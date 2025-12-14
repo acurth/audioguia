@@ -1,0 +1,150 @@
+{
+  "id": "nvd-0001",
+  "name": "Llao Llao – Sendero Arrayanes (NVD)",
+  "points": [
+    {
+      "id": "p1",
+      "name": "Punto 1",
+      "lat": -41.052312,
+      "lng": -71.540472,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/001.mp3"
+    },
+    {
+      "id": "p2",
+      "name": "Punto 2",
+      "lat": -41.052253,
+      "lng": -71.541516,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/002.mp3"
+    },
+    {
+      "id": "p3",
+      "name": "Punto 3",
+      "lat": -41.052759,
+      "lng": -71.541056,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/003.mp3"
+    },
+    {
+      "id": "p4",
+      "name": "Punto 4",
+      "lat": -41.053168,
+      "lng": -71.540717,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/004.mp3"
+    },
+    {
+      "id": "p5",
+      "name": "Punto 5",
+      "lat": -41.053591,
+      "lng": -71.540698,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/005.mp3"
+    },
+    {
+      "id": "p6",
+      "name": "Punto 6",
+      "lat": -41.053943,
+      "lng": -71.540799,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/006.mp3"
+    },
+    {
+      "id": "p7",
+      "name": "Punto 7",
+      "lat": -41.053993,
+      "lng": -71.541394,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/007.mp3"
+    },
+    {
+      "id": "p8",
+      "name": "Punto 8",
+      "lat": -41.053964,
+      "lng": -71.541925,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/008.mp3"
+    },
+    {
+      "id": "p9",
+      "name": "Punto 9",
+      "lat": -41.053805,
+      "lng": -71.542727,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/009.mp3"
+    },
+    {
+      "id": "p10",
+      "name": "Punto 10",
+      "lat": -41.053613,
+      "lng": -71.543533,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/010.mp3"
+    },
+    {
+      "id": "p11",
+      "name": "Punto 11",
+      "lat": -41.053915,
+      "lng": -71.544898,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/011.mp3"
+    },
+    {
+      "id": "p12",
+      "name": "Punto 12",
+      "lat": -41.055501,
+      "lng": -71.544907,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/012.mp3"
+    },
+    {
+      "id": "p13",
+      "name": "Punto 13",
+      "lat": -41.056720,
+      "lng": -71.545477,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/013.mp3"
+    },
+    {
+      "id": "p14",
+      "name": "Punto 14",
+      "lat": -41.056668,
+      "lng": -71.546643,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/014.mp3"
+    },
+    {
+      "id": "p15",
+      "name": "Punto 15",
+      "lat": -41.057295,
+      "lng": -71.547984,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/015.mp3"
+    },
+    {
+      "id": "p16",
+      "name": "Punto 16",
+      "lat": -41.058197,
+      "lng": -71.549947,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/016.mp3"
+    }
+  ]
+}

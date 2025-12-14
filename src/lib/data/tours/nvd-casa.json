@@ -1,0 +1,150 @@
+{
+  "id": "nvd-casa",
+  "name": "Test: vuelta por casa",
+  "points": [
+    {
+      "id": "p1",
+      "name": "Avenida Exequiel Bustillo 3390",
+      "lat": -41.129216,
+      "lng": -71.347856,
+      "alt": 777.13,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/001.mp3"
+    },
+    {
+      "id": "p2",
+      "name": "Avenida Exequiel Bustillo 3380",
+      "lat": -41.129394,
+      "lng": -71.346817,
+      "alt": 778.05,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/002.mp3"
+    },
+    {
+      "id": "p3",
+      "name": "Avenida Exequiel Bustillo 3302",
+      "lat": -41.129777,
+      "lng": -71.34665,
+      "alt": 784.25,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/003.mp3"
+    },
+    {
+      "id": "p4",
+      "name": "Lagos del Sur 13–55",
+      "lat": -41.129777,
+      "lng": -71.34665,
+      "alt": 784.25,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/004.mp3"
+    },
+    {
+      "id": "p5",
+      "name": "Lagos del Sur 37",
+      "lat": -41.130028,
+      "lng": -71.347587,
+      "alt": 793.72,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/005.mp3"
+    },
+    {
+      "id": "p6",
+      "name": "Lagos del Sur 89",
+      "lat": -41.130027,
+      "lng": -71.348444,
+      "alt": 795.79,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/006.mp3"
+    },
+    {
+      "id": "p7",
+      "name": "Tronador 3307",
+      "lat": -41.130027,
+      "lng": -71.348444,
+      "alt": 795.79,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/007.mp3"
+    },
+    {
+      "id": "p8",
+      "name": "Tronador 3309",
+      "lat": -41.129773,
+      "lng": -71.349257,
+      "alt": 789.05,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/008.mp3"
+    },
+    {
+      "id": "p9",
+      "name": "Tronador 3590 (1)",
+      "lat": -41.129448,
+      "lng": -71.349876,
+      "alt": 786.87,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/009.mp3"
+    },
+    {
+      "id": "p10",
+      "name": "Tronador 3590 (2)",
+      "lat": -41.129448,
+      "lng": -71.349876,
+      "alt": 786.87,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/010.mp3"
+    },
+    {
+      "id": "p11",
+      "name": "Colihue 76 (1)",
+      "lat": -41.128852,
+      "lng": -71.349547,
+      "alt": 777.91,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/011.mp3"
+    },
+    {
+      "id": "p12",
+      "name": "Colihue 76 (2)",
+      "lat": -41.128852,
+      "lng": -71.349547,
+      "alt": 777.91,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/012.mp3"
+    },
+    {
+      "id": "p13",
+      "name": "Avenida Exequiel Bustillo 3552 (1)",
+      "lat": -41.128882,
+      "lng": -71.348964,
+      "alt": 777.21,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/013.mp3"
+    },
+    {
+      "id": "p14",
+      "name": "Avenida Exequiel Bustillo 3552 (2)",
+      "lat": -41.129196,
+      "lng": -71.348342,
+      "alt": 781.03,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/014.mp3"
+    },
+    {
+      "id": "p15",
+      "name": "Avenida Exequiel Bustillo 3430 (1)",
+      "lat": -41.129614,
+      "lng": -71.348441,
+      "alt": 780.64,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/015.mp3"
+    },
+    {
+      "id": "p16",
+      "name": "Avenida Exequiel Bustillo 3430 (2)",
+      "lat": -41.129614,
+      "lng": -71.348441,
+      "alt": 780.64,
+      "radius": 20,
+      "audio": "audio/tours/nvd-casa/es/016.mp3"
+    }
+  ]
+}
