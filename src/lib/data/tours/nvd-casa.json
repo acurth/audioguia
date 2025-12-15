@@ -146,5 +146,74 @@
       "radius": 20,
       "audio": "audio/tours/nvd-casa/es/016.mp3"
     }
-  ]
+  ],
+  "offline": {
+    "totalBytes": 5381412,
+    "files": [
+      {
+        "path": "audio/tours/nvd-casa/es/001.mp3",
+        "bytes": 407838
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/002.mp3",
+        "bytes": 371285
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/003.mp3",
+        "bytes": 362937
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/004.mp3",
+        "bytes": 349325
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/005.mp3",
+        "bytes": 334257
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/006.mp3",
+        "bytes": 261813
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/007.mp3",
+        "bytes": 245431
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/008.mp3",
+        "bytes": 359101
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/009.mp3",
+        "bytes": 329031
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/010.mp3",
+        "bytes": 148458
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/011.mp3",
+        "bytes": 241870
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/012.mp3",
+        "bytes": 311070
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/013.mp3",
+        "bytes": 260445
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/014.mp3",
+        "bytes": 245166
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/015.mp3",
+        "bytes": 140325
+      },
+      {
+        "path": "audio/tours/nvd-casa/es/016.mp3",
+        "bytes": 1013060
+      }
+    ]
+  }
 }
