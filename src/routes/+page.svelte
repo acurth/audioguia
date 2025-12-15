@@ -1,6 +1,13 @@
 <script lang="ts">
   import { base } from "$app/paths";
 
+  type TourJson = {
+    id?: string;
+    slug?: string;
+    name?: string;
+    theme?: string;
+  };
+
   type TourLink = {
     id: string;
     slug: string;
@@ -9,19 +16,19 @@
   };
 
   const tourModules = import.meta.glob("$lib/data/tours/*.json", {
-    eager: true
-  }) as Record<string, any>;
+    eager: true,
+    import: "default"
+  }) as Record<string, TourJson>;
 
   const tours: TourLink[] = Object.entries(tourModules)
     .map(([path, data]) => {
-      const json = data as any;
       const filename = path.split("/").pop() ?? "";
       const idFromFile = filename.replace(".json", "");
 
-      const id = json.id ?? idFromFile;
-      const slug = json.slug ?? id;
-      const label = json.name ?? id;
-      const theme = json.theme as string | undefined;
+      const id = typeof data.id === "string" ? data.id : idFromFile;
+      const slug = typeof data.slug === "string" ? data.slug : id;
+      const label = typeof data.name === "string" ? data.name : id;
+      const theme = typeof data.theme === "string" ? data.theme : undefined;
 
       return { id, slug, label, theme };
     })

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
+  import { dev } from "$app/environment";
   import { page } from "$app/stores";
 
   type Point = {
@@ -27,7 +28,8 @@
   };
 
   const tourModules = import.meta.glob("$lib/data/tours/*.json", {
-    eager: true
+    eager: true,
+    import: "default"
   }) as Record<string, TourJson>;
 
   const tours: Tour[] = Object.entries(tourModules)
@@ -52,11 +54,13 @@
 
   let title: string = tours[0]?.name ?? "Recorrido no encontrado";
   let points: Point[] = tours[0]?.points ?? [];
+  let selectedTour: Tour | undefined = tours[0];
 
   $: {
     const track = $page.params.track;
     const fallbackTour = tours[0];
-    const currentTour = (track ? tourMap[track] : fallbackTour) ?? fallbackTour;
+    const currentTour = track ? tourMap[track] : fallbackTour;
+    selectedTour = currentTour ?? undefined;
     title = currentTour?.name ?? "Recorrido no encontrado";
     points = currentTour?.points ?? [];
   }
@@ -314,6 +318,30 @@
       en el radio de los puntos del recorrido seleccionado.
     </p>
   </header>
+
+  {#if dev}
+    <section
+      style="
+        width: 100%;
+        max-width: 640px;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px dashed rgba(0,0,0,0.2);
+        font-size: 0.9rem;
+        text-align: left;
+      "
+    >
+      <p style="margin: 0.25rem 0;">
+        track param: <strong>{$page.params.track ?? "(none)"}</strong>
+      </p>
+      <p style="margin: 0.25rem 0;">
+        tour seleccionado: <strong>{selectedTour?.id ?? "—"}</strong> — {selectedTour?.name ?? "—"}
+      </p>
+      <p style="margin: 0.25rem 0;">
+        tours encontrados ({tours.length}): {tours.map((t) => `${t.id} (${t.name})`).join(", ")}
+      </p>
+    </section>
+  {/if}
 
   <section
     style="
