@@ -1,9 +1,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { page } from "$app/stores";
-  import casaRoute from "$lib/data/tours/nvd-casa.json";
-  import arrayanesRoute from "$lib/data/tours/nvd-0001.json";
-  
+
   type Point = {
     id: string;
     name: string;
@@ -14,36 +12,53 @@
     audio: string;
   };
 
-  const routeMap: Record<string, { name: string; points: Point[] }> = {
-    // Ruta de prueba en casa
-    casa: {
-      name: "Guía Auditiva – Test casa",
-      points: (casaRoute as any).points as Point[]
-    },
-    "nvd-casa": {
-      name: "Guía Auditiva – Test casa",
-      points: (casaRoute as any).points as Point[]
-    },
-
-    // Sendero Arrayanes / Llao Llao (NVD)
-    arrayanes: {
-      name: "Guía Auditiva – Sendero Arrayanes / Llao Llao",
-      points: (arrayanesRoute as any).points as Point[]
-    },
-    "nvd-0001": {
-      name: "Guía Auditiva – Sendero Arrayanes / Llao Llao",
-      points: (arrayanesRoute as any).points as Point[]
-    }
+  type Tour = {
+    id: string;
+    slug: string;
+    name: string;
+    points: Point[];
   };
 
-  let title: string = "Guía Auditiva – Test casa";
-  let points: Point[] = (casaRoute as any).points as Point[];
+  type TourJson = {
+    id?: string;
+    slug?: string;
+    name?: string;
+    points?: Point[];
+  };
+
+  const tourModules = import.meta.glob("$lib/data/tours/*.json", {
+    eager: true
+  }) as Record<string, TourJson>;
+
+  const tours: Tour[] = Object.entries(tourModules)
+    .map(([path, data]) => {
+      const filename = path.split("/").pop() ?? "";
+      const fallbackId = filename.replace(".json", "");
+
+      const id = typeof data.id === "string" ? data.id : fallbackId;
+      const slug = typeof data.slug === "string" ? data.slug : id;
+      const name = typeof data.name === "string" ? data.name : slug;
+      const points = Array.isArray(data.points) ? (data.points as Point[]) : [];
+
+      return { id, slug, name, points };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const tourMap = tours.reduce<Record<string, Tour>>((acc, tour) => {
+    acc[tour.slug] = tour;
+    acc[tour.id] = tour;
+    return acc;
+  }, {});
+
+  let title: string = tours[0]?.name ?? "Recorrido no encontrado";
+  let points: Point[] = tours[0]?.points ?? [];
 
   $: {
-    const track = $page.params.track ?? "casa";
-    const currentRoute = routeMap[track] ?? routeMap["casa"];
-    title = currentRoute.name;
-    points = currentRoute.points;
+    const track = $page.params.track;
+    const fallbackTour = tours[0];
+    const currentTour = (track ? tourMap[track] : fallbackTour) ?? fallbackTour;
+    title = currentTour?.name ?? "Recorrido no encontrado";
+    points = currentTour?.points ?? [];
   }
 
   // Estado general
