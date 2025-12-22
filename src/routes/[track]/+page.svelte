@@ -27,6 +27,12 @@
     points?: Point[];
   };
 
+  const MIN_EFFECTIVE_RADIUS_METERS = 8;
+  const MAX_EFFECTIVE_RADIUS_METERS = 25;
+  const ACCURACY_MULTIPLIER = 2.5;
+  const POOR_ACCURACY_THRESHOLD_METERS = 20;
+  const MAX_ACCURACY_FOR_TRIGGER_METERS = 50;
+
   const tourModules = import.meta.glob("$lib/data/tours/*.json", {
     eager: true,
     import: "default"
@@ -73,6 +79,7 @@
   let currentLat: number | null = null;
   let currentLng: number | null = null;
   let currentAccuracy: number | null = null;
+  let gpsWarningMessage: string | null = null;
 
   // Distancias dinámicas
   let distanceToFirstMeters: number | null = null;
@@ -84,6 +91,12 @@
   // Puntos disparados
   let triggeredPointIds: string[] = [];
   let lastTriggeredPoint: Point | null = null;
+  let lastTriggerEvalPointId: string | null = null;
+  let lastTriggerEvalEffectiveRadius: number | null = null;
+  let lastTriggerEvalInsideRadius: boolean | null = null;
+  let lastTriggeredAccuracy: number | null = null;
+  let lastTriggeredEffectiveRadius: number | null = null;
+  let lastTriggeredInsideRadius: boolean | null = null;
 
   // Reproductor de audio
   let audioPlayer: HTMLAudioElement | null = null;
@@ -115,6 +128,15 @@
     if (d == null || !Number.isFinite(d)) return "—";
     if (d < 1000) return `${Math.round(d)} m`;
     return `${(d / 1000).toFixed(2)} km`;
+  }
+
+  function clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function getEffectiveRadius(accuracy: number, baseRadius: number): number {
+    const scaled = Math.max(baseRadius, accuracy * ACCURACY_MULTIPLIER);
+    return clamp(scaled, MIN_EFFECTIVE_RADIUS_METERS, MAX_EFFECTIVE_RADIUS_METERS);
   }
 
   async function playPointAudio(point: Point) {
@@ -201,6 +223,7 @@
     currentLat = latitude;
     currentLng = longitude;
     currentAccuracy = accuracy;
+    gpsWarningMessage = accuracy > POOR_ACCURACY_THRESHOLD_METERS ? "GPS poco preciso" : null;
 
     // Distancia al punto 1 del recorrido (si existe)
     if (points.length > 0) {
@@ -232,10 +255,21 @@
       if (triggeredPointIds.includes(point.id)) continue;
 
       const dist = distanceMeters(latitude, longitude, point.lat, point.lng);
+      const baseRadius = Number.isFinite(point.radius) ? point.radius : 10;
+      const effectiveRadius = getEffectiveRadius(accuracy, baseRadius);
+      const insideRadius = dist <= effectiveRadius;
+      const accuracyOk = accuracy <= MAX_ACCURACY_FOR_TRIGGER_METERS;
 
-      if (dist <= point.radius) {
+      lastTriggerEvalPointId = point.id;
+      lastTriggerEvalEffectiveRadius = effectiveRadius;
+      lastTriggerEvalInsideRadius = insideRadius;
+
+      if (insideRadius && accuracyOk) {
         triggeredPointIds = [...triggeredPointIds, point.id];
         lastTriggeredPoint = point;
+        lastTriggeredAccuracy = accuracy;
+        lastTriggeredEffectiveRadius = effectiveRadius;
+        lastTriggeredInsideRadius = insideRadius;
         void playPointAudio(point);
         break;
       }
@@ -259,6 +293,9 @@
 
     triggeredPointIds = [];
     lastTriggeredPoint = null;
+    lastTriggeredAccuracy = null;
+    lastTriggeredEffectiveRadius = null;
+    lastTriggeredInsideRadius = null;
     isTracking = true;
     statusMessage = "Iniciando seguimiento de ubicación…";
 
@@ -408,9 +445,22 @@
             Precisión aprox.: {Math.round(currentAccuracy)} m
           </p>
         {/if}
+        {#if gpsWarningMessage}
+          <p style="font-size: 0.9rem; margin: 0.1rem 0; color: #c0392b;">
+            {gpsWarningMessage}
+          </p>
+        {/if}
         {#if distanceToFirstMeters !== null}
           <p style="font-size: 0.9rem; margin: 0.1rem 0;">
             Distancia al punto 1 del recorrido: {formatDistance(distanceToFirstMeters)}
+          </p>
+        {/if}
+        {#if lastTriggerEvalEffectiveRadius !== null && lastTriggerEvalInsideRadius !== null}
+          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+            Radio efectivo ({lastTriggerEvalPointId ?? "—"}): {Math.round(lastTriggerEvalEffectiveRadius)} m
+          </p>
+          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+            Inside radius: {lastTriggerEvalInsideRadius ? "sí" : "no"}
           </p>
         {/if}
       {:else}
@@ -435,6 +485,16 @@
         <p style="font-size: 0.85rem; margin: 0.1rem 0%;">
           ID: {lastTriggeredPoint.id} — Radio: {lastTriggeredPoint.radius} m
         </p>
+        {#if lastTriggeredAccuracy !== null && lastTriggeredEffectiveRadius !== null}
+          <p style="font-size: 0.85rem; margin: 0.1rem 0;">
+            Accuracy: {Math.round(lastTriggeredAccuracy)} m — Radio efectivo: {Math.round(lastTriggeredEffectiveRadius)} m
+          </p>
+        {/if}
+        {#if lastTriggeredInsideRadius !== null}
+          <p style="font-size: 0.85rem; margin: 0.1rem 0;">
+            Inside radius: {lastTriggeredInsideRadius ? "sí" : "no"}
+          </p>
+        {/if}
       {:else}
         <p style="font-size: 0.9rem; margin: 0;">
           Aún no se disparó ningún punto.

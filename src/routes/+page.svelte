@@ -50,6 +50,8 @@
     bytes?: number;
   };
 
+  const logoSrc = `${base}/branding/audioguia-natural-transparent.png`;
+
   let downloadState: Record<string, DownloadState> = {};
 
   function loadState() {
@@ -127,121 +129,70 @@
   });
 </script>
 
-<main
-  style="
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    padding: 2rem 1rem;
-    text-align: center;
-  "
->
-  <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">
-    Guía Auditiva – Llao Llao
-  </h1>
+<div class="page">
+  <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <p style="max-width: 520px; font-size: 0.95rem; margin: 0 auto 1.5rem;">
-    Elegí un recorrido para empezar a caminar con audio guiado.
-  </p>
+  <header class="hero">
+    <img src={logoSrc} alt="Audioguía Natural" class="hero-logo" />
 
-  <div
-    style="
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      width: 100%;
-      max-width: 360px;
-    "
-  >
-    {#if tours.length === 0}
-      <p style="font-size: 0.9rem; margin: 0;">
-        Todavía no hay recorridos configurados.
-      </p>
-    {:else}
-      {#each tours as tour}
-        <div
-          style="
-            padding: 0.85rem 1.25rem;
-            border-radius: 0.75rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            background: #f4f9ff;
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-          "
-        >
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <a
-              href={`${base}/${tour.slug}`}
-              style="
-                text-decoration: none;
-                font-weight: 700;
-                font-size: 0.95rem;
-                color: inherit;
-              "
-            >
-              {tour.label}
-            </a>
-            <span style="font-size: 0.8rem; color: #555;">
-              {formatMB(tour.offline?.totalBytes)}
-            </span>
-          </div>
+    <h1 class="hero-title">Audioguía Natural — Senderos para escuchar</h1>
 
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <span style="font-size: 0.85rem;">
+    <p class="hero-blurb">
+      Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para
+      personas ciegas, abierta a todo público.
+    </p>
+  </header>
+
+  <main id="main" class="content">
+    <p class="hero-subtitle">Elegí un recorrido para empezar a caminar con audio guiado.</p>
+
+    <div class="tour-list">
+      {#if tours.length === 0}
+        <p class="empty-state">Todavía no hay recorridos configurados.</p>
+      {:else}
+        {#each tours as tour}
+          <div class="tour-card">
+            <div class="tour-header">
+              <a
+                href={`${base}/${tour.slug}`}
+                class="tour-link"
+                aria-label={`Abrir tour ${tour.label}`}
+              >
+                {tour.label}
+              </a>
+              <span class="tour-size">{formatMB(tour.offline?.totalBytes)}</span>
+            </div>
+
+            <div class="tour-meta">
+              <span class="status-text">
+                {#if downloadState[tour.id]?.status === "downloaded"}
+                  Offline listo
+                {:else if downloadState[tour.id]?.status === "downloading"}
+                  Descargando…
+                {:else}
+                  No descargado
+                {/if}
+              </span>
+
               {#if downloadState[tour.id]?.status === "downloaded"}
-                Offline listo
-              {:else if downloadState[tour.id]?.status === "downloading"}
-                Descargando…
+                <button type="button" on:click={() => deleteDownload(tour)} class="btn btn-delete">
+                  Eliminar
+                </button>
               {:else}
-                No descargado
+                <button
+                  type="button"
+                  on:click={() => requestDownload(tour)}
+                  class="btn btn-download"
+                  class:is-downloading={downloadState[tour.id]?.status === "downloading"}
+                  disabled={downloadState[tour.id]?.status === "downloading"}
+                >
+                  {downloadState[tour.id]?.status === "downloading" ? "Descargando…" : "Descargar"}
+                </button>
               {/if}
-            </span>
-
-            {#if downloadState[tour.id]?.status === "downloaded"}
-              <button
-                type="button"
-                on:click={() => deleteDownload(tour)}
-                style="
-                  border: none;
-                  border-radius: 999px;
-                  padding: 0.35rem 0.9rem;
-                  font-size: 0.85rem;
-                  cursor: pointer;
-                  background: #f1c40f;
-                  color: #1f1f1f;
-                  font-weight: 600;
-                "
-              >
-                Eliminar
-              </button>
-            {:else}
-              <button
-                type="button"
-                on:click={() => requestDownload(tour)}
-                style="
-                  border: none;
-                  border-radius: 999px;
-                  padding: 0.35rem 0.9rem;
-                  font-size: 0.85rem;
-                  cursor: pointer;
-                  background: #3498db;
-                  color: white;
-                  font-weight: 600;
-                  opacity: {downloadState[tour.id]?.status === "downloading" ? 0.7 : 1};
-                "
-                disabled={downloadState[tour.id]?.status === "downloading"}
-              >
-                {downloadState[tour.id]?.status === "downloading" ? "Descargando…" : "Descargar"}
-              </button>
-            {/if}
+            </div>
           </div>
-        </div>
-      {/each}
-    {/if}
-  </div>
-</main>
+        {/each}
+      {/if}
+    </div>
+  </main>
+</div>

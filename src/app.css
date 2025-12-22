@@ -1,0 +1,190 @@
+:root {
+  background-color: #fbf9f6;
+  color: #1b1b1b;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+html,
+body {
+  min-height: 100%;
+  background-color: #fbf9f6;
+}
+
+body {
+  margin: 0;
+  color: inherit;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a {
+  color: #0b5aa0;
+}
+
+a:hover {
+  color: #094c86;
+}
+
+:focus-visible {
+  outline: 3px solid #0b5aa0;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem 2.5rem;
+  text-align: center;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0.75rem;
+  background: #0b5aa0;
+  color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 0.75rem;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 640px;
+}
+
+.hero-logo {
+  width: min(420px, 82vw);
+  height: auto;
+  max-width: 420px;
+  object-fit: contain;
+}
+
+.hero-title {
+  font-size: 1.8rem;
+  margin: 0.25rem 0 0;
+}
+
+.hero-blurb {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.hero-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.content {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tour-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tour-card {
+  padding: 0.85rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f4f9ff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.tour-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tour-link {
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: inherit;
+}
+
+.tour-link:hover {
+  text-decoration: underline;
+}
+
+.tour-size {
+  font-size: 0.8rem;
+  color: #4c4c4c;
+}
+
+.tour-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-text {
+  font-size: 0.85rem;
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-download {
+  background: #3498db;
+  color: #ffffff;
+}
+
+.btn-delete {
+  background: #f1c40f;
+  color: #1f1f1f;
+}
+
+.btn.is-downloading {
+  opacity: 0.7;
+}
+
+.empty-state {
+  font-size: 0.9rem;
+  margin: 0;
+}
