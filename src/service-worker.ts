@@ -48,13 +48,50 @@ async function cacheTourAssets(payload: {
     urls.add(toAbsolute(f));
   }
 
-  await Promise.all(
-    Array.from(urls).map((url) =>
-      cache.add(url).catch((err) => {
-        console.error("Failed to cache", url, err);
-      })
-    )
-  );
+  const total = urls.size;
+  let completed = 0;
+
+  await notifyClients({
+    type: "tour-progress",
+    id: payload.id,
+    stage: "preparing",
+    completed,
+    total
+  });
+
+  for (const url of urls) {
+    try {
+      await cache.add(url);
+      completed += 1;
+      await notifyClients({
+        type: "tour-progress",
+        id: payload.id,
+        stage: "downloading",
+        completed,
+        total,
+        url
+      });
+    } catch (err) {
+      console.error("Failed to cache", url, err);
+      await notifyClients({
+        type: "tour-progress",
+        id: payload.id,
+        stage: "downloading",
+        completed,
+        total,
+        url,
+        error: err instanceof Error ? err.message : "Error al cachear"
+      });
+    }
+  }
+
+  await notifyClients({
+    type: "tour-progress",
+    id: payload.id,
+    stage: "saving",
+    completed,
+    total
+  });
 
   if (payload.json) {
     const jsonUrl = toAbsolute(`/offline/tours/${payload.slug}.json`);
@@ -65,6 +102,14 @@ async function cacheTourAssets(payload: {
       })
     );
   }
+
+  await notifyClients({
+    type: "tour-progress",
+    id: payload.id,
+    stage: "done",
+    completed: total,
+    total
+  });
 
   await notifyClients({ type: "tour-downloaded", id: payload.id });
 }
