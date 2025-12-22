@@ -7,8 +7,10 @@
 
 	onMount(() => {
 		if ('serviceWorker' in navigator) {
+			const swUrl = `${base}/service-worker.js`;
+
 			navigator.serviceWorker
-				.register(`${base}/service-worker.js`)
+				.register(swUrl, { scope: `${base}/`, type: 'module' })
 				.catch((err) => console.error('SW registration failed', err));
 		}
 	});

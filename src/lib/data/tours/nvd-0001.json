@@ -4,215 +4,228 @@
   "points": [
     {
       "id": "p1",
-      "name": "Punto 1",
-      "lat": -41.052312,
-      "lng": -71.540472,
+      "name": "Intro Estacionamiento Sendero Arrayanes",
+      "lat": -41.052365,
+      "lng": -71.540938,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/001.mp3"
     },
     {
       "id": "p2",
-      "name": "Punto 2",
-      "lat": -41.052253,
-      "lng": -71.541516,
+      "name": "Nuevo Audio Explicación Bifurcación",
+      "lat": -41.05252,
+      "lng": -71.541555,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/002.mp3"
     },
     {
       "id": "p3",
-      "name": "Punto 3",
-      "lat": -41.052759,
-      "lng": -71.541056,
+      "name": "Churrin y Chucao",
+      "lat": -41.052827,
+      "lng": -71.540907,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/003.mp3"
     },
     {
       "id": "p4",
-      "name": "Punto 4",
-      "lat": -41.053168,
-      "lng": -71.540717,
+      "name": "Chimango",
+      "lat": -41.05348,
+      "lng": -71.54062,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/004.mp3"
     },
     {
       "id": "p5",
-      "name": "Punto 5",
-      "lat": -41.053591,
-      "lng": -71.540698,
+      "name": "Pica Rubi",
+      "lat": -41.05402,
+      "lng": -71.54084,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/005.mp3"
     },
     {
       "id": "p6",
-      "name": "Punto 6",
-      "lat": -41.053943,
-      "lng": -71.540799,
+      "name": "Caña colihue (Karin)",
+      "lat": -41.053997,
+      "lng": -71.541878,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/006.mp3"
     },
     {
       "id": "p7",
-      "name": "Punto 7",
-      "lat": -41.053993,
-      "lng": -71.541394,
+      "name": "Hueco del árbol (Karin)",
+      "lat": -41.053744,
+      "lng": -71.542764,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/007.mp3"
     },
     {
       "id": "p8",
-      "name": "Punto 8",
-      "lat": -41.053964,
-      "lng": -71.541925,
+      "name": "Ratona Contacto",
+      "lat": -41.0537,
+      "lng": -71.544645,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/008.mp3"
     },
     {
       "id": "p9",
-      "name": "Punto 9",
-      "lat": -41.053805,
-      "lng": -71.542727,
+      "name": "Ratona Canto",
+      "lat": -41.053982,
+      "lng": -71.54497,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/009.mp3"
     },
     {
       "id": "p10",
-      "name": "Punto 10",
-      "lat": -41.053613,
-      "lng": -71.543533,
+      "name": "Comienzo Loop Bosque Arrayanes",
+      "lat": -41.054592,
+      "lng": -71.544547,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/010.mp3"
     },
     {
       "id": "p11",
-      "name": "Punto 11",
-      "lat": -41.053915,
-      "lng": -71.544898,
+      "name": "Lengua de vaca (exótica) (Karin)",
+      "lat": -41.054806,
+      "lng": -71.544511,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/011.mp3"
     },
     {
       "id": "p12",
-      "name": "Punto 12",
-      "lat": -41.055501,
-      "lng": -71.544907,
+      "name": "Abrojo (Karin)",
+      "lat": -41.056328,
+      "lng": -71.545272,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/012.mp3"
     },
     {
       "id": "p13",
-      "name": "Punto 13",
-      "lat": -41.05672,
-      "lng": -71.545477,
+      "name": "Quintral (Guille)",
+      "lat": -41.05675,
+      "lng": -71.546044,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/013.mp3"
     },
     {
       "id": "p14",
-      "name": "Punto 14",
-      "lat": -41.056668,
-      "lng": -71.546643,
+      "name": "Monito del Monte (Guille)",
+      "lat": -41.056673,
+      "lng": -71.546519,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/014.mp3"
     },
     {
       "id": "p15",
-      "name": "Punto 15",
-      "lat": -41.057295,
-      "lng": -71.547984,
+      "name": "Huet Huet",
+      "lat": -41.057373,
+      "lng": -71.547951,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/015.mp3"
     },
     {
       "id": "p16",
-      "name": "Punto 16",
-      "lat": -41.058197,
-      "lng": -71.549947,
+      "name": "Próximos a la bifurcación",
+      "lat": -41.057932,
+      "lng": -71.549534,
       "alt": 900,
       "radius": 20,
       "audio": "audio/tours/nvd-0001/es/016.mp3"
+    },
+    {
+      "id": "p17",
+      "name": "Cierre — Llegada a la playa del lago",
+      "lat": -41.058517,
+      "lng": -71.548955,
+      "alt": 900,
+      "radius": 20,
+      "audio": "audio/tours/nvd-0001/es/017.mp3"
     }
   ],
   "offline": {
-    "totalBytes": 6843329,
+    "totalBytes": 12352888,
     "files": [
       {
         "path": "audio/tours/nvd-0001/es/001.mp3",
-        "bytes": 407838
+        "bytes": 569501
       },
       {
         "path": "audio/tours/nvd-0001/es/002.mp3",
-        "bytes": 371285
+        "bytes": 432603
       },
       {
         "path": "audio/tours/nvd-0001/es/003.mp3",
-        "bytes": 1824854
+        "bytes": 540303
       },
       {
         "path": "audio/tours/nvd-0001/es/004.mp3",
-        "bytes": 349325
+        "bytes": 446689
       },
       {
         "path": "audio/tours/nvd-0001/es/005.mp3",
-        "bytes": 334257
+        "bytes": 323664
       },
       {
         "path": "audio/tours/nvd-0001/es/006.mp3",
-        "bytes": 261813
+        "bytes": 1191155
       },
       {
         "path": "audio/tours/nvd-0001/es/007.mp3",
-        "bytes": 245431
+        "bytes": 1214296
       },
       {
         "path": "audio/tours/nvd-0001/es/008.mp3",
-        "bytes": 359101
+        "bytes": 577655
       },
       {
         "path": "audio/tours/nvd-0001/es/009.mp3",
-        "bytes": 329031
+        "bytes": 637890
       },
       {
         "path": "audio/tours/nvd-0001/es/010.mp3",
-        "bytes": 148458
+        "bytes": 655270
       },
       {
         "path": "audio/tours/nvd-0001/es/011.mp3",
-        "bytes": 241870
+        "bytes": 813918
       },
       {
         "path": "audio/tours/nvd-0001/es/012.mp3",
-        "bytes": 311070
+        "bytes": 1298757
       },
       {
         "path": "audio/tours/nvd-0001/es/013.mp3",
-        "bytes": 260445
+        "bytes": 604041
       },
       {
         "path": "audio/tours/nvd-0001/es/014.mp3",
-        "bytes": 245166
+        "bytes": 832461
       },
       {
         "path": "audio/tours/nvd-0001/es/015.mp3",
-        "bytes": 140325
+        "bytes": 744882
       },
       {
         "path": "audio/tours/nvd-0001/es/016.mp3",
-        "bytes": 1013060
+        "bytes": 699179
+      },
+      {
+        "path": "audio/tours/nvd-0001/es/017.mp3",
+        "bytes": 770624
       }
     ]
   }
