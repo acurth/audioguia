@@ -336,6 +336,7 @@
 </script>
 
 <main
+  class="ag-main"
   style="
     min-height: 100vh;
     display: flex;
@@ -343,7 +344,7 @@
     justify-content: flex-start;
     align-items: center;
     text-align: center;
-    padding: 2rem 1rem 3rem;
+    padding: 0 1rem 3rem;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     gap: 1.5rem;
   "
@@ -351,8 +352,8 @@
   <header>
     <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
     <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
-      Caminá con el celular en el bolsillo. La app reproduce cada audio cuando entrás
-      en el radio de los puntos del recorrido seleccionado.
+      Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
+      caminás. Si el teléfono bloquea la pantalla, puede pausar el seguimiento.
     </p>
   </header>
 
