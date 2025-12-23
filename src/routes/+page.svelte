@@ -30,6 +30,16 @@
     import: "default"
   }) as Record<string, TourJson>;
 
+  const labelOverrides: Record<string, string> = {
+    "sendero-arrayanes-audio-01": "Sendero Arrayanes – Audioguía (Llao Llao)",
+    "casa-test-01": "Casa – Tour de prueba"
+  };
+
+  const ctaLabelOverrides: Record<string, string> = {
+    "sendero-arrayanes-audio-01": "Abrir Sendero Arrayanes Audio",
+    "casa-test-01": "Abrir Test casa"
+  };
+
   const tours: TourLink[] = Object.entries(tourModules)
     .map(([path, data]) => {
       const filename = path.split("/").pop() ?? "";
@@ -37,13 +47,18 @@
 
       const id = typeof data.id === "string" ? data.id : idFromFile;
       const slug = typeof data.slug === "string" ? data.slug : id;
-      const label = typeof data.name === "string" ? data.name : id;
+      const label = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
       const theme = typeof data.theme === "string" ? data.theme : undefined;
       const offline = data.offline;
 
       return { id, slug, label, theme, offline, raw: data };
     })
-    .sort((a, b) => a.label.localeCompare(b.label));
+    .sort((a, b) => {
+      const aIsTest = /test|casa/i.test(a.id);
+      const bIsTest = /test|casa/i.test(b.id);
+      if (aIsTest !== bIsTest) return aIsTest ? 1 : -1;
+      return a.label.localeCompare(b.label);
+    });
 
   type DownloadStage = "preparing" | "downloading" | "saving" | "done" | "error";
 
@@ -69,6 +84,8 @@
   const ANNOUNCE_INTERVAL_MS = 15000;
 
   let downloadState: Record<string, DownloadState> = {};
+  let announcedReady: Record<string, boolean> = {};
+  let liveMessage = "";
   let now = Date.now();
 
   function loadState() {
@@ -77,6 +94,11 @@
     if (stored) {
       try {
         downloadState = JSON.parse(stored);
+        announcedReady = Object.fromEntries(
+          Object.entries(downloadState)
+            .filter(([, state]) => state?.status === "downloaded")
+            .map(([id]) => [id, true])
+        );
       } catch (err) {
         console.error("Failed to parse offline state", err);
       }
@@ -113,6 +135,15 @@
       return Math.round((state.completedFiles / state.totalFiles) * 100);
     }
     return 0;
+  }
+
+  $: {
+    for (const tour of tours) {
+      if (downloadState[tour.id]?.status === "downloaded" && !announcedReady[tour.id]) {
+        liveMessage = `Tour listo sin conexión: ${tour.label}`;
+        announcedReady = { ...announcedReady, [tour.id]: true };
+      }
+    }
   }
 
   function getDownloadedBytes(state: DownloadState | undefined, totalBytes?: number): number | undefined {
@@ -348,30 +379,45 @@
   </header>
 
   <main id="main" class="content">
-    <p class="hero-subtitle">Elegí un recorrido para empezar a caminar con audio guiado.</p>
+    <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+      {liveMessage}
+    </div>
+    <p class="hero-subtitle">
+      Elegí un recorrido para empezar a caminar con audio guiado. Se recomienda descargar el tour
+      antes de salir del Wi-Fi o de una buena conexión de datos.
+    </p>
 
     <div class="tour-list">
       {#if tours.length === 0}
         <p class="empty-state">Todavía no hay recorridos configurados.</p>
       {:else}
         {#each tours as tour}
-          <article class="tour-card">
+          <article
+            class="tour-card"
+            class:offline-ready={downloadState[tour.id]?.status === "downloaded"}
+          >
             <div class="tour-card-inner">
               <div class="tour-top">
-                <h2 class="tour-title">{tour.label}</h2>
+                <h2 class="sr-only">{tour.label}</h2>
                 <div class="tour-actions">
                   <a
                     href={`${base}/${tour.slug}`}
                     class="btn btn-primary tour-cta"
-                    aria-label={`Abrir tour: ${tour.label}`}
+                    aria-label={ctaLabelOverrides[tour.id] ?? "Abrir tour"}
                   >
-                    Abrir tour
+                    {ctaLabelOverrides[tour.id] ?? "Abrir tour"}
                   </a>
                 </div>
               </div>
 
               <div class="tour-bottom">
-                <p class="offline-status">
+                <p
+                  class="offline-status"
+                  class:offline-ready={downloadState[tour.id]?.status === "downloaded"}
+                >
+                  {#if downloadState[tour.id]?.status === "downloaded"}
+                    <span class="offline-ready-icon" aria-hidden="true">✓</span>
+                  {/if}
                   Offline:
                   {#if downloadState[tour.id]?.status === "downloaded"}
                     listo
@@ -390,28 +436,77 @@
                       {formatMB(tour.offline?.totalBytes)}
                     {/if}
                   {/if}
+                  <span class="offline-action">
+                    {#if downloadState[tour.id]?.status === "downloaded"}
+                      <button
+                        type="button"
+                        on:click={() => deleteDownload(tour)}
+                        class="btn-link offline-action-btn"
+                        aria-label={`Eliminar descarga del tour: ${tour.label}`}
+                      >
+                        <svg
+                          class="offline-action-icon"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <path
+                            d="M9 3h6l1 2h5v2H3V5h5l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9zm-1 12h12a2 2 0 0 0 2-2V7H4v12a2 2 0 0 0 2 2z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                        Eliminar
+                      </button>
+                    {:else if downloadState[tour.id]?.status !== "downloading" && downloadState[tour.id]?.status !== "error"}
+                      <button
+                        type="button"
+                        on:click={() => requestDownload(tour)}
+                        class="btn-link offline-action-btn"
+                        aria-label={`Descargar tour: ${tour.label}`}
+                      >
+                        <svg
+                          class="offline-action-icon"
+                          viewBox="0 0 24 24"
+                          width="16"
+                          height="16"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <path
+                            d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3 1.4 1.42L12 17.41l-4.7-4.7 1.4-1.42 2.3 2.3V4a1 1 0 0 1 1-1zm-7 16h14v2H5v-2z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                        Descargar
+                      </button>
+                    {/if}
+                  </span>
                 </p>
 
-                <div class="offline-actions">
-                  {#if downloadState[tour.id]?.status === "downloaded"}
-                    <button
-                      type="button"
-                      on:click={() => deleteDownload(tour)}
-                      class="btn btn-delete"
-                      aria-label={`Eliminar descarga del tour ${tour.label}`}
-                    >
-                      Eliminar
-                    </button>
-                  {:else if downloadState[tour.id]?.status === "downloading"}
-                    <button
-                      type="button"
-                      on:click={() => resetDownload(tour)}
-                      class="btn btn-reset"
-                      aria-label={`Restablecer descarga del tour ${tour.label}`}
-                    >
-                      Restablecer
-                    </button>
-                    {#if isStalled(downloadState[tour.id]) || downloadState[tour.id]?.errorMessage}
+                {#if downloadState[tour.id]?.status === "downloading" || downloadState[tour.id]?.status === "error"}
+                  <div class="offline-actions">
+                    {#if downloadState[tour.id]?.status === "downloading"}
+                      <button
+                        type="button"
+                        on:click={() => resetDownload(tour)}
+                        class="btn btn-reset"
+                        aria-label={`Restablecer descarga del tour ${tour.label}`}
+                      >
+                        Restablecer
+                      </button>
+                      {#if isStalled(downloadState[tour.id]) || downloadState[tour.id]?.errorMessage}
+                        <button
+                          type="button"
+                          on:click={() => resetDownload(tour, true)}
+                          class="btn btn-retry"
+                          aria-label={`Reintentar descarga del tour ${tour.label}`}
+                        >
+                          Reintentar
+                        </button>
+                      {/if}
+                    {:else}
                       <button
                         type="button"
                         on:click={() => resetDownload(tour, true)}
@@ -420,39 +515,17 @@
                       >
                         Reintentar
                       </button>
+                      <button
+                        type="button"
+                        on:click={() => resetDownload(tour)}
+                        class="btn btn-reset"
+                        aria-label={`Restablecer descarga del tour ${tour.label}`}
+                      >
+                        Restablecer
+                      </button>
                     {/if}
-                  {:else if downloadState[tour.id]?.status === "error"}
-                    <button
-                      type="button"
-                      on:click={() => resetDownload(tour, true)}
-                      class="btn btn-retry"
-                      aria-label={`Reintentar descarga del tour ${tour.label}`}
-                    >
-                      Reintentar
-                    </button>
-                    <button
-                      type="button"
-                      on:click={() => resetDownload(tour)}
-                      class="btn btn-reset"
-                      aria-label={`Restablecer descarga del tour ${tour.label}`}
-                    >
-                      Restablecer
-                    </button>
-                  {:else}
-                    <button
-                      type="button"
-                      on:click={() => requestDownload(tour)}
-                      class="btn btn-download btn-secondary"
-                      class:is-downloading={downloadState[tour.id]?.status === "downloading"}
-                      disabled={downloadState[tour.id]?.status === "downloading"}
-                      aria-label={`Descargar tour: ${tour.label}${
-                        tour.offline?.totalBytes ? ` (${formatMB(tour.offline?.totalBytes)})` : ""
-                      }`}
-                    >
-                      Descargar para usar sin conexión
-                    </button>
-                  {/if}
-                </div>
+                  </div>
+                {/if}
               </div>
 
               {#if downloadState[tour.id]?.status === "downloading"}
@@ -495,7 +568,6 @@
                 </div>
               {/if}
 
-              <p class="tour-hint">Recomendado: descargá antes de salir del Wi-Fi.</p>
             </div>
           </article>
         {/each}

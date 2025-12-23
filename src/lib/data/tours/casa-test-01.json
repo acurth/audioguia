@@ -1,5 +1,5 @@
 {
-  "id": "nvd-casa",
+  "id": "casa-test-01",
   "name": "Test: vuelta por casa",
   "points": [
     {
@@ -9,7 +9,7 @@
       "lng": -71.347856,
       "alt": 777.13,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/001.mp3"
+      "audio": "audio/tours/casa-test-01/es/001.mp3"
     },
     {
       "id": "p2",
@@ -18,7 +18,7 @@
       "lng": -71.346817,
       "alt": 778.05,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/002.mp3"
+      "audio": "audio/tours/casa-test-01/es/002.mp3"
     },
     {
       "id": "p3",
@@ -27,7 +27,7 @@
       "lng": -71.34665,
       "alt": 784.25,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/003.mp3"
+      "audio": "audio/tours/casa-test-01/es/003.mp3"
     },
     {
       "id": "p4",
@@ -36,7 +36,7 @@
       "lng": -71.34665,
       "alt": 784.25,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/004.mp3"
+      "audio": "audio/tours/casa-test-01/es/004.mp3"
     },
     {
       "id": "p5",
@@ -45,7 +45,7 @@
       "lng": -71.347587,
       "alt": 793.72,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/005.mp3"
+      "audio": "audio/tours/casa-test-01/es/005.mp3"
     },
     {
       "id": "p6",
@@ -54,7 +54,7 @@
       "lng": -71.348444,
       "alt": 795.79,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/006.mp3"
+      "audio": "audio/tours/casa-test-01/es/006.mp3"
     },
     {
       "id": "p7",
@@ -63,7 +63,7 @@
       "lng": -71.348444,
       "alt": 795.79,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/007.mp3"
+      "audio": "audio/tours/casa-test-01/es/007.mp3"
     },
     {
       "id": "p8",
@@ -72,7 +72,7 @@
       "lng": -71.349257,
       "alt": 789.05,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/008.mp3"
+      "audio": "audio/tours/casa-test-01/es/008.mp3"
     },
     {
       "id": "p9",
@@ -81,7 +81,7 @@
       "lng": -71.349876,
       "alt": 786.87,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/009.mp3"
+      "audio": "audio/tours/casa-test-01/es/009.mp3"
     },
     {
       "id": "p10",
@@ -90,7 +90,7 @@
       "lng": -71.349876,
       "alt": 786.87,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/010.mp3"
+      "audio": "audio/tours/casa-test-01/es/010.mp3"
     },
     {
       "id": "p11",
@@ -99,7 +99,7 @@
       "lng": -71.349547,
       "alt": 777.91,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/011.mp3"
+      "audio": "audio/tours/casa-test-01/es/011.mp3"
     },
     {
       "id": "p12",
@@ -108,7 +108,7 @@
       "lng": -71.349547,
       "alt": 777.91,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/012.mp3"
+      "audio": "audio/tours/casa-test-01/es/012.mp3"
     },
     {
       "id": "p13",
@@ -117,7 +117,7 @@
       "lng": -71.348964,
       "alt": 777.21,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/013.mp3"
+      "audio": "audio/tours/casa-test-01/es/013.mp3"
     },
     {
       "id": "p14",
@@ -126,7 +126,7 @@
       "lng": -71.348342,
       "alt": 781.03,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/014.mp3"
+      "audio": "audio/tours/casa-test-01/es/014.mp3"
     },
     {
       "id": "p15",
@@ -135,7 +135,7 @@
       "lng": -71.348441,
       "alt": 780.64,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/015.mp3"
+      "audio": "audio/tours/casa-test-01/es/015.mp3"
     },
     {
       "id": "p16",
@@ -144,74 +144,74 @@
       "lng": -71.348441,
       "alt": 780.64,
       "radius": 20,
-      "audio": "audio/tours/nvd-casa/es/016.mp3"
+      "audio": "audio/tours/casa-test-01/es/016.mp3"
     }
   ],
   "offline": {
     "totalBytes": 5381412,
     "files": [
       {
-        "path": "audio/tours/nvd-casa/es/001.mp3",
+        "path": "audio/tours/casa-test-01/es/001.mp3",
         "bytes": 407838
       },
       {
-        "path": "audio/tours/nvd-casa/es/002.mp3",
+        "path": "audio/tours/casa-test-01/es/002.mp3",
         "bytes": 371285
       },
       {
-        "path": "audio/tours/nvd-casa/es/003.mp3",
+        "path": "audio/tours/casa-test-01/es/003.mp3",
         "bytes": 362937
       },
       {
-        "path": "audio/tours/nvd-casa/es/004.mp3",
+        "path": "audio/tours/casa-test-01/es/004.mp3",
         "bytes": 349325
       },
       {
-        "path": "audio/tours/nvd-casa/es/005.mp3",
+        "path": "audio/tours/casa-test-01/es/005.mp3",
         "bytes": 334257
       },
       {
-        "path": "audio/tours/nvd-casa/es/006.mp3",
+        "path": "audio/tours/casa-test-01/es/006.mp3",
         "bytes": 261813
       },
       {
-        "path": "audio/tours/nvd-casa/es/007.mp3",
+        "path": "audio/tours/casa-test-01/es/007.mp3",
         "bytes": 245431
       },
       {
-        "path": "audio/tours/nvd-casa/es/008.mp3",
+        "path": "audio/tours/casa-test-01/es/008.mp3",
         "bytes": 359101
       },
       {
-        "path": "audio/tours/nvd-casa/es/009.mp3",
+        "path": "audio/tours/casa-test-01/es/009.mp3",
         "bytes": 329031
       },
       {
-        "path": "audio/tours/nvd-casa/es/010.mp3",
+        "path": "audio/tours/casa-test-01/es/010.mp3",
         "bytes": 148458
       },
       {
-        "path": "audio/tours/nvd-casa/es/011.mp3",
+        "path": "audio/tours/casa-test-01/es/011.mp3",
         "bytes": 241870
       },
       {
-        "path": "audio/tours/nvd-casa/es/012.mp3",
+        "path": "audio/tours/casa-test-01/es/012.mp3",
         "bytes": 311070
       },
       {
-        "path": "audio/tours/nvd-casa/es/013.mp3",
+        "path": "audio/tours/casa-test-01/es/013.mp3",
         "bytes": 260445
       },
       {
-        "path": "audio/tours/nvd-casa/es/014.mp3",
+        "path": "audio/tours/casa-test-01/es/014.mp3",
         "bytes": 245166
       },
       {
-        "path": "audio/tours/nvd-casa/es/015.mp3",
+        "path": "audio/tours/casa-test-01/es/015.mp3",
         "bytes": 140325
       },
       {
-        "path": "audio/tours/nvd-casa/es/016.mp3",
+        "path": "audio/tours/casa-test-01/es/016.mp3",
         "bytes": 1013060
       }
     ]
