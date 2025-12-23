@@ -1,0 +1,20 @@
+DirectoryIndex index.html
+Options -MultiViews
+RewriteEngine On
+
+# 0) Si existe un archivo o carpeta real, servilo tal cual
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 1) Aliases "lindos" (ajustá estos a tus slugs reales)
+#    Ejemplos (poné acá los que quieras mantener):
+RewriteRule ^arrayanes/?$ sendero-arrayanes-audio-01.html [L]
+RewriteRule ^test-casa/?$ casa-test-01.html [L]
+
+# 2) Si existe algo.html, servirlo para /algo o /algo/
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+# 3) Fallback SPA: todo lo demás va a index.html
+RewriteRule ^ index.html [L]

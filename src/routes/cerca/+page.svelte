@@ -3,6 +3,7 @@
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
+  import type { DownloadState } from "$lib/stores/offline";
   import TourCard from "$lib/components/TourCard.svelte";
 
   type Point = {
@@ -21,12 +22,13 @@
     offline?: OfflineManifest;
   };
 
-  type TourLink = {
+  type TourRuntime = {
     id: string;
     slug: string;
-    label: string;
+    name: string;
     points: Point[];
     ctaLabel: string;
+    sizeBytes?: number;
     offline?: OfflineManifest;
     raw: TourJson;
   };
@@ -46,26 +48,35 @@
     "casa-test-01": "Abrir Test casa"
   };
 
-  const tours: TourLink[] = Object.entries(tourModules).map(([path, data]) => {
+  const tours: TourRuntime[] = Object.entries(tourModules).map(([path, data]) => {
     const filename = path.split("/").pop() ?? "";
     const idFromFile = filename.replace(".json", "");
     const id = typeof data.id === "string" ? data.id : idFromFile;
     const slug = typeof data.slug === "string" ? data.slug : id;
-    const label = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
+    const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
     const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
     const points = Array.isArray(data.points) ? data.points : [];
-    return { id, slug, label, points, ctaLabel, offline: data.offline, raw: data };
+    return {
+      id,
+      slug,
+      name,
+      points,
+      ctaLabel,
+      sizeBytes: data.offline?.totalBytes,
+      offline: data.offline,
+      raw: data
+    };
   });
 
   type LocationStatus = "loading" | "ready" | "denied" | "error";
   let locationStatus: LocationStatus = "loading";
   let locationMessage = "";
   let userPosition: { lat: number; lng: number } | null = null;
-  let downloadState: Record<
-    string,
-    { status?: string; bytes?: number; lastUpdate?: number; errorMessage?: string }
-  > = {};
+  let downloadState: Record<string, DownloadState> = {};
+  let sortedTours: Array<TourRuntime & { distance: number }> = [];
   let unsubscribeStore: (() => void) | null = null;
+
+  const appBase = base;
 
   function toRad(value: number) {
     return (value * Math.PI) / 180;
@@ -91,17 +102,18 @@
 
   function setState(
     id: string,
-    next: { status?: string; bytes?: number; lastUpdate?: number; errorMessage?: string }
+    next: Partial<DownloadState>
   ) {
     setDownloadState(id, next);
   }
 
-  async function requestDownload(tour: TourLink) {
+  async function requestDownload(tour: TourRuntime) {
     if (!browser || !("serviceWorker" in navigator)) return;
     setState(tour.id, {
       status: "downloading",
       bytes: tour.offline?.totalBytes,
-      lastUpdate: Date.now()
+      lastUpdate: Date.now(),
+      cacheResult: undefined
     });
 
     const files = tour.offline?.files?.map((f) => f.path) ?? [];
@@ -119,14 +131,14 @@
     });
   }
 
-  async function deleteDownload(tour: TourLink) {
+  async function deleteDownload(tour: TourRuntime) {
     if (!browser || !("serviceWorker" in navigator)) return;
     const registration = await navigator.serviceWorker.ready;
     registration.active?.postMessage({ type: "delete-tour", id: tour.id });
     setState(tour.id, { status: "idle", bytes: tour.offline?.totalBytes });
   }
 
-  async function resetDownload(tour: TourLink, restart = false) {
+  async function resetDownload(tour: TourRuntime, restart = false) {
     if (!browser || !("caches" in window)) return;
     const cacheName = `audioguia-tour-${tour.id}`;
     await caches.delete(cacheName);
@@ -142,22 +154,26 @@
     return Date.now() - lastUpdate > 30000;
   }
 
-  $: sortedTours =
-    userPosition === null
-      ? []
-      : tours
-          .map((tour) => {
-            const firstPoint = tour.points[0];
-            if (!firstPoint || typeof firstPoint.lat !== "number" || typeof firstPoint.lng !== "number") {
-              return { ...tour, distance: Number.POSITIVE_INFINITY };
-            }
-            const distance = getDistanceMeters(userPosition, {
-              lat: firstPoint.lat,
-              lng: firstPoint.lng
-            });
-            return { ...tour, distance };
-          })
-          .sort((a, b) => a.distance - b.distance);
+  $: {
+    if (!userPosition) {
+      sortedTours = [];
+    } else {
+      const position = userPosition;
+      sortedTours = tours
+        .map((tour) => {
+          const firstPoint = tour.points[0];
+          if (!firstPoint || typeof firstPoint.lat !== "number" || typeof firstPoint.lng !== "number") {
+            return { ...tour, distance: Number.POSITIVE_INFINITY };
+          }
+          const distance = getDistanceMeters(position, {
+            lat: firstPoint.lat,
+            lng: firstPoint.lng
+          });
+          return { ...tour, distance };
+        })
+        .sort((a, b) => a.distance - b.distance);
+    }
+  }
 
   onMount(() => {
     if (browser) {
@@ -216,7 +232,7 @@
       <div class="tour-list">
         {#each sortedTours as tour}
           <TourCard
-            {base}
+            base={appBase}
             tour={tour}
             state={downloadState[tour.id]}
             metaText={formatDistance(tour.distance)}

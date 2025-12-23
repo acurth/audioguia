@@ -3,6 +3,7 @@
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
+  import type { DownloadState } from "$lib/stores/offline";
   import TourCard from "$lib/components/TourCard.svelte";
 
   type OfflineFile = { path: string; bytes: number };
@@ -18,14 +19,9 @@
   type TourLink = {
     id: string;
     slug: string;
-    label: string;
+    name: string;
     ctaLabel: string;
-    offline?: OfflineManifest;
-  };
-
-  type DownloadState = {
-    status?: "idle" | "downloading" | "downloaded" | "error";
-    bytes?: number;
+    sizeBytes?: number;
   };
 
   const tourModules = import.meta.glob("$lib/data/tours/*.json", {
@@ -48,15 +44,17 @@
     const idFromFile = filename.replace(".json", "");
     const id = typeof data.id === "string" ? data.id : idFromFile;
     const slug = typeof data.slug === "string" ? data.slug : id;
-    const label = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
+    const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
     const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
-    const offline = data.offline;
-    return { id, slug, label, ctaLabel, offline };
+    const sizeBytes = data.offline?.totalBytes;
+    return { id, slug, name, ctaLabel, sizeBytes };
   });
 
   let downloadState: Record<string, DownloadState> = {};
   let unsubscribeStore: (() => void) | null = null;
   const noop = () => undefined;
+
+  const appBase = base;
 
   async function deleteDownload(tour: TourLink) {
     if (!browser || !("serviceWorker" in navigator)) return;
@@ -97,7 +95,7 @@
       <div class="tour-list">
         {#each offlineTours as tour}
           <TourCard
-            {base}
+            base={appBase}
             tour={tour}
             state={downloadState[tour.id]}
             onRequestDownload={noop}

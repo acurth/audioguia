@@ -7,13 +7,66 @@ declare const self: ServiceWorkerGlobalScope;
 const SHELL_CACHE = `audioguia-shell-${version}`;
 const TOUR_CACHE_PREFIX = "audioguia-tour-";
 
+const scopeUrl = new URL(self.registration.scope);
+const scopePath = scopeUrl.pathname.replace(/\/$/, "");
+
 const toAbsolute = (path: string) => new URL(path, self.registration.scope).href;
 
-const shellAssets = [...build, ...files].map(toAbsolute);
+const isCacheableUrl = (url: string) => {
+  const target = new URL(url, self.registration.scope);
+  if (target.origin !== self.location.origin) return false;
+  const pathname = target.pathname;
+  if (pathname.startsWith("/.")) return false;
+  if (pathname.startsWith("/.well-known/")) return false;
+  if (scopePath && !pathname.startsWith(scopePath)) return false;
+  return true;
+};
+
+const shellAssetCandidates = [...build, ...files].map(toAbsolute);
+const shellAssets = shellAssetCandidates.filter(isCacheableUrl);
+
+async function logNonOkResponses(urls: string[], label: string) {
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        console.warn(`[sw-cache-debug] ${label} ${response.status} ${url}`);
+      }
+    } catch (err) {
+      console.warn(`[sw-cache-debug] ${label} fetch failed ${url}`, err);
+    }
+  }
+}
+
+async function cacheUrlsSafely(cache: Cache, urls: string[]) {
+  const failedUrls: string[] = [];
+  let okCount = 0;
+
+  for (const url of urls) {
+    try {
+      await cache.add(url);
+      okCount += 1;
+    } catch (err) {
+      failedUrls.push(url);
+      console.error("Failed to cache", url, err);
+    }
+  }
+
+  return {
+    okCount,
+    failCount: failedUrls.length,
+    failedUrls
+  };
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(shellAssets)).then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(SHELL_CACHE);
+      await logNonOkResponses(shellAssetCandidates, "shell");
+      await cacheUrlsSafely(cache, shellAssets);
+      await self.skipWaiting();
+    })()
   );
 });
 
@@ -44,12 +97,18 @@ async function cacheTourAssets(payload: {
   const cache = await caches.open(cacheName);
 
   const urls = new Set<string>();
+  const candidates: string[] = [];
   for (const f of payload.files ?? []) {
-    urls.add(toAbsolute(f));
+    const url = toAbsolute(f);
+    candidates.push(url);
+    if (isCacheableUrl(url)) {
+      urls.add(url);
+    }
   }
 
   const total = urls.size;
   let completed = 0;
+  const failedUrls: string[] = [];
 
   await notifyClients({
     type: "tour-progress",
@@ -58,6 +117,8 @@ async function cacheTourAssets(payload: {
     completed,
     total
   });
+
+  await logNonOkResponses(candidates, `tour:${payload.id}`);
 
   for (const url of urls) {
     try {
@@ -72,6 +133,7 @@ async function cacheTourAssets(payload: {
         url
       });
     } catch (err) {
+      failedUrls.push(url);
       console.error("Failed to cache", url, err);
       await notifyClients({
         type: "tour-progress",
@@ -94,13 +156,18 @@ async function cacheTourAssets(payload: {
   });
 
   if (payload.json) {
-    const jsonUrl = toAbsolute(`/offline/tours/${payload.slug}.json`);
-    await cache.put(
-      jsonUrl,
-      new Response(payload.json, {
-        headers: { "Content-Type": "application/json" }
-      })
-    );
+    const jsonUrl = toAbsolute(`offline/tours/${payload.slug}.json`);
+    try {
+      await cache.put(
+        jsonUrl,
+        new Response(payload.json, {
+          headers: { "Content-Type": "application/json" }
+        })
+      );
+    } catch (err) {
+      failedUrls.push(jsonUrl);
+      console.error("Failed to cache", jsonUrl, err);
+    }
   }
 
   await notifyClients({
@@ -111,7 +178,13 @@ async function cacheTourAssets(payload: {
     total
   });
 
-  await notifyClients({ type: "tour-downloaded", id: payload.id });
+  const result = {
+    okCount: completed,
+    failCount: failedUrls.length,
+    failedUrls
+  };
+
+  await notifyClients({ type: "tour-downloaded", id: payload.id, result });
 }
 
 async function deleteTourAssets(id: string) {

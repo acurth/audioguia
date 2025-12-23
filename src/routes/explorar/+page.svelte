@@ -4,6 +4,7 @@
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
+  import type { DownloadState } from "$lib/stores/offline";
   import TourCard from "$lib/components/TourCard.svelte";
 
   type OfflineFile = { path: string; bytes: number };
@@ -21,9 +22,10 @@
   type TourLink = {
     id: string;
     slug: string;
-    label: string;
+    name: string;
     ctaLabel: string;
     theme?: string;
+    sizeBytes?: number;
     offline?: OfflineManifest;
     raw: TourJson;
   };
@@ -50,36 +52,20 @@
 
       const id = typeof data.id === "string" ? data.id : idFromFile;
       const slug = typeof data.slug === "string" ? data.slug : id;
-      const label = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
+      const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
       const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
       const theme = typeof data.theme === "string" ? data.theme : undefined;
       const offline = data.offline;
+      const sizeBytes = data.offline?.totalBytes;
 
-      return { id, slug, label, ctaLabel, theme, offline, raw: data };
+      return { id, slug, name, ctaLabel, theme, sizeBytes, offline, raw: data };
     })
     .sort((a, b) => {
       const aIsTest = /test|casa/i.test(a.id);
       const bIsTest = /test|casa/i.test(b.id);
       if (aIsTest !== bIsTest) return aIsTest ? 1 : -1;
-      return a.label.localeCompare(b.label);
+      return a.name.localeCompare(b.name);
     });
-
-  type DownloadStage = "preparing" | "downloading" | "saving" | "done" | "error";
-
-  type DownloadState = {
-    status: "idle" | "downloading" | "downloaded" | "error";
-    bytes?: number;
-    downloadedBytes?: number;
-    progress?: number;
-    stage?: DownloadStage;
-    completedFiles?: number;
-    totalFiles?: number;
-    lastUpdate?: number;
-    lastAnnouncedProgress?: number;
-    lastAnnouncedAt?: number;
-    screenreaderText?: string;
-    errorMessage?: string;
-  };
 
   const TOUR_CACHE_PREFIX = "audioguia-tour-";
   const STALL_TIMEOUT_MS = 30000;
@@ -92,6 +78,8 @@
   let hasInitializedAnnouncements = false;
   let unsubscribeStore: (() => void) | null = null;
   let now = Date.now();
+
+  const appBase = base;
 
   function loadState() {
     if (!browser) return;
@@ -116,11 +104,11 @@
     return;
   }
 
-  function setState(id: string, next: DownloadState) {
+  function setState(id: string, next: Partial<DownloadState>) {
     setDownloadState(id, next);
   }
 
-  function getStageLabel(stage?: DownloadStage): string {
+  function getStageLabel(stage?: string): string {
     if (stage === "preparing") return "Preparando…";
     if (stage === "saving") return "Guardando para uso offline…";
     if (stage === "done") return "Listo";
@@ -140,7 +128,7 @@
   $: {
     for (const tour of tours) {
       if (downloadState[tour.id]?.status === "downloaded" && !announcedReady[tour.id]) {
-        liveMessage = `Tour listo sin conexión: ${tour.label}`;
+        liveMessage = `Tour listo sin conexión: ${tour.name}`;
         announcedReady = { ...announcedReady, [tour.id]: true };
       }
     }
@@ -221,7 +209,8 @@
       stage: "preparing",
       completedFiles: 0,
       totalFiles: tour.offline?.files?.length ?? 0,
-      lastUpdate: Date.now()
+      lastUpdate: Date.now(),
+      cacheResult: undefined
     });
 
     const files = tour.offline?.files?.map((f) => f.path) ?? [];
@@ -268,7 +257,7 @@
           const keys = await cache.keys();
           if (keys.length === 0) {
             const prev = downloadState[tour.id];
-            const label = `Descarga de ${tour.label}`;
+            const label = `Descarga de ${tour.name}`;
             const updated = {
               ...(prev ?? {}),
               status: "error",
@@ -306,7 +295,10 @@
             progress: 100,
             stage: "done",
             downloadedBytes: bytes,
-            lastUpdate: Date.now()
+            lastUpdate: Date.now(),
+            cacheResult: data.result as
+              | { okCount: number; failCount: number; failedUrls: string[] }
+              | undefined
           });
         }
         if (data.type === "tour-deleted") {
@@ -328,7 +320,7 @@
           const bytesTotal = tour?.offline?.totalBytes;
           const downloadedBytes =
             bytesTotal && totalFiles > 0 ? Math.round((completedFiles / totalFiles) * bytesTotal) : 0;
-          const stage = (data.stage as DownloadStage) ?? "downloading";
+          const stage = (data.stage as DownloadState["stage"]) ?? "downloading";
           const errorMessage = typeof data.error === "string" ? data.error : undefined;
           const nextState: DownloadState = {
             ...(prev ?? {}),
@@ -342,7 +334,7 @@
             lastUpdate: Date.now(),
             errorMessage
           };
-          const label = `Descarga de ${tour?.label ?? "tour"}`;
+          const label = `Descarga de ${tour?.name ?? "tour"}`;
           const announcer = updateScreenreaderText(prev, nextState, label, progress);
           setState(tourId, { ...nextState, ...announcer });
         }
@@ -375,7 +367,7 @@
       {:else}
         {#each tours as tour}
           <TourCard
-            {base}
+            base={appBase}
             tour={tour}
             state={downloadState[tour.id]}
             onRequestDownload={requestDownload}

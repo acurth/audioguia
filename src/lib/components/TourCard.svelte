@@ -1,35 +1,31 @@
 <script lang="ts">
-  type OfflineFile = { path: string; bytes: number };
-  type OfflineManifest = { totalBytes?: number; files?: OfflineFile[] };
+  import type { DownloadState } from "$lib/stores/offline";
 
-  type DownloadState = {
-    status?: "idle" | "downloading" | "downloaded" | "error";
-    bytes?: number;
-    downloadedBytes?: number;
-    progress?: number;
-    stage?: "preparing" | "downloading" | "saving" | "done" | "error";
-    completedFiles?: number;
-    totalFiles?: number;
-    screenreaderText?: string;
-    errorMessage?: string;
-  };
-
-  type TourLink = {
-    id: string;
-    slug: string;
-    label: string;
-    ctaLabel: string;
-    offline?: OfflineManifest;
-  };
-
-  export let tour: TourLink;
+  export let tour: TourSummary;
   export let base: string;
   export let state: DownloadState | undefined;
-  export let metaText: string | undefined;
-  export let onRequestDownload: (tour: TourLink) => void;
-  export let onDeleteDownload: (tour: TourLink) => void;
-  export let onResetDownload: (tour: TourLink, restart?: boolean) => void;
+  export let metaText: string | undefined = undefined;
+  export let onRequestDownload: TourAction;
+  export let onDeleteDownload: TourAction;
+  export let onResetDownload: TourResetAction;
   export let isStalled: (state: DownloadState | undefined) => boolean = () => false;
+
+  type TourSummary = {
+    id: string;
+    name: string;
+    distance?: number;
+    sizeBytes?: number;
+    slug?: string;
+    ctaLabel?: string;
+  };
+  type TourAction = {
+    bivarianceHack(tour: TourSummary): void | Promise<void>;
+  }["bivarianceHack"];
+  type TourResetAction = {
+    bivarianceHack(tour: TourSummary, restart?: boolean): void | Promise<void>;
+  }["bivarianceHack"];
+
+  const defaultCtaLabel = "Abrir tour";
 
   function formatMB(bytes?: number) {
     if (!bytes) return "0 MB";
@@ -66,10 +62,14 @@
 <article class="tour-card" class:offline-ready={state?.status === "downloaded"}>
   <div class="tour-card-inner">
     <div class="tour-top">
-      <h2 class="sr-only">{tour.label}</h2>
+      <h2 class="sr-only">{tour.name}</h2>
       <div class="tour-actions">
-        <a href={`${base}/${tour.slug}`} class="btn btn-primary tour-cta" aria-label={tour.ctaLabel}>
-          {tour.ctaLabel}
+        <a
+          href={`${base}/${tour.slug ?? tour.id}`}
+          class="btn btn-primary tour-cta"
+          aria-label={tour.ctaLabel ?? defaultCtaLabel}
+        >
+          {tour.ctaLabel ?? defaultCtaLabel}
         </a>
       </div>
     </div>
@@ -92,12 +92,12 @@
         {:else}
           no descargado
         {/if}
-        {#if tour.offline?.totalBytes}
+        {#if tour.sizeBytes}
           · {#if state?.status === "downloading"}
-            {formatMB(getDownloadedBytes(state, tour.offline?.totalBytes))}
-            de {formatMB(tour.offline?.totalBytes)}
+            {formatMB(getDownloadedBytes(state, tour.sizeBytes))}
+            de {formatMB(tour.sizeBytes)}
           {:else}
-            {formatMB(tour.offline?.totalBytes)}
+            {formatMB(tour.sizeBytes)}
           {/if}
         {/if}
         <span class="offline-action">
@@ -106,7 +106,7 @@
               type="button"
               on:click={() => onDeleteDownload(tour)}
               class="btn-link offline-action-btn"
-              aria-label={`Eliminar descarga del tour: ${tour.label}`}
+              aria-label={`Eliminar descarga del tour: ${tour.name}`}
             >
               <svg
                 class="offline-action-icon"
@@ -128,7 +128,7 @@
               type="button"
               on:click={() => onRequestDownload(tour)}
               class="btn-link offline-action-btn"
-              aria-label={`Descargar tour: ${tour.label}`}
+              aria-label={`Descargar tour: ${tour.name}`}
             >
               <svg
                 class="offline-action-icon"
@@ -156,7 +156,7 @@
               type="button"
               on:click={() => onResetDownload(tour)}
               class="btn btn-reset"
-              aria-label={`Restablecer descarga del tour ${tour.label}`}
+              aria-label={`Restablecer descarga del tour ${tour.name}`}
             >
               Restablecer
             </button>
@@ -165,7 +165,7 @@
                 type="button"
                 on:click={() => onResetDownload(tour, true)}
                 class="btn btn-retry"
-                aria-label={`Reintentar descarga del tour ${tour.label}`}
+                aria-label={`Reintentar descarga del tour ${tour.name}`}
               >
                 Reintentar
               </button>
@@ -175,7 +175,7 @@
               type="button"
               on:click={() => onResetDownload(tour, true)}
               class="btn btn-retry"
-              aria-label={`Reintentar descarga del tour ${tour.label}`}
+              aria-label={`Reintentar descarga del tour ${tour.name}`}
             >
               Reintentar
             </button>
@@ -183,7 +183,7 @@
               type="button"
               on:click={() => onResetDownload(tour)}
               class="btn btn-reset"
-              aria-label={`Restablecer descarga del tour ${tour.label}`}
+              aria-label={`Restablecer descarga del tour ${tour.name}`}
             >
               Restablecer
             </button>

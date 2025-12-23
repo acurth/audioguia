@@ -1,23 +1,25 @@
 <script lang="ts">
   import { base } from "$app/paths";
 
+  const appBase = base;
+
   const actions = [
     {
       title: "Recorridos cerca de mí",
       subtitle: "Ver recorridos disponibles según tu ubicación",
-      href: `${base}/cerca`,
+      href: `${appBase}/cerca`,
       ariaLabel: "Ir a Recorridos cerca de mí"
     },
     {
       title: "Recorridos offline",
       subtitle: "Recorridos descargados para usar sin conexión",
-      href: `${base}/offline`,
+      href: `${appBase}/offline`,
       ariaLabel: "Ir a Recorridos offline"
     },
     {
       title: "Explorar recorridos",
       subtitle: "Ver todos los recorridos disponibles",
-      href: `${base}/explorar`,
+      href: `${appBase}/explorar`,
       ariaLabel: "Ir a Explorar recorridos"
     }
   ];
