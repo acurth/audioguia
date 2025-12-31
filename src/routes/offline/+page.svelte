@@ -4,7 +4,7 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import {
-    getDevModeFromSearch,
+    getDevModeFromStorage,
     getTourRecords,
     type TourJson,
     type TourStatus
@@ -35,7 +35,7 @@
     "casa-test-01": "Abrir Test casa"
   };
 
-  const devMode = $derived(browser ? getDevModeFromSearch($page.url.search) : false);
+  const devMode = $derived(browser ? getDevModeFromStorage() : false);
   const tours = $derived(
     getTourRecords(devMode).map(({ id, slug, status, data }) => {
       const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);

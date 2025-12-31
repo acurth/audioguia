@@ -25,6 +25,15 @@
 	const isTrack = $derived(Boolean($page.params.track));
 
 	onMount(() => {
+		const params = new URLSearchParams(window.location.search);
+		if (params.get('dev') === '1') {
+			sessionStorage.setItem('devMode', '1');
+			params.delete('dev');
+			const nextUrl = new URL(window.location.href);
+			nextUrl.search = params.toString();
+			window.history.replaceState({}, '', nextUrl);
+		}
+
 		initOfflineStore();
 		if ('serviceWorker' in navigator) {
 			const swUrl = `${appBase}/service-worker.js`;

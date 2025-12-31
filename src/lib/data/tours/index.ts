@@ -20,8 +20,8 @@ export type TourRecord = {
   data: TourJson;
 };
 
-export const getDevModeFromSearch = (search: string) =>
-  new URLSearchParams(search).get("dev") === "1";
+export const getDevModeFromStorage = () =>
+  typeof sessionStorage !== "undefined" && sessionStorage.getItem("devMode") === "1";
 
 const tourModules = import.meta.glob("$lib/data/tours/*.json", {
   eager: true,
