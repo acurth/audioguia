@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 120">
+  <style>
+    .stroke {
+      stroke: #ffffff;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    .head {
+      fill: #ffffff;
+    }
+    .leg-left {
+      transform-origin: 32px 74px;
+      animation: walk-left 0.9s ease-in-out infinite;
+    }
+    .leg-right {
+      transform-origin: 32px 74px;
+      animation: walk-right 0.9s ease-in-out infinite;
+    }
+    .arm {
+      transform-origin: 32px 52px;
+      animation: arm-swing 0.9s ease-in-out infinite;
+    }
+    .wave {
+      animation: wave-pulse 1.2s ease-in-out infinite;
+    }
+    .wave.second {
+      animation-delay: 0.2s;
+    }
+    .wave.third {
+      animation-delay: 0.4s;
+    }
+    @keyframes walk-left {
+      0% { transform: rotate(14deg); }
+      50% { transform: rotate(-12deg); }
+      100% { transform: rotate(14deg); }
+    }
+    @keyframes walk-right {
+      0% { transform: rotate(-14deg); }
+      50% { transform: rotate(12deg); }
+      100% { transform: rotate(-14deg); }
+    }
+    @keyframes arm-swing {
+      0% { transform: rotate(-10deg); }
+      50% { transform: rotate(8deg); }
+      100% { transform: rotate(-10deg); }
+    }
+    @keyframes wave-pulse {
+      0% { opacity: 0.2; transform: scale(0.9); }
+      50% { opacity: 0.9; transform: scale(1); }
+      100% { opacity: 0.2; transform: scale(0.9); }
+    }
+  </style>
+
+  <symbol id="state-walk" viewBox="0 0 64 120">
+    <circle class="head" cx="32" cy="18" r="8" />
+    <line class="stroke" x1="32" y1="26" x2="32" y2="54" />
+    <line class="stroke arm" x1="32" y1="36" x2="18" y2="48" />
+    <line class="stroke" x1="32" y1="36" x2="46" y2="46" />
+    <line class="stroke leg-left" x1="32" y1="54" x2="18" y2="78" />
+    <line class="stroke leg-right" x1="32" y1="54" x2="46" y2="78" />
+  </symbol>
+
+  <symbol id="state-listen" viewBox="0 0 64 120">
+    <circle class="head" cx="32" cy="18" r="8" />
+    <line class="stroke" x1="32" y1="26" x2="32" y2="54" />
+    <line class="stroke" x1="32" y1="36" x2="18" y2="48" />
+    <line class="stroke" x1="32" y1="36" x2="46" y2="48" />
+    <line class="stroke" x1="32" y1="54" x2="22" y2="78" />
+    <line class="stroke" x1="32" y1="54" x2="42" y2="78" />
+    <path class="stroke wave" d="M46 14c4 4 4 10 0 14" />
+    <path class="stroke wave second" d="M50 10c6 6 6 14 0 20" />
+    <path class="stroke wave third" d="M54 6c8 8 8 18 0 26" />
+  </symbol>
+</svg>

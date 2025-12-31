@@ -3,6 +3,7 @@
   import { base } from "$app/paths";
   import { browser, dev } from "$app/environment";
   import { page } from "$app/stores";
+  import MotionIndicator from "$lib/components/MotionIndicator.svelte";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
 
@@ -41,6 +42,9 @@
   const ACCURACY_MULTIPLIER = 2.5;
   const POOR_ACCURACY_THRESHOLD_METERS = 20;
   const MAX_ACCURACY_FOR_TRIGGER_METERS = 50;
+  const MOTION_DISTANCE_METERS = 8;
+  const MOTION_STILL_METERS = 3;
+  const MOTION_WINDOW_MS = 12000;
 
   const tourModules = import.meta.glob("$lib/data/tours/*.json", {
     eager: true,
@@ -104,6 +108,8 @@
   let currentLng: number | null = null;
   let currentAccuracy: number | null = null;
   let gpsWarningMessage: string | null = null;
+  let isMoving = false;
+  let lastMotionSample: { lat: number; lng: number; time: number } | null = null;
 
   // Distancias dinámicas
   let distanceToFirstMeters: number | null = null;
@@ -303,6 +309,7 @@
 
   function handlePosition(pos: GeolocationPosition) {
     const { latitude, longitude, accuracy } = pos.coords;
+    const now = Date.now();
 
     currentLat = latitude;
     currentLng = longitude;
@@ -332,6 +339,26 @@
       );
     }
     pointDistances = newDistances;
+
+    if (accuracy <= POOR_ACCURACY_THRESHOLD_METERS) {
+      if (!lastMotionSample) {
+        lastMotionSample = { lat: latitude, lng: longitude, time: now };
+      } else if (now - lastMotionSample.time >= MOTION_WINDOW_MS) {
+        const moved = distanceMeters(
+          lastMotionSample.lat,
+          lastMotionSample.lng,
+          latitude,
+          longitude
+        );
+        if (moved >= MOTION_DISTANCE_METERS) {
+          isMoving = true;
+          lastMotionSample = { lat: latitude, lng: longitude, time: now };
+        } else if (moved < MOTION_STILL_METERS) {
+          isMoving = false;
+          lastMotionSample = { lat: latitude, lng: longitude, time: now };
+        }
+      }
+    }
 
     if (!isTracking) return;
 
@@ -415,6 +442,8 @@
   function stopTracking() {
     isTracking = false;
     statusMessage = "Seguimiento detenido";
+    isMoving = false;
+    lastMotionSample = null;
 
     if (watchId !== null && typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.clearWatch(watchId);
@@ -584,10 +613,14 @@
 
   <header class="track-panel">
     <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
-    <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
-      Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
-      caminás. Si el teléfono bloquea la pantalla, puede pausar el seguimiento.
-    </p>
+    {#if isTracking}
+      <MotionIndicator isTracking={isTracking} isMoving={isMoving} />
+    {:else}
+      <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
+        Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
+        caminás. Si el teléfono bloquea la pantalla, puede pausar el seguimiento.
+      </p>
+    {/if}
   </header>
 
   {#if selectedTour}
