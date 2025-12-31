@@ -381,7 +381,7 @@
 <div class="page">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <main id="main" class="content ag-main debug-box">
+  <main id="main" class="content ag-main">
     <h1 class="hero-title">Recorridos cerca de mí</h1>
     <p class="hero-subtitle">Ver recorridos disponibles según tu ubicación.</p>
     <p class="hero-subtitle">
@@ -393,7 +393,7 @@
         {locationStatus === "loading" ? "Buscando tu ubicación…" : locationMessage}
       </p>
     {:else}
-      <div class="tour-list debug-box">
+      <div class="tour-list">
         {#each sortedTours as tour}
           <TourCard
             base={appBase}

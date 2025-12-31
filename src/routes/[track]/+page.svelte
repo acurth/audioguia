@@ -403,14 +403,14 @@
     background-repeat: no-repeat;
   `}
 >
-  <div class="track-header debug-box">
+  <div class="track-header track-panel">
     <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
     <span class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}>
       {isOfflineReady ? "Recorrido offline" : "Recorrido online"}
     </span>
   </div>
 
-  <header class="debug-box">
+  <header class="track-panel">
     <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
     <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
       Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
@@ -443,7 +443,7 @@
   {/if}
 
   <section
-    class="debug-box"
+    class="track-panel"
     style="
       display: flex;
       flex-direction: column;
@@ -477,7 +477,7 @@
   </section>
 
   <section
-    class="debug-box"
+    class="track-panel"
     style="
       width: 100%;
       max-width: 640px;
@@ -489,7 +489,7 @@
     "
   >
     <div
-      class="debug-box"
+      class="track-panel"
       style="
         padding: 1rem;
         border-radius: 0.75rem;

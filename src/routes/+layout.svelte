@@ -75,11 +75,11 @@
 <div class="app-shell">
 	{#if !isTrack}
 		<header class="site-header">
-			<div class="site-header-inner debug-box">
+			<div class="site-header-inner">
 				<a class="site-logo" href={`${appBase}/`} aria-label="Ir al inicio">
 					<img src={logoSrc} alt="Audioguía Natural" class="site-logo-img" />
 				</a>
-				<nav class="site-nav debug-box" aria-label="Navegación principal">
+				<nav class="site-nav" aria-label="Navegación principal">
 					<a href={`${appBase}/`} aria-current={isHome ? 'page' : undefined}>
 						Inicio
 					</a>

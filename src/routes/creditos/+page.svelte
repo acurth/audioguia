@@ -8,11 +8,10 @@
 <div class="page">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <main id="main" class="content ag-main debug-box">
+  <main id="main" class="content ag-main">
     <h1 class="hero-title">Créditos</h1>
 
     <section class="about" aria-labelledby="creditos-meta-title">
-      <h2 id="creditos-meta-title">Información</h2>
       <p>
         <strong>Iniciativa:</strong> COA Tucúquere Bariloche / Aves Argentinas
       </p>

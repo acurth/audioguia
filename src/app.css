@@ -209,7 +209,7 @@ a:hover {
 
 .track-pill.is-offline {
   background: #f3dfbf;
-  color: #1f1f1f;
+  color: #111111;
 }
 
 .track-pill.is-online {
@@ -265,6 +265,13 @@ a:hover {
 
 .track-page .track-pill.is-online {
   background: rgba(11, 90, 160, 0.6);
+}
+
+.track-panel {
+  background: rgba(0, 0, 0, 0.8);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.8rem;
 }
 
 .tracking-dot {
@@ -635,11 +642,4 @@ a:hover {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
-}
-
-.debug-box {
-  background: rgba(0, 0, 0, 0.14);
-  border: 1px solid rgba(0, 0, 0, 0.22);
-  border-radius: 0.75rem;
-  padding: 0.6rem;
 }
