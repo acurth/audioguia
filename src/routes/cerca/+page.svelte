@@ -76,6 +76,10 @@
   let sortedTours: Array<TourRuntime & { distance: number }> = [];
   let unsubscribeStore: (() => void) | null = null;
 
+  const ANNOUNCE_STEP = 2;
+  const ANNOUNCE_INTERVAL_MS = 2000;
+  const STALL_TIMEOUT_MS = 30000;
+
   const appBase = base;
 
   function toRad(value: number) {
@@ -107,17 +111,107 @@
     setDownloadState(id, next);
   }
 
+  function getTourById(id: string) {
+    return tours.find((tour) => tour.id === id);
+  }
+
+  function getStageLabel(stage?: string): string {
+    if (stage === "preparing") return "Preparando…";
+    if (stage === "saving") return "Guardando para uso offline…";
+    if (stage === "done") return "Listo";
+    if (stage === "error") return "Error en la descarga";
+    return "Descargando audios…";
+  }
+
+  function updateScreenreaderText(
+    prev: DownloadState | undefined,
+    next: DownloadState,
+    label: string,
+    progress: number
+  ) {
+    const announceValue =
+      typeof next.completedFiles === "number" ? next.completedFiles : progress;
+    const lastProgress = prev?.lastAnnouncedProgress ?? -ANNOUNCE_STEP;
+    const lastAnnouncedAt = prev?.lastAnnouncedAt ?? 0;
+    const elapsed = Date.now() - lastAnnouncedAt;
+    const shouldAnnounceProgress =
+      announceValue - lastProgress >= ANNOUNCE_STEP || elapsed >= ANNOUNCE_INTERVAL_MS;
+
+    const stageChanged = prev?.stage !== next.stage;
+    const shouldAnnounceStage = stageChanged && next.stage !== "downloading";
+
+    if (next.errorMessage) {
+      return {
+        screenreaderText: `${label}. ${next.errorMessage}`,
+        lastAnnouncedProgress: announceValue,
+        lastAnnouncedAt: Date.now()
+      };
+    }
+
+    if (next.stage === "done") {
+      return {
+        screenreaderText: `${label}. Descarga completa.`,
+        lastAnnouncedProgress: 100,
+        lastAnnouncedAt: Date.now()
+      };
+    }
+
+    if (shouldAnnounceStage) {
+      return {
+        screenreaderText: `${label}. ${getStageLabel(next.stage)}`,
+        lastAnnouncedProgress: announceValue,
+        lastAnnouncedAt: Date.now()
+      };
+    }
+
+    if (shouldAnnounceProgress) {
+      if (typeof next.completedFiles === "number" && typeof next.totalFiles === "number") {
+        return {
+          screenreaderText: `${label}. Descargando ${next.completedFiles} de ${next.totalFiles}.`,
+          lastAnnouncedProgress: announceValue,
+          lastAnnouncedAt: Date.now()
+        };
+      }
+      return {
+        screenreaderText: `${label}. ${progress}% descargado.`,
+        lastAnnouncedProgress: announceValue,
+        lastAnnouncedAt: Date.now()
+      };
+    }
+
+    return {
+      screenreaderText: prev?.screenreaderText,
+      lastAnnouncedProgress: prev?.lastAnnouncedProgress,
+      lastAnnouncedAt: prev?.lastAnnouncedAt
+    };
+  }
+
   async function requestDownload(tour: TourRuntime) {
     if (!browser || !("serviceWorker" in navigator)) return;
     setState(tour.id, {
       status: "downloading",
       bytes: tour.offline?.totalBytes,
+      downloadedBytes: 0,
+      progress: 0,
+      stage: "preparing",
+      completedFiles: 0,
+      totalFiles: tour.offline?.files?.length ?? 0,
       lastUpdate: Date.now(),
+      lastAnnouncedAt: undefined,
+      lastAnnouncedProgress: undefined,
+      screenreaderText: undefined,
+      errorMessage: undefined,
       cacheResult: undefined
     });
 
     const files = tour.offline?.files?.map((f) => f.path) ?? [];
     const jsonPayload = JSON.stringify(tour.raw);
+
+    console.info("[offline] user requested tour download", {
+      id: tour.id,
+      slug: tour.slug,
+      files: files.length
+    });
 
     const registration = await navigator.serviceWorker.ready;
     registration.active?.postMessage({
@@ -151,7 +245,7 @@
   function isStalled(state?: { lastUpdate?: number; status?: string }) {
     if (!state || state.status !== "downloading") return false;
     const lastUpdate = state.lastUpdate ?? 0;
-    return Date.now() - lastUpdate > 30000;
+    return Date.now() - lastUpdate > STALL_TIMEOUT_MS;
   }
 
   $: {
@@ -180,6 +274,65 @@
       initOfflineStore();
       unsubscribeStore = downloadStateStore.subscribe((state) => {
         downloadState = state;
+      });
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        const data = event.data;
+        if (!data) return;
+        if (data.type === "tour-downloaded") {
+          const tourId = data.id as string;
+          const bytes = tours.find((t) => t.id === tourId)?.offline?.totalBytes;
+          setState(tourId, {
+            status: "downloaded",
+            bytes,
+            progress: 100,
+            stage: "done",
+            downloadedBytes: bytes,
+            lastUpdate: Date.now(),
+            cacheResult: data.result as
+              | { okCount: number; failCount: number; failedUrls: string[] }
+              | undefined
+          });
+        }
+        if (data.type === "tour-deleted") {
+          const tourId = data.id as string;
+          const bytes = tours.find((t) => t.id === tourId)?.offline?.totalBytes;
+          setState(tourId, { status: "idle", bytes });
+        }
+        if (data.type === "tour-progress") {
+          const tourId = data.id as string;
+          const prev = downloadState[tourId];
+          const tour = getTourById(tourId);
+          const totalFiles =
+            typeof data.total === "number"
+              ? data.total
+              : tour?.offline?.files?.length ?? prev?.totalFiles ?? 0;
+          const completedFiles =
+            typeof data.completed === "number" ? data.completed : prev?.completedFiles ?? 0;
+          const progress = totalFiles > 0 ? Math.round((completedFiles / totalFiles) * 100) : 0;
+          const bytesTotal = tour?.offline?.totalBytes;
+          const downloadedBytes =
+            bytesTotal && totalFiles > 0 ? Math.round((completedFiles / totalFiles) * bytesTotal) : 0;
+          const stage = (data.stage as DownloadState["stage"]) ?? "downloading";
+          const errorMessage = typeof data.error === "string" ? data.error : undefined;
+          const nextState: DownloadState = {
+            ...(prev ?? {}),
+            status: "downloading",
+            bytes: bytesTotal ?? prev?.bytes,
+            downloadedBytes,
+            progress,
+            stage,
+            completedFiles,
+            totalFiles,
+            lastUpdate: Date.now(),
+            errorMessage
+          };
+          const label = `Descarga de ${tour?.name ?? "tour"}`;
+          const announcer = updateScreenreaderText(prev, nextState, label, progress);
+          setState(tourId, { ...nextState, ...announcer });
+        }
       });
     }
 

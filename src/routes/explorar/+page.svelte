@@ -69,8 +69,8 @@
 
   const TOUR_CACHE_PREFIX = "audioguia-tour-";
   const STALL_TIMEOUT_MS = 30000;
-  const ANNOUNCE_STEP = 10;
-  const ANNOUNCE_INTERVAL_MS = 15000;
+  const ANNOUNCE_STEP = 2;
+  const ANNOUNCE_INTERVAL_MS = 2000;
 
   let downloadState: Record<string, DownloadState> = {};
   let announcedReady: Record<string, boolean> = {};
@@ -150,11 +150,13 @@
     label: string,
     progress: number
   ) {
+    const announceValue =
+      typeof next.completedFiles === "number" ? next.completedFiles : progress;
     const lastProgress = prev?.lastAnnouncedProgress ?? -ANNOUNCE_STEP;
     const lastAnnouncedAt = prev?.lastAnnouncedAt ?? 0;
     const elapsed = Date.now() - lastAnnouncedAt;
     const shouldAnnounceProgress =
-      progress - lastProgress >= ANNOUNCE_STEP || elapsed >= ANNOUNCE_INTERVAL_MS;
+      announceValue - lastProgress >= ANNOUNCE_STEP || elapsed >= ANNOUNCE_INTERVAL_MS;
 
     const stageChanged = prev?.stage !== next.stage;
     const shouldAnnounceStage = stageChanged && next.stage !== "downloading";
@@ -184,9 +186,16 @@
     }
 
     if (shouldAnnounceProgress) {
+      if (typeof next.completedFiles === "number" && typeof next.totalFiles === "number") {
+        return {
+          screenreaderText: `${label}. Descargando ${next.completedFiles} de ${next.totalFiles}.`,
+          lastAnnouncedProgress: announceValue,
+          lastAnnouncedAt: Date.now()
+        };
+      }
       return {
         screenreaderText: `${label}. ${progress}% descargado.`,
-        lastAnnouncedProgress: progress,
+        lastAnnouncedProgress: announceValue,
         lastAnnouncedAt: Date.now()
       };
     }
@@ -210,11 +219,21 @@
       completedFiles: 0,
       totalFiles: tour.offline?.files?.length ?? 0,
       lastUpdate: Date.now(),
+      lastAnnouncedAt: undefined,
+      lastAnnouncedProgress: undefined,
+      screenreaderText: undefined,
+      errorMessage: undefined,
       cacheResult: undefined
     });
 
     const files = tour.offline?.files?.map((f) => f.path) ?? [];
     const jsonPayload = JSON.stringify(tour.raw);
+
+    console.info("[offline] user requested tour download", {
+      id: tour.id,
+      slug: tour.slug,
+      files: files.length
+    });
 
     const registration = await navigator.serviceWorker.ready;
     registration.active?.postMessage({

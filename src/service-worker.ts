@@ -21,22 +21,45 @@ const isHtaccessAsset = (url: string) => {
   }
 };
 
+const getRelativePath = (url: string) => {
+  try {
+    const target = new URL(url, self.registration.scope);
+    if (target.origin !== self.location.origin) return null;
+    const pathname = target.pathname;
+    if (scopePath && !pathname.startsWith(scopePath)) return null;
+    return scopePath ? pathname.slice(scopePath.length) || "/" : pathname;
+  } catch {
+    return null;
+  }
+};
+
 const isCacheableUrl = (url: string) => {
-  const target = new URL(url, self.registration.scope);
-  if (target.origin !== self.location.origin) return false;
-  const pathname = target.pathname;
-  if (scopePath && !pathname.startsWith(scopePath)) return false;
-  const relPath = scopePath ? pathname.slice(scopePath.length) || "/" : pathname;
+  const relPath = getRelativePath(url);
+  if (!relPath) return false;
   if (relPath === "/.htaccess") return false;
   if (relPath.startsWith("/.")) return false;
   if (relPath.startsWith("/.well-known/")) return false;
   return true;
 };
 
-const shellAssetCandidates = [...build, ...files]
+const shellStaticAllowlist = new Set(["/manifest.webmanifest", "/robots.txt"]);
+const shellStaticPrefixes = ["/branding/", "/og/"];
+
+const isStaticShellAsset = (url: string) => {
+  const relPath = getRelativePath(url);
+  if (!relPath) return false;
+  if (relPath.startsWith("/audio/")) return false;
+  if (relPath.startsWith("/offline/tours/")) return false;
+  if (shellStaticAllowlist.has(relPath)) return true;
+  return shellStaticPrefixes.some((prefix) => relPath.startsWith(prefix));
+};
+
+const buildAssets = build.map(toAbsolute);
+const staticShellAssets = files
   .map(toAbsolute)
-  .filter((url) => !isHtaccessAsset(url));
-const shellAssets = shellAssetCandidates.filter(isCacheableUrl);
+  .filter((url) => !isHtaccessAsset(url))
+  .filter(isStaticShellAsset);
+const shellAssets = [...buildAssets, ...staticShellAssets].filter(isCacheableUrl);
 
 async function logNonOkResponses(urls: string[], label: string) {
   for (const url of urls) {
@@ -219,6 +242,7 @@ self.addEventListener("message", (event) => {
   if (!data || typeof data !== "object") return;
 
   if (data.type === "download-tour") {
+    console.info("[sw-download] start tour download (user action)", data.payload?.id);
     event.waitUntil(cacheTourAssets(data.payload));
   }
 
