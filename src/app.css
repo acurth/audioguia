@@ -219,14 +219,21 @@ a:hover {
 }
 
 .track-btn {
-  padding: 0.75rem 1.75rem;
+  padding: 0.65rem 1rem;
   font-size: 1rem;
+  border-radius: 0.9rem;
+  min-height: 44px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .btn-offline {
-  background: #f3dfbf;
-  color: #1f1f1f;
+  background: #ff922b;
+  color: #ffffff;
+}
+
+.track-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .tracking-status {

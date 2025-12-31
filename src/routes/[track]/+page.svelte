@@ -703,6 +703,7 @@
     <button
       on:click={toggleTracking}
       class={`btn track-btn ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
+      aria-label="Iniciar recorrido"
       aria-pressed={isTracking}
     >
       {#if isTracking}
