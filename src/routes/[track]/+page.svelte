@@ -289,8 +289,6 @@
       return;
     }
 
-    initAudioPlayer();
-
     triggeredPointIds = [];
     lastTriggeredPoint = null;
     lastTriggeredAccuracy = null;

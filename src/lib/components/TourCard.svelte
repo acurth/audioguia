@@ -50,6 +50,22 @@
     return 0;
   }
 
+  function getFileLabel(state?: DownloadState): string | undefined {
+    const url = state?.currentUrl;
+    if (!url) return undefined;
+    try {
+      const last = url.split("/").pop();
+      return last || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function getProgressCount(state?: DownloadState): string | null {
+    if (!state || typeof state.totalFiles !== "number") return null;
+    return `${state.completedFiles ?? 0}/${state.totalFiles}`;
+  }
+
   function getStageLabel(stage?: DownloadState["stage"]): string {
     if (stage === "preparing") return "Preparando…";
     if (stage === "saving") return "Guardando para uso offline…";
@@ -86,7 +102,7 @@
         {#if state?.status === "downloaded"}
           listo
         {:else if state?.status === "downloading"}
-          descargando {getProgressPercent(state)}%
+          descargando {getProgressCount(state) ?? `${getProgressPercent(state)}%`}
         {:else if state?.status === "error"}
           {state?.errorMessage ?? "error"}
         {:else}
@@ -211,8 +227,16 @@
           <span>{getStageLabel(state?.stage)}</span>
           {#if state?.totalFiles}
             <span class="progress-stage">
-              Audios {state?.completedFiles ?? 0}/{state?.totalFiles}
+              Descargando {state?.completedFiles ?? 0}/{state?.totalFiles}
             </span>
+          {/if}
+          {#if state?.currentIndex && state?.totalFiles}
+            <span class="progress-stage">
+              Archivo {state?.currentIndex}/{state?.totalFiles}
+            </span>
+          {/if}
+          {#if getFileLabel(state)}
+            <span class="progress-stage">{getFileLabel(state)}</span>
           {/if}
         </div>
         {#if state?.errorMessage}

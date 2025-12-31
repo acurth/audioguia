@@ -11,6 +11,8 @@ export type DownloadState = {
   stage?: DownloadStage;
   completedFiles?: number;
   totalFiles?: number;
+  currentIndex?: number;
+  currentUrl?: string;
   lastUpdate?: number;
   lastAnnouncedProgress?: number;
   lastAnnouncedAt?: number;
@@ -32,6 +34,8 @@ function normalizeDownloadState(next: Partial<DownloadState> | undefined): Downl
     stage: next?.stage,
     completedFiles: next?.completedFiles,
     totalFiles: next?.totalFiles,
+    currentIndex: next?.currentIndex,
+    currentUrl: next?.currentUrl,
     lastUpdate: next?.lastUpdate,
     lastAnnouncedProgress: next?.lastAnnouncedProgress,
     lastAnnouncedAt: next?.lastAnnouncedAt,

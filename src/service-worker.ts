@@ -133,17 +133,17 @@ async function cacheTourAssets(payload: {
   const cacheName = `${TOUR_CACHE_PREFIX}${payload.id}`;
   const cache = await caches.open(cacheName);
 
-  const urls = new Set<string>();
-  const candidates: string[] = [];
+  const orderedUrls: string[] = [];
+  const seen = new Set<string>();
   for (const f of payload.files ?? []) {
     const url = toAbsolute(f);
-    candidates.push(url);
-    if (isCacheableUrl(url)) {
-      urls.add(url);
-    }
+    if (!isCacheableUrl(url)) continue;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    orderedUrls.push(url);
   }
 
-  const total = urls.size;
+  const total = orderedUrls.length;
   let completed = 0;
   const failedUrls: string[] = [];
 
@@ -155,19 +155,50 @@ async function cacheTourAssets(payload: {
     total
   });
 
-  await logNonOkResponses(Array.from(urls), `tour:${payload.id}`);
+  if (orderedUrls.length > 0) {
+    await notifyClients({
+      type: "tour-progress",
+      id: payload.id,
+      stage: "downloading",
+      completed,
+      total,
+      currentIndex: 1,
+      currentUrl: orderedUrls[0]
+    });
+  }
 
-  for (const url of urls) {
+  for (let index = 0; index < orderedUrls.length; index += 1) {
+    const url = orderedUrls[index];
+    const currentIndex = index + 1;
+
+    await notifyClients({
+      type: "tour-progress",
+      id: payload.id,
+      stage: "downloading",
+      completed,
+      total,
+      currentIndex,
+      currentUrl: url
+    });
+
     let cached = false;
     let lastError: unknown = undefined;
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
       try {
-        await cache.add(url);
+        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        await cache.put(url, response.clone());
         cached = true;
         break;
       } catch (err) {
         lastError = err;
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
 
@@ -179,7 +210,8 @@ async function cacheTourAssets(payload: {
         stage: "downloading",
         completed,
         total,
-        url
+        currentIndex,
+        currentUrl: url
       });
     } else {
       failedUrls.push(url);
@@ -190,7 +222,8 @@ async function cacheTourAssets(payload: {
         stage: "downloading",
         completed,
         total,
-        url,
+        currentIndex,
+        currentUrl: url,
         error: lastError instanceof Error ? lastError.message : "Error al cachear"
       });
     }

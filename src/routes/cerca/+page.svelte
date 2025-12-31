@@ -76,7 +76,6 @@
   let sortedTours: Array<TourRuntime & { distance: number }> = [];
   let unsubscribeStore: (() => void) | null = null;
 
-  const ANNOUNCE_STEP = 2;
   const ANNOUNCE_INTERVAL_MS = 2000;
   const STALL_TIMEOUT_MS = 30000;
 
@@ -129,13 +128,13 @@
     label: string,
     progress: number
   ) {
-    const announceValue =
-      typeof next.completedFiles === "number" ? next.completedFiles : progress;
-    const lastProgress = prev?.lastAnnouncedProgress ?? -ANNOUNCE_STEP;
+    const lastProgress = prev?.lastAnnouncedProgress ?? -1;
     const lastAnnouncedAt = prev?.lastAnnouncedAt ?? 0;
     const elapsed = Date.now() - lastAnnouncedAt;
+    const completedChanged = next.completedFiles !== prev?.completedFiles;
+    const currentIndexChanged = next.currentIndex !== prev?.currentIndex;
     const shouldAnnounceProgress =
-      announceValue - lastProgress >= ANNOUNCE_STEP || elapsed >= ANNOUNCE_INTERVAL_MS;
+      (completedChanged || currentIndexChanged) && elapsed >= ANNOUNCE_INTERVAL_MS;
 
     const stageChanged = prev?.stage !== next.stage;
     const shouldAnnounceStage = stageChanged && next.stage !== "downloading";
@@ -143,7 +142,7 @@
     if (next.errorMessage) {
       return {
         screenreaderText: `${label}. ${next.errorMessage}`,
-        lastAnnouncedProgress: announceValue,
+        lastAnnouncedProgress: next.completedFiles ?? lastProgress,
         lastAnnouncedAt: Date.now()
       };
     }
@@ -159,7 +158,7 @@
     if (shouldAnnounceStage) {
       return {
         screenreaderText: `${label}. ${getStageLabel(next.stage)}`,
-        lastAnnouncedProgress: announceValue,
+        lastAnnouncedProgress: next.completedFiles ?? lastProgress,
         lastAnnouncedAt: Date.now()
       };
     }
@@ -167,14 +166,14 @@
     if (shouldAnnounceProgress) {
       if (typeof next.completedFiles === "number" && typeof next.totalFiles === "number") {
         return {
-          screenreaderText: `${label}. Descargando ${next.completedFiles} de ${next.totalFiles}.`,
-          lastAnnouncedProgress: announceValue,
+          screenreaderText: `${label}. Descargando ${next.completedFiles} de ${next.totalFiles}. Archivo ${next.currentIndex ?? 0} de ${next.totalFiles}.`,
+          lastAnnouncedProgress: next.completedFiles,
           lastAnnouncedAt: Date.now()
         };
       }
       return {
         screenreaderText: `${label}. ${progress}% descargado.`,
-        lastAnnouncedProgress: announceValue,
+        lastAnnouncedProgress: next.completedFiles ?? lastProgress,
         lastAnnouncedAt: Date.now()
       };
     }
@@ -196,6 +195,8 @@
       stage: "preparing",
       completedFiles: 0,
       totalFiles: tour.offline?.files?.length ?? 0,
+      currentIndex: 0,
+      currentUrl: undefined,
       lastUpdate: Date.now(),
       lastAnnouncedAt: undefined,
       lastAnnouncedProgress: undefined,
@@ -317,6 +318,9 @@
             bytesTotal && totalFiles > 0 ? Math.round((completedFiles / totalFiles) * bytesTotal) : 0;
           const stage = (data.stage as DownloadState["stage"]) ?? "downloading";
           const errorMessage = typeof data.error === "string" ? data.error : undefined;
+          const currentIndex =
+            typeof data.currentIndex === "number" ? data.currentIndex : prev?.currentIndex;
+          const currentUrl = typeof data.currentUrl === "string" ? data.currentUrl : prev?.currentUrl;
           const nextState: DownloadState = {
             ...(prev ?? {}),
             status: "downloading",
@@ -326,6 +330,8 @@
             stage,
             completedFiles,
             totalFiles,
+            currentIndex,
+            currentUrl,
             lastUpdate: Date.now(),
             errorMessage
           };
