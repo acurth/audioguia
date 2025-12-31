@@ -83,7 +83,7 @@
 				href={`${appBase}/cerca`}
 				aria-current={isCerca ? 'page' : undefined}
 			>
-				Cerca
+				Cerca mío
 			</a>
 			<a
 				href={`${appBase}/offline`}

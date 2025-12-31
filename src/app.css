@@ -47,7 +47,7 @@ a:hover {
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  padding: 2rem 1rem 2.5rem;
+  padding: 0.5rem 1rem 2.5rem;
   text-align: center;
 }
 
@@ -97,6 +97,7 @@ a:hover {
   color: #0b5aa0;
   font-weight: 600;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .site-nav a:hover {
@@ -105,7 +106,6 @@ a:hover {
 
 .site-nav a[aria-current="page"] {
   background: #eaf2ff;
-  font-weight: 700;
   text-decoration: none;
   transition: background-color 180ms ease, color 180ms ease;
 }
@@ -165,7 +165,7 @@ a:hover {
 }
 
 .ag-main {
-  padding-top: 1.25rem;
+  padding-top: 0;
 }
 
 .home-actions {
