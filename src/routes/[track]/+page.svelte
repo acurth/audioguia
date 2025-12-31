@@ -607,11 +607,12 @@
           Offline: listo · {formatMB(selectedTour.offline?.totalBytes)}
           <button
             type="button"
-            class="offline-inline-link delete-link"
+            class="offline-inline-link delete-link delete-inline"
             on:click={() => deleteDownload(selectedTour!)}
             aria-label="Eliminar recorrido descargado"
           >
-            🗑️ Eliminar recorrido
+            <span aria-hidden="true">✕</span>
+            Eliminar recorrido
           </button>
         </p>
       </section>
@@ -652,9 +653,10 @@
               type="button"
               class="offline-inline-link"
               on:click={() => requestDownload(selectedTour!)}
-              aria-label="Descargar recorrido para uso sin conexión"
+              aria-label="Descargar para usar sin conexión"
             >
-              ⬇️ Descargar
+              <span aria-hidden="true">↓</span>
+              Descargar
             </button>
           </p>
           <p style="margin: 0; font-size: 0.9rem;">
@@ -905,6 +907,16 @@
     font: inherit;
     cursor: pointer;
     text-decoration: none;
+  }
+
+  .track-page .offline-inline-link span[aria-hidden="true"] {
+    display: inline-block;
+    margin-right: 0.35rem;
+  }
+
+  .track-page .delete-inline {
+    padding-left: 0.75rem;
+    min-height: 44px;
   }
 
   .track-page .offline-inline-link:hover,
