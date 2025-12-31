@@ -50,29 +50,6 @@
     return 0;
   }
 
-  function getFileLabel(state?: DownloadState): string | undefined {
-    const url = state?.currentUrl;
-    if (!url) return undefined;
-    try {
-      const last = url.split("/").pop();
-      return last || undefined;
-    } catch {
-      return undefined;
-    }
-  }
-
-  function getProgressCount(state?: DownloadState): string | null {
-    if (!state || typeof state.totalFiles !== "number") return null;
-    return `${state.completedFiles ?? 0}/${state.totalFiles}`;
-  }
-
-  function getStageLabel(stage?: DownloadState["stage"]): string {
-    if (stage === "preparing") return "Preparando…";
-    if (stage === "saving") return "Guardando para uso offline…";
-    if (stage === "done") return "Listo";
-    if (stage === "error") return "Error en la descarga";
-    return "Descargando audios…";
-  }
 </script>
 
 <article class="tour-card" class:offline-ready={state?.status === "downloaded"}>
@@ -102,7 +79,7 @@
         {#if state?.status === "downloaded"}
           listo
         {:else if state?.status === "downloading"}
-          descargando {getProgressCount(state) ?? `${getProgressPercent(state)}%`}
+          descargando {state?.completedFiles ?? 0} de {state?.totalFiles ?? 0}
         {:else if state?.status === "error"}
           {state?.errorMessage ?? "error"}
         {:else}
@@ -222,22 +199,6 @@
           aria-valuenow={getProgressPercent(state)}
         >
           <div class="progress-fill" style={`width: ${getProgressPercent(state)}%`}></div>
-        </div>
-        <div class="progress-meta">
-          <span>{getStageLabel(state?.stage)}</span>
-          {#if state?.totalFiles}
-            <span class="progress-stage">
-              Descargando {state?.completedFiles ?? 0}/{state?.totalFiles}
-            </span>
-          {/if}
-          {#if state?.currentIndex && state?.totalFiles}
-            <span class="progress-stage">
-              Archivo {state?.currentIndex}/{state?.totalFiles}
-            </span>
-          {/if}
-          {#if getFileLabel(state)}
-            <span class="progress-stage">{getFileLabel(state)}</span>
-          {/if}
         </div>
         {#if state?.errorMessage}
           <p class="progress-error">{state?.errorMessage}</p>

@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
-	import favicon from '$lib/assets/favicon.svg';
 	import { initOfflineStore, mergeDownloadState } from '$lib/stores/offline';
 	import '../app.css';
 
@@ -54,7 +53,6 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
 	<link rel="icon" type="image/png" sizes="32x32" href={`${appBase}/branding/icon-32.png`} />
 	<link rel="icon" type="image/png" sizes="16x16" href={`${appBase}/branding/icon-16.png`} />
 	<link rel="apple-touch-icon" sizes="180x180" href={`${appBase}/branding/icon-180.png`} />
