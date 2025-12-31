@@ -12,21 +12,35 @@ const scopePath = scopeUrl.pathname.replace(/\/$/, "");
 
 const toAbsolute = (path: string) => new URL(path, self.registration.scope).href;
 
+const isHtaccessAsset = (url: string) => {
+  try {
+    const target = new URL(url, self.registration.scope);
+    return target.pathname.endsWith("/.htaccess");
+  } catch {
+    return false;
+  }
+};
+
 const isCacheableUrl = (url: string) => {
   const target = new URL(url, self.registration.scope);
   if (target.origin !== self.location.origin) return false;
   const pathname = target.pathname;
-  if (pathname.startsWith("/.")) return false;
-  if (pathname.startsWith("/.well-known/")) return false;
   if (scopePath && !pathname.startsWith(scopePath)) return false;
+  const relPath = scopePath ? pathname.slice(scopePath.length) || "/" : pathname;
+  if (relPath === "/.htaccess") return false;
+  if (relPath.startsWith("/.")) return false;
+  if (relPath.startsWith("/.well-known/")) return false;
   return true;
 };
 
-const shellAssetCandidates = [...build, ...files].map(toAbsolute);
+const shellAssetCandidates = [...build, ...files]
+  .map(toAbsolute)
+  .filter((url) => !isHtaccessAsset(url));
 const shellAssets = shellAssetCandidates.filter(isCacheableUrl);
 
 async function logNonOkResponses(urls: string[], label: string) {
   for (const url of urls) {
+    if (!isCacheableUrl(url)) continue;
     try {
       const response = await fetch(url, { cache: "no-store" });
       if (!response.ok) {
@@ -63,7 +77,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(SHELL_CACHE);
-      await logNonOkResponses(shellAssetCandidates, "shell");
+      await logNonOkResponses(shellAssets, "shell");
       await cacheUrlsSafely(cache, shellAssets);
       await self.skipWaiting();
     })()
@@ -118,7 +132,7 @@ async function cacheTourAssets(payload: {
     total
   });
 
-  await logNonOkResponses(candidates, `tour:${payload.id}`);
+  await logNonOkResponses(Array.from(urls), `tour:${payload.id}`);
 
   for (const url of urls) {
     try {
