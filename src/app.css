@@ -277,6 +277,16 @@ a:hover {
   display: inline-flex;
 }
 
+.track-page .delete-link {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.track-page .delete-link:hover,
+.track-page .delete-link:focus-visible {
+  text-decoration: underline;
+}
+
 .track-panel {
   background: rgba(0, 0, 0, 0.3);
   border: none;

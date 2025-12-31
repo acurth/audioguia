@@ -608,7 +608,7 @@
         </p>
         <button
           type="button"
-          class="btn-link"
+          class="btn-link delete-link"
           on:click={() => deleteDownload(selectedTour!)}
           aria-label="Eliminar recorrido descargado"
         >
@@ -627,8 +627,8 @@
           gap: 0.65rem;
         "
       >
-        <p style="margin: 0; font-size: 0.95rem;">
-          Este recorrido aún no está disponible sin conexión.
+        <p style="margin: 0; font-size: 0.95rem;" aria-live="polite">
+          Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
         </p>
         {#if downloadStatus?.status === "downloading"}
           <div style="width: 100%;">

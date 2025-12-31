@@ -102,7 +102,7 @@
             <button
               type="button"
               on:click={() => onDeleteDownload(tour)}
-              class="btn-link offline-action-btn"
+              class="btn-link offline-action-btn delete-link"
               aria-label="Eliminar recorrido descargado"
             >
               🗑️ Eliminar recorrido
