@@ -603,17 +603,17 @@
           gap: 0.35rem;
         "
       >
-        <p style="margin: 0; font-size: 0.95rem;">
-          Este recorrido está disponible sin conexión.
+        <p class="offline-inline" style="margin: 0; font-size: 0.95rem;">
+          Offline: listo · {formatMB(selectedTour.offline?.totalBytes)}
+          <button
+            type="button"
+            class="offline-inline-link delete-link"
+            on:click={() => deleteDownload(selectedTour!)}
+            aria-label="Eliminar recorrido descargado"
+          >
+            🗑️ Eliminar recorrido
+          </button>
         </p>
-        <button
-          type="button"
-          class="btn-link delete-link"
-          on:click={() => deleteDownload(selectedTour!)}
-          aria-label="Eliminar recorrido descargado"
-        >
-          🗑️ Eliminar recorrido
-        </button>
       </section>
     {:else}
       <section
@@ -627,9 +627,6 @@
           gap: 0.65rem;
         "
       >
-        <p style="margin: 0; font-size: 0.95rem;" aria-live="polite">
-          Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
-        </p>
         {#if downloadStatus?.status === "downloading"}
           <div style="width: 100%;">
             <div
@@ -649,13 +646,20 @@
             </p>
           </div>
         {:else}
-          <button
-            type="button"
-            class="btn btn-primary"
-            on:click={() => requestDownload(selectedTour!)}
-          >
-            Descargar recorrido ({formatMB(selectedTour.offline?.totalBytes)})
-          </button>
+          <p class="offline-inline" style="margin: 0; font-size: 0.95rem;" aria-live="polite">
+            Offline: no descargado · {formatMB(selectedTour.offline?.totalBytes)}
+            <button
+              type="button"
+              class="offline-inline-link"
+              on:click={() => requestDownload(selectedTour!)}
+              aria-label="Descargar recorrido para uso sin conexión"
+            >
+              ⬇️ Descargar
+            </button>
+          </p>
+          <p style="margin: 0; font-size: 0.9rem;">
+            Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
+          </p>
         {/if}
       </section>
     {/if}
@@ -820,7 +824,8 @@
           <li
             style="
               font-size: 0.85rem;
-              padding: 0.25rem 0;
+              padding: 0.6rem 0;
+              min-height: 52px;
               display: flex;
               justify-content: space-between;
               align-items: center;
@@ -841,14 +846,20 @@
               <button
                 type="button"
                 on:click={() => togglePlayPoint(point)}
+                aria-label={`${currentAudioPointId === point.id && isAudioPlaying ? "Pausar" : "Reproducir"} punto: ${point.name}`}
                 style="
                   border: none;
                   border-radius: 999px;
-                  padding: 0.1rem 0.5rem;
+                  padding: 0.45rem 0.9rem;
+                  min-width: 44px;
+                  min-height: 44px;
                   font-size: 0.75rem;
                   cursor: pointer;
                   background: #ffffff;
                   box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
                 "
               >
                 {#if currentAudioPointId === point.id && isAudioPlaying}
@@ -880,3 +891,24 @@
     </div>
   </section>
 </main>
+
+<style>
+  .track-page .offline-inline {
+    color: #ffffff;
+  }
+
+  .track-page .offline-inline-link {
+    color: #ffffff;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .track-page .offline-inline-link:hover,
+  .track-page .offline-inline-link:focus-visible {
+    text-decoration: underline;
+  }
+</style>
