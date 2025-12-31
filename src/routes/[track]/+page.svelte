@@ -3,7 +3,7 @@
   import { base } from "$app/paths";
   import { browser, dev } from "$app/environment";
   import { page } from "$app/stores";
-  import { downloadStateStore, initOfflineStore } from "$lib/stores/offline";
+  import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
 
   type Point = {
@@ -16,11 +16,16 @@
     audio: string;
   };
 
+  type OfflineFile = { path: string; bytes: number };
+  type OfflineManifest = { totalBytes?: number; files?: OfflineFile[] };
+
   type Tour = {
     id: string;
     slug: string;
     name: string;
     points: Point[];
+    offline?: OfflineManifest;
+    raw: TourJson;
   };
 
   type TourJson = {
@@ -28,6 +33,7 @@
     slug?: string;
     name?: string;
     points?: Point[];
+    offline?: OfflineManifest;
   };
 
   const MIN_EFFECTIVE_RADIUS_METERS = 8;
@@ -50,8 +56,9 @@
       const slug = typeof data.slug === "string" ? data.slug : id;
       const name = typeof data.name === "string" ? data.name : slug;
       const points = Array.isArray(data.points) ? (data.points as Point[]) : [];
+      const offline = data.offline;
 
-      return { id, slug, name, points };
+      return { id, slug, name, points, offline, raw: data };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -66,6 +73,7 @@
   let selectedTour: Tour | undefined = tours[0];
   let downloadState: Record<string, DownloadState> = {};
   let unsubscribeStore: (() => void) | null = null;
+  let removeSwListener: (() => void) | null = null;
   let wakeLock: WakeLockSentinel | null = null;
   let isOfflineReady = false;
 
@@ -85,6 +93,7 @@
   );
   $: tourSlug = selectedTour?.slug ?? selectedTour?.id ?? "";
   $: backgroundUrl = tourSlug ? `${appBase}/media/tours/${tourSlug}/background.webp` : "";
+  $: downloadStatus = selectedTour?.id ? downloadState[selectedTour.id] : undefined;
 
   // Estado general
   let isTracking = false;
@@ -143,6 +152,66 @@
     if (d == null || !Number.isFinite(d)) return "—";
     if (d < 1000) return `${Math.round(d)} m`;
     return `${(d / 1000).toFixed(2)} km`;
+  }
+
+  function formatMB(bytes?: number) {
+    if (!bytes) return "0 MB";
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  function getProgressPercent(state?: DownloadState): number {
+    if (!state) return 0;
+    if (typeof state.progress === "number") return state.progress;
+    if (state.completedFiles && state.totalFiles) {
+      return Math.round((state.completedFiles / state.totalFiles) * 100);
+    }
+    return 0;
+  }
+
+  async function requestDownload(tour: Tour) {
+    if (!browser || !("serviceWorker" in navigator)) return;
+    if (!tour.offline?.files?.length) return;
+
+    setDownloadState(tour.id, {
+      status: "downloading",
+      bytes: tour.offline?.totalBytes,
+      downloadedBytes: 0,
+      progress: 0,
+      stage: "preparing",
+      completedFiles: 0,
+      totalFiles: tour.offline?.files?.length ?? 0,
+      currentIndex: 0,
+      currentUrl: undefined,
+      lastUpdate: Date.now(),
+      lastAnnouncedAt: undefined,
+      lastAnnouncedProgress: undefined,
+      screenreaderText: undefined,
+      errorMessage: undefined,
+      cacheResult: undefined
+    });
+
+    const files = tour.offline?.files?.map((f) => f.path) ?? [];
+    const backgroundPath = `media/tours/${tour.slug}/background.webp`;
+    const downloadFiles = [...files, backgroundPath];
+    const jsonPayload = JSON.stringify(tour.raw);
+
+    const registration = await navigator.serviceWorker.ready;
+    registration.active?.postMessage({
+      type: "download-tour",
+      payload: {
+        id: tour.id,
+        slug: tour.slug,
+        files: downloadFiles,
+        json: jsonPayload
+      }
+    });
+  }
+
+  async function deleteDownload(tour: Tour) {
+    if (!browser || !("serviceWorker" in navigator)) return;
+    const registration = await navigator.serviceWorker.ready;
+    registration.active?.postMessage({ type: "delete-tour", id: tour.id });
+    setDownloadState(tour.id, { status: "idle", bytes: tour.offline?.totalBytes });
   }
 
   function clamp(value: number, min: number, max: number): number {
@@ -374,10 +443,80 @@
     unsubscribeStore = downloadStateStore.subscribe((state) => {
       downloadState = state;
     });
+
+    if ("serviceWorker" in navigator) {
+      const handleMessage = (event: MessageEvent) => {
+        const data = event.data;
+        if (!data) return;
+        if (data.type === "tour-downloaded") {
+          const tourId = data.id as string;
+          const bytes = tours.find((t) => t.id === tourId)?.offline?.totalBytes;
+          setDownloadState(tourId, {
+            status: "downloaded",
+            bytes,
+            progress: 100,
+            stage: "done",
+            downloadedBytes: bytes,
+            lastUpdate: Date.now(),
+            cacheResult: data.result as
+              | { okCount: number; failCount: number; failedUrls: string[] }
+              | undefined
+          });
+        }
+        if (data.type === "tour-deleted") {
+          const tourId = data.id as string;
+          const bytes = tours.find((t) => t.id === tourId)?.offline?.totalBytes;
+          setDownloadState(tourId, { status: "idle", bytes });
+        }
+        if (data.type === "tour-progress") {
+          const tourId = data.id as string;
+          const prev = downloadState[tourId];
+          const tour = tours.find((t) => t.id === tourId);
+          const totalFiles =
+            typeof data.total === "number"
+              ? data.total
+              : tour?.offline?.files?.length ?? prev?.totalFiles ?? 0;
+          const completedFiles =
+            typeof data.completed === "number" ? data.completed : prev?.completedFiles ?? 0;
+          const progress = totalFiles > 0 ? Math.round((completedFiles / totalFiles) * 100) : 0;
+          const bytesTotal = tour?.offline?.totalBytes;
+          const downloadedBytes =
+            bytesTotal && totalFiles > 0 ? Math.round((completedFiles / totalFiles) * bytesTotal) : 0;
+          const stage = (data.stage as DownloadState["stage"]) ?? "downloading";
+          const errorMessage = typeof data.error === "string" ? data.error : undefined;
+          const currentIndex =
+            typeof data.currentIndex === "number" ? data.currentIndex : prev?.currentIndex;
+          const currentUrl = typeof data.currentUrl === "string" ? data.currentUrl : prev?.currentUrl;
+          const nextState: DownloadState = {
+            ...(prev ?? {}),
+            status: "downloading",
+            bytes: bytesTotal ?? prev?.bytes,
+            downloadedBytes,
+            progress,
+            stage,
+            completedFiles,
+            totalFiles,
+            currentIndex,
+            currentUrl,
+            lastUpdate: Date.now(),
+            errorMessage
+          };
+          setDownloadState(tourId, nextState);
+        }
+      };
+
+      navigator.serviceWorker.addEventListener("message", handleMessage);
+      removeSwListener = () => {
+        navigator.serviceWorker.removeEventListener("message", handleMessage);
+      };
+    }
   });
 
   onDestroy(() => {
     stopTracking();
+    if (removeSwListener) {
+      removeSwListener();
+    }
     if (unsubscribeStore) {
       unsubscribeStore();
     }
@@ -450,6 +589,77 @@
       caminás. Si el teléfono bloquea la pantalla, puede pausar el seguimiento.
     </p>
   </header>
+
+  {#if selectedTour}
+    {#if isOfflineReady}
+      <section
+        class="track-panel"
+        style="
+          width: 100%;
+          max-width: 640px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.35rem;
+        "
+      >
+        <p style="margin: 0; font-size: 0.95rem;">
+          Este recorrido está disponible sin conexión.
+        </p>
+        <button
+          type="button"
+          class="btn-link"
+          on:click={() => deleteDownload(selectedTour!)}
+          aria-label="Eliminar recorrido descargado"
+        >
+          🗑️ Eliminar recorrido
+        </button>
+      </section>
+    {:else}
+      <section
+        class="track-panel"
+        style="
+          width: 100%;
+          max-width: 640px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.65rem;
+        "
+      >
+        <p style="margin: 0; font-size: 0.95rem;">
+          Este recorrido aún no está disponible sin conexión.
+        </p>
+        {#if downloadStatus?.status === "downloading"}
+          <div style="width: 100%;">
+            <div
+              style="height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden;"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={getProgressPercent(downloadStatus)}
+            >
+              <div
+                style={`height: 100%; background: #0b5aa0; width: ${getProgressPercent(downloadStatus)}%;`}
+              ></div>
+            </div>
+            <p style="margin: 0.5rem 0 0; font-size: 0.9rem;" aria-live="polite">
+              Descargando audio {downloadStatus?.currentIndex ?? downloadStatus?.completedFiles ?? 0} de {downloadStatus?.totalFiles ?? 0}
+              ({getProgressPercent(downloadStatus)}%)
+            </p>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="btn btn-primary"
+            on:click={() => requestDownload(selectedTour!)}
+          >
+            Descargar recorrido ({formatMB(selectedTour.offline?.totalBytes)})
+          </button>
+        {/if}
+      </section>
+    {/if}
+  {/if}
 
   {#if dev}
     <section

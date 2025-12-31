@@ -103,22 +103,9 @@
               type="button"
               on:click={() => onDeleteDownload(tour)}
               class="btn-link offline-action-btn"
-              aria-label={`Eliminar descarga del tour: ${tour.name}`}
+              aria-label="Eliminar recorrido descargado"
             >
-              <svg
-                class="offline-action-icon"
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  d="M9 3h6l1 2h5v2H3V5h5l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM7 9h2v9H7V9zm-1 12h12a2 2 0 0 0 2-2V7H4v12a2 2 0 0 0 2 2z"
-                  fill="currentColor"
-                />
-              </svg>
-              Eliminar
+              🗑️ Eliminar recorrido
             </button>
           {:else if state?.status !== "downloading" && state?.status !== "error"}
             <button
