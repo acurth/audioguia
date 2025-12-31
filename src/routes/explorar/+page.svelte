@@ -382,7 +382,7 @@
 <div class="page">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <main id="main" class="content ag-main">
+  <main id="main" class="content ag-main debug-box">
     <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
       {liveMessage}
     </div>
@@ -391,7 +391,7 @@
       Recomendación: descargá el recorrido antes de salir del Wi-Fi o de una buena conexión de datos.
     </p>
 
-    <div class="tour-list">
+    <div class="tour-list debug-box">
       {#if tours.length === 0}
         <p class="empty-state">Todavía no hay recorridos configurados.</p>
       {:else}

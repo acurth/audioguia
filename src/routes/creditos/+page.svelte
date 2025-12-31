@@ -8,7 +8,7 @@
 <div class="page">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <main id="main" class="content ag-main">
+  <main id="main" class="content ag-main debug-box">
     <h1 class="hero-title">Créditos</h1>
 
     <section class="about" aria-labelledby="creditos-meta-title">

@@ -83,7 +83,7 @@
 <div class="page">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <main id="main" class="content ag-main">
+  <main id="main" class="content ag-main debug-box">
     <h1 class="hero-title">Recorridos offline</h1>
     <p class="hero-subtitle">Recorridos descargados para usar sin conexión.</p>
 
@@ -92,7 +92,7 @@
         No hay recorridos descargados. Podés bajar un tour desde Explorar para usarlo sin conexión.
       </p>
     {:else}
-      <div class="tour-list">
+      <div class="tour-list debug-box">
         {#each offlineTours as tour}
           <TourCard
             base={appBase}

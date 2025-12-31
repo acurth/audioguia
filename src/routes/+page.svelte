@@ -27,14 +27,14 @@
 <div class="page">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <main id="main" class="content ag-main">
+  <main id="main" class="content ag-main debug-box">
     <h1 class="hero-title">Senderos para escuchar</h1>
     <p class="hero-blurb">
       Una audioguía accesible para recorrer senderos naturales a través del sonido, pensada para
       personas con discapacidad visual y abierta a todo público.
     </p>
 
-    <div class="home-actions">
+    <div class="home-actions debug-box">
       {#each actions as action, index}
         <a class="home-card" href={action.href} aria-label={action.ariaLabel}>
           <span class="home-icon" aria-hidden="true">
