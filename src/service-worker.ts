@@ -158,8 +158,20 @@ async function cacheTourAssets(payload: {
   await logNonOkResponses(Array.from(urls), `tour:${payload.id}`);
 
   for (const url of urls) {
-    try {
-      await cache.add(url);
+    let cached = false;
+    let lastError: unknown = undefined;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await cache.add(url);
+        cached = true;
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (cached) {
       completed += 1;
       await notifyClients({
         type: "tour-progress",
@@ -169,9 +181,9 @@ async function cacheTourAssets(payload: {
         total,
         url
       });
-    } catch (err) {
+    } else {
       failedUrls.push(url);
-      console.error("Failed to cache", url, err);
+      console.error("Failed to cache", url, lastError);
       await notifyClients({
         type: "tour-progress",
         id: payload.id,
@@ -179,7 +191,7 @@ async function cacheTourAssets(payload: {
         completed,
         total,
         url,
-        error: err instanceof Error ? err.message : "Error al cachear"
+        error: lastError instanceof Error ? lastError.message : "Error al cachear"
       });
     }
   }
