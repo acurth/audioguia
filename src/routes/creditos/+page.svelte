@@ -19,10 +19,10 @@
         <strong>Last Update:</strong> {LAST_UPDATE}
       </p>
       <p>
-        <strong>Versión App:</strong> {APP_VERSION}
+        <strong>Versión app:</strong> {APP_VERSION}
       </p>
       <p>
-        <strong>Versión Contenido:</strong> {CONTENT_VERSION}
+        <strong>Versión contenidos:</strong> {CONTENT_VERSION}
       </p>
       <p>
         © {CURRENT_YEAR} Audioguía Natural. Todos los derechos reservados.
@@ -52,7 +52,7 @@
     </section>
 
     <p>
-      Agradecimientos: a Los Búhos Bariloche, a Yamila T., a Lucas, a Karin, a Guille, a Andre.
+      Agradecimientos: a Los Búhos Bariloche, a Yamila, Lucas, Karin, Andre, Guille y Axel.
     </p>
   </main>
 </div>

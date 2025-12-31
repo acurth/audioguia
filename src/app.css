@@ -268,7 +268,7 @@ a:hover {
 }
 
 .track-panel {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.3);
   border: none;
   border-radius: 0.75rem;
   padding: 0.8rem;
@@ -333,6 +333,13 @@ a:hover {
 
 .about p {
   margin: 0.25rem 0;
+}
+
+.about-version {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #2f2f2f;
 }
 
 .home-card {

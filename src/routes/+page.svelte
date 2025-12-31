@@ -1,5 +1,6 @@
 <script lang="ts">
   import { base } from "$app/paths";
+  import { APP_VERSION, CONTENT_VERSION } from "$lib/version";
   const appBase = base;
 
   const actions = [
@@ -68,6 +69,10 @@
         </a>
       {/each}
     </div>
+
+    <p class="about-version">
+      Versión app: {APP_VERSION} · Versión contenidos: {CONTENT_VERSION}
+    </p>
 
   </main>
 </div>
