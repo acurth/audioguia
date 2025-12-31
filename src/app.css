@@ -191,6 +191,24 @@ a:hover {
   gap: 0.85rem;
 }
 
+.about {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.9rem;
+  text-align: center;
+  color: #2f2f2f;
+}
+
+.about h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.about p {
+  margin: 0.25rem 0;
+}
+
 .home-card {
   display: flex;
   align-items: center;

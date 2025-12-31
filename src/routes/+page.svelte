@@ -1,7 +1,10 @@
 <script lang="ts">
   import { base } from "$app/paths";
+  import { APP_VERSION, CONTENT_VERSION } from "$lib/version";
 
   const appBase = base;
+  const LAST_UPDATE = new Date().toISOString().slice(0, 10);
+  const CURRENT_YEAR = new Date().getFullYear();
 
   const actions = [
     {
@@ -29,7 +32,7 @@
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
   <main id="main" class="content ag-main">
-    <h1 class="hero-title">Audioguía Natural — Senderos para escuchar</h1>
+    <h1 class="hero-title">Senderos para escuchar</h1>
     <p class="hero-blurb">
       Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para
       personas ciegas, abierta a todo público.
@@ -73,5 +76,24 @@
         </a>
       {/each}
     </div>
+
+    <section class="about" aria-labelledby="about-title">
+      <h2 id="about-title">About</h2>
+      <p>
+        <strong>Iniciativa:</strong> COA Tucúquere Bariloche / Aves Argentinas
+      </p>
+      <p>
+        <strong>Last Update:</strong> {LAST_UPDATE}
+      </p>
+      <p>
+        <strong>Versión App:</strong> {APP_VERSION}
+      </p>
+      <p>
+        <strong>Versión Content:</strong> {CONTENT_VERSION}
+      </p>
+      <p>
+        © {CURRENT_YEAR} Audioguía Natural. Todos los derechos reservados.
+      </p>
+    </section>
   </main>
 </div>
