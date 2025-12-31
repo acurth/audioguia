@@ -64,18 +64,33 @@ a:hover {
   align-items: center;
   justify-content: flex-start;
   gap: 0.5rem;
-  padding: 1rem 1rem 0.5rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.site-header-inner {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 .site-logo {
-  display: inline-flex;
+  display: block;
   align-items: center;
   text-decoration: none;
+  margin: 0 auto;
 }
 
 .site-logo-img {
   width: min(252px, 60vw);
   height: auto;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
 }
 
 .site-nav {
@@ -84,6 +99,7 @@ a:hover {
   display: flex;
   justify-content: center;
   gap: 0.6rem;
+  margin: 0 auto;
 }
 
 .site-nav a {
