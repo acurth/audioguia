@@ -200,21 +200,22 @@ a:hover {
 .track-pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+  gap: 0.4rem;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .track-pill.is-offline {
-  background: #f3dfbf;
-  color: #111111;
+  background: none;
+  color: #ffffff;
 }
 
 .track-pill.is-online {
-  background: #eaf2ff;
-  color: #0b5aa0;
+  background: none;
+  color: #ffffff;
 }
 
 .track-btn {
@@ -264,13 +265,16 @@ a:hover {
 }
 
 .track-page .track-pill.is-offline {
-  color: #111111;
   text-shadow: none;
   box-shadow: none;
 }
 
 .track-page .track-pill.is-online {
-  background: rgba(11, 90, 160, 0.6);
+  background: none;
+}
+
+.track-status-icon {
+  display: inline-flex;
 }
 
 .track-panel {

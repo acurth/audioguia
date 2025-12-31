@@ -405,8 +405,41 @@
 >
   <div class="track-header track-panel">
     <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
-    <span class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}>
-      {isOfflineReady ? "Recorrido offline" : "Recorrido online"}
+    <span
+      class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}
+      aria-label={`Estado del recorrido: ${isOfflineReady ? "offline" : "online"}`}
+      aria-live="polite"
+    >
+      {#if isOfflineReady}
+        <svg
+          class="track-status-icon"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3 1.4 1.42L12 17.41l-4.7-4.7 1.4-1.42 2.3 2.3V4a1 1 0 0 1 1-1zm-7 16h14v2H5v-2z"
+            fill="currentColor"
+          />
+        </svg>
+        Recorrido offline
+      {:else}
+        <svg
+          class="track-status-icon"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M12 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" fill="currentColor" />
+          <path d="M6.3 15.3a8 8 0 0 1 11.4 0l-1.4 1.4a6 6 0 0 0-8.6 0l-1.4-1.4z" fill="currentColor" />
+          <path d="M3.5 12.5a12 12 0 0 1 17 0l-1.4 1.4a10 10 0 0 0-14.2 0l-1.4-1.4z" fill="currentColor" />
+        </svg>
+        Recorrido online
+      {/if}
     </span>
   </div>
 
