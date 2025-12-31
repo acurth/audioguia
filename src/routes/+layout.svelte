@@ -7,13 +7,14 @@
 
 	let { children } = $props();
 
-	const ogTitle = 'Audioguía Natural — Senderos para escuchar';
+	const ogTitle = 'Senderos para escuchar';
 	const ogDescription =
-		'Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para personas ciegas, abierta a todo público.';
+		'Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para personas con discapacidad visual, abierta a todo público.';
 
 	const appBase = base;
 	const normalizedPath = $derived($page.url.pathname.replace(/\/$/, ''));
-	const ogUrl = $derived(appBase ? `${appBase}/` : '/');
+	const canonicalUrl = $derived(`${$page.url.origin}${$page.url.pathname}`);
+	const ogUrl = $derived(canonicalUrl);
 	const ogImage = $derived(`${appBase}/og/audioguia-natural-og.png`);
 	const logoSrc = $derived(`${appBase}/branding/audioguia-natural-cropped.png`);
 	const isHome = $derived(normalizedPath === (appBase || ''));
@@ -55,6 +56,10 @@
 </script>
 
 <svelte:head>
+	<title>{ogTitle}</title>
+	<meta name="description" content={ogDescription} />
+	<link rel="canonical" href={canonicalUrl} />
+
 	<link rel="icon" type="image/png" sizes="32x32" href={`${appBase}/branding/icon-32.png`} />
 	<link rel="icon" type="image/png" sizes="16x16" href={`${appBase}/branding/icon-16.png`} />
 	<link rel="apple-touch-icon" sizes="180x180" href={`${appBase}/branding/icon-180.png`} />

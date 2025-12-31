@@ -45,6 +45,10 @@
     "casa-test-01": "Abrir Test casa"
   };
 
+  const hiddenTourIds = new Set(["casa-test-01"]);
+  const isHiddenTour = (tour: { id?: string; slug?: string }) =>
+    (tour.id && hiddenTourIds.has(tour.id)) || (tour.slug && hiddenTourIds.has(tour.slug));
+
   const tours: TourLink[] = Object.entries(tourModules)
     .map(([path, data]) => {
       const filename = path.split("/").pop() ?? "";
@@ -60,6 +64,7 @@
 
       return { id, slug, name, ctaLabel, theme, sizeBytes, offline, raw: data };
     })
+    .filter((tour) => !isHiddenTour(tour))
     .sort((a, b) => {
       const aIsTest = /test|casa/i.test(a.id);
       const bIsTest = /test|casa/i.test(b.id);

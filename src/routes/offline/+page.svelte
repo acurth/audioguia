@@ -39,16 +39,22 @@
     "casa-test-01": "Abrir Test casa"
   };
 
-  const tours: TourLink[] = Object.entries(tourModules).map(([path, data]) => {
-    const filename = path.split("/").pop() ?? "";
-    const idFromFile = filename.replace(".json", "");
-    const id = typeof data.id === "string" ? data.id : idFromFile;
-    const slug = typeof data.slug === "string" ? data.slug : id;
-    const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
-    const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
-    const sizeBytes = data.offline?.totalBytes;
-    return { id, slug, name, ctaLabel, sizeBytes };
-  });
+  const hiddenTourIds = new Set(["casa-test-01"]);
+  const isHiddenTour = (tour: { id?: string; slug?: string }) =>
+    (tour.id && hiddenTourIds.has(tour.id)) || (tour.slug && hiddenTourIds.has(tour.slug));
+
+  const tours: TourLink[] = Object.entries(tourModules)
+    .map(([path, data]) => {
+      const filename = path.split("/").pop() ?? "";
+      const idFromFile = filename.replace(".json", "");
+      const id = typeof data.id === "string" ? data.id : idFromFile;
+      const slug = typeof data.slug === "string" ? data.slug : id;
+      const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
+      const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
+      const sizeBytes = data.offline?.totalBytes;
+      return { id, slug, name, ctaLabel, sizeBytes };
+    })
+    .filter((tour) => !isHiddenTour(tour));
 
   let downloadState: Record<string, DownloadState> = {};
   let unsubscribeStore: (() => void) | null = null;
