@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { APP_VERSION, CONTENT_VERSION } from "$lib/version";
-
-  const LAST_UPDATE = new Date().toISOString().slice(0, 10);
+  import { APP_VERSION, CONTENT_VERSION, LAST_UPDATE } from "$lib/config/version";
   const CURRENT_YEAR = new Date().getFullYear();
 </script>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { base } from "$app/paths";
-  import { APP_VERSION, CONTENT_VERSION } from "$lib/version";
+  import { APP_VERSION, CONTENT_VERSION } from "$lib/config/version";
   const appBase = base;
 
   const actions = [
