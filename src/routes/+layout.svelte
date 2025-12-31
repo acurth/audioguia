@@ -7,7 +7,7 @@
 
 	let { children } = $props();
 
-	const ogTitle = 'Senderos para escuchar';
+	const ogTitle = 'Audioguía Natural – Senderos para escuchar';
 	const ogDescription =
 		'Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para personas con discapacidad visual, abierta a todo público.';
 

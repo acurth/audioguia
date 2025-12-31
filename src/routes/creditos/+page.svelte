@@ -9,29 +9,32 @@
   <main id="main" class="content ag-main">
     <h1 class="hero-title">Sobre la audioguía</h1>
 
-    <p>
-      Esta audioguía te acompaña en senderos naturales con relatos y sonidos que se activan a
-      medida que recorrés el espacio. Está pensada para personas con discapacidad visual y
-      también para quienes quieran explorar el entorno de una manera distinta.
-    </p>
-    <p>
-      El recorrido puede seguirse con geolocalización: cuando te acercás a un punto de interés,
-      se dispara el audio correspondiente. También podés reproducir los audios manualmente si lo
-      necesitás.
-    </p>
-    <p>
-      Para usarla sin conexión, es posible descargar los recorridos con anticipación. Así, los
-      audios quedan disponibles incluso cuando no hay señal o datos móviles.
-    </p>
-    <p>
-      Agradecimientos: a Los Búhos Bariloche, a Yamila, Lucas, Karin, Andre, Guille y Axel.
-    </p>
+    <section class="creditos-body" aria-labelledby="creditos-body-title">
+      <h2 id="creditos-body-title" class="sr-only">Descripción</h2>
+      <p>
+        Esta audioguía te acompaña en senderos naturales con relatos y sonidos que se activan a
+        medida que recorrés el espacio. Está pensada para personas con discapacidad visual y
+        también para quienes quieran explorar el entorno de una manera distinta.
+      </p>
+      <p>
+        El recorrido puede seguirse con geolocalización: cuando te acercás a un punto de interés,
+        se dispara el audio correspondiente. También podés reproducir los audios manualmente si lo
+        necesitás.
+      </p>
+      <p>
+        Para usarla sin conexión, es posible descargar los recorridos con anticipación. Así, los
+        audios quedan disponibles incluso cuando no hay señal o datos móviles.
+      </p>
+      <p>
+        Agradecimientos: a Los Búhos Bariloche, a Yamila, Lucas, Karin, Andre, Guille y Axel.
+      </p>
+    </section>
 
     <hr />
 
     <section class="about" aria-labelledby="creditos-meta-title">
       <p>
-        <strong>Iniciativa:</strong> COA Tucúquere Bariloche / Aves Argentinas
+        <strong>Iniciativa:</strong> COA Tucúquere Bariloche / Aves Argentinas · audioguia.io
       </p>
       <p>
         <strong>Última actualización:</strong> {LAST_UPDATE}
@@ -48,3 +51,19 @@
     </section>
   </main>
 </div>
+
+<style>
+  .creditos-body {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  .creditos-body p {
+    margin: 0 0 0.75em;
+  }
+
+  .creditos-body p:last-child {
+    margin-bottom: 0;
+  }
+</style>
