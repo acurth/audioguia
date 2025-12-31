@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
-  import { dev } from "$app/environment";
+  import { onDestroy, onMount } from "svelte";
+  import { base } from "$app/paths";
+  import { browser, dev } from "$app/environment";
   import { page } from "$app/stores";
+  import { downloadStateStore, initOfflineStore } from "$lib/stores/offline";
+  import type { DownloadState } from "$lib/stores/offline";
 
   type Point = {
     id: string;
@@ -61,6 +64,12 @@
   let title: string = tours[0]?.name ?? "Recorrido no encontrado";
   let points: Point[] = tours[0]?.points ?? [];
   let selectedTour: Tour | undefined = tours[0];
+  let downloadState: Record<string, DownloadState> = {};
+  let unsubscribeStore: (() => void) | null = null;
+  let wakeLock: WakeLockSentinel | null = null;
+  let isOfflineReady = false;
+
+  const appBase = base;
 
   $: {
     const track = $page.params.track;
@@ -70,6 +79,10 @@
     title = currentTour?.name ?? "Recorrido no encontrado";
     points = currentTour?.points ?? [];
   }
+
+  $: isOfflineReady = Boolean(
+    selectedTour?.id && downloadState[selectedTour.id]?.status === "downloaded"
+  );
 
   // Estado general
   let isTracking = false;
@@ -281,6 +294,29 @@
     statusMessage = `Error de geolocalización (${err.code}): ${err.message}`;
   }
 
+  async function requestWakeLock() {
+    if (!("wakeLock" in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => {
+        wakeLock = null;
+      });
+    } catch {
+      wakeLock = null;
+    }
+  }
+
+  async function releaseWakeLock() {
+    if (!wakeLock) return;
+    try {
+      await wakeLock.release();
+    } catch {
+      // ignore
+    } finally {
+      wakeLock = null;
+    }
+  }
+
   function startTracking() {
     if (isTracking) return;
 
@@ -296,6 +332,7 @@
     lastTriggeredInsideRadius = null;
     isTracking = true;
     statusMessage = "Iniciando seguimiento de ubicación…";
+    void requestWakeLock();
 
     watchId = navigator.geolocation.watchPosition(handlePosition, handlePositionError, {
       enableHighAccuracy: true,
@@ -318,6 +355,7 @@
     }
     currentAudioPointId = null;
     isAudioPlaying = false;
+    void releaseWakeLock();
   }
 
   function toggleTracking() {
@@ -328,8 +366,19 @@
     }
   }
 
+  onMount(() => {
+    if (!browser) return;
+    initOfflineStore();
+    unsubscribeStore = downloadStateStore.subscribe((state) => {
+      downloadState = state;
+    });
+  });
+
   onDestroy(() => {
     stopTracking();
+    if (unsubscribeStore) {
+      unsubscribeStore();
+    }
   });
 </script>
 
@@ -347,6 +396,13 @@
     gap: 1.5rem;
   "
 >
+  <div class="track-header">
+    <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
+    <span class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}>
+      {isOfflineReady ? "Recorrido offline" : "Recorrido online"}
+    </span>
+  </div>
+
   <header>
     <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
     <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
@@ -389,17 +445,8 @@
   >
     <button
       on:click={toggleTracking}
-      style="
-        padding: 0.75rem 1.75rem;
-        border-radius: 999px;
-        border: none;
-        font-size: 1rem;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        background: {isTracking ? '#c0392b' : '#2ecc71'};
-        color: white;
-        font-weight: 600;
-      "
+      class={`btn track-btn ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
+      aria-pressed={isTracking}
     >
       {#if isTracking}
         Detener recorrido
@@ -410,6 +457,14 @@
 
     <p style="font-size: 0.9rem; max-width: 420px; margin: 0;">
       {statusMessage}
+    </p>
+    <p class="tracking-status" aria-live="polite">
+      {#if isTracking}
+        <span class="tracking-dot" aria-hidden="true"></span>
+        Seguimiento activo
+      {:else}
+        Seguimiento en pausa
+      {/if}
     </p>
   </section>
 
@@ -506,8 +561,6 @@
         padding: 1rem;
         border-radius: 0.75rem;
         border: 1px solid rgba(0,0,0,0.1);
-        max-height: 220px;
-        overflow: auto;
       "
     >
       <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Puntos del recorrido</h2>

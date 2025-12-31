@@ -173,6 +173,87 @@ a:hover {
   font-size: 0.95rem;
 }
 
+.track-header {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 auto 0.9rem;
+}
+
+.track-back {
+  text-decoration: none;
+  color: #0b5aa0;
+  font-weight: 600;
+}
+
+.track-back:hover {
+  text-decoration: underline;
+}
+
+.track-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.track-pill.is-offline {
+  background: #f3dfbf;
+  color: #1f1f1f;
+}
+
+.track-pill.is-online {
+  background: #eaf2ff;
+  color: #0b5aa0;
+}
+
+.track-btn {
+  padding: 0.75rem 1.75rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-offline {
+  background: #f3dfbf;
+  color: #1f1f1f;
+}
+
+.tracking-status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #2f2f2f;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tracking-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f39c12;
+  box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.6);
+  animation: tracking-pulse 1.6s ease-out infinite;
+}
+
+@keyframes tracking-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(243, 156, 18, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(243, 156, 18, 0);
+  }
+}
+
 .content {
   width: 100%;
   max-width: 920px;

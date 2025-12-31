@@ -21,6 +21,7 @@
 	const isOffline = $derived(normalizedPath.startsWith(`${appBase}/offline`));
 	const isExplorar = $derived(normalizedPath.startsWith(`${appBase}/explorar`));
 	const isCreditos = $derived(normalizedPath.startsWith(`${appBase}/creditos`));
+	const isTrack = $derived(Boolean($page.params.track));
 
 	onMount(() => {
 		initOfflineStore();
@@ -72,42 +73,44 @@
 </svelte:head>
 
 <div class="app-shell">
-	<header class="site-header">
-		<div class="site-header-inner">
-			<a class="site-logo" href={`${appBase}/`} aria-label="Ir al inicio">
-				<img src={logoSrc} alt="Audioguía Natural" class="site-logo-img" />
-			</a>
-			<nav class="site-nav" aria-label="Navegación principal">
-				<a href={`${appBase}/`} aria-current={isHome ? 'page' : undefined}>
-					Inicio
+	{#if !isTrack}
+		<header class="site-header">
+			<div class="site-header-inner">
+				<a class="site-logo" href={`${appBase}/`} aria-label="Ir al inicio">
+					<img src={logoSrc} alt="Audioguía Natural" class="site-logo-img" />
 				</a>
-				<a
-					href={`${appBase}/cerca`}
-					aria-current={isCerca ? 'page' : undefined}
-				>
-					Cerca mío
-				</a>
-				<a
-					href={`${appBase}/offline`}
-					aria-current={isOffline ? 'page' : undefined}
-				>
-					Offline
-				</a>
-				<a
-					href={`${appBase}/explorar`}
-					aria-current={isExplorar ? 'page' : undefined}
-				>
-					Explorar
-				</a>
-				<a
-					href={`${appBase}/creditos`}
-					aria-current={isCreditos ? 'page' : undefined}
-				>
-					Créditos
-				</a>
-			</nav>
-		</div>
-	</header>
+				<nav class="site-nav" aria-label="Navegación principal">
+					<a href={`${appBase}/`} aria-current={isHome ? 'page' : undefined}>
+						Inicio
+					</a>
+					<a
+						href={`${appBase}/cerca`}
+						aria-current={isCerca ? 'page' : undefined}
+					>
+						Cerca mío
+					</a>
+					<a
+						href={`${appBase}/offline`}
+						aria-current={isOffline ? 'page' : undefined}
+					>
+						Offline
+					</a>
+					<a
+						href={`${appBase}/explorar`}
+						aria-current={isExplorar ? 'page' : undefined}
+					>
+						Explorar
+					</a>
+					<a
+						href={`${appBase}/creditos`}
+						aria-current={isCreditos ? 'page' : undefined}
+					>
+						Créditos
+					</a>
+				</nav>
+			</div>
+		</header>
+	{/if}
 
 	{@render children()}
 </div>
