@@ -12,14 +12,7 @@ const scopePath = scopeUrl.pathname.replace(/\/$/, "");
 
 const toAbsolute = (path: string) => new URL(path, self.registration.scope).href;
 
-const isHtaccessAsset = (url: string) => {
-  try {
-    const target = new URL(url, self.registration.scope);
-    return target.pathname.endsWith("/.htaccess");
-  } catch {
-    return false;
-  }
-};
+const isDotfilePath = (path: string) => path.includes("/.") || path.endsWith(".htaccess");
 
 const getRelativePath = (url: string) => {
   try {
@@ -36,8 +29,7 @@ const getRelativePath = (url: string) => {
 const isCacheableUrl = (url: string) => {
   const relPath = getRelativePath(url);
   if (!relPath) return false;
-  if (relPath === "/.htaccess") return false;
-  if (relPath.startsWith("/.")) return false;
+  if (isDotfilePath(relPath)) return false;
   if (relPath.startsWith("/.well-known/")) return false;
   return true;
 };
@@ -48,7 +40,8 @@ const shellStaticPrefixes = ["/branding/", "/og/"];
 const isStaticShellAsset = (url: string) => {
   const relPath = getRelativePath(url);
   if (!relPath) return false;
-  if (relPath.startsWith("/audio/")) return false;
+  if (relPath.startsWith("/audio/tours/")) return false;
+  if (relPath.startsWith("/media/tours/")) return false;
   if (relPath.startsWith("/offline/tours/")) return false;
   if (shellStaticAllowlist.has(relPath)) return true;
   return shellStaticPrefixes.some((prefix) => relPath.startsWith(prefix));
@@ -57,7 +50,6 @@ const isStaticShellAsset = (url: string) => {
 const buildAssets = build.map(toAbsolute);
 const staticShellAssets = files
   .map(toAbsolute)
-  .filter((url) => !isHtaccessAsset(url))
   .filter(isStaticShellAsset);
 const shellAssets = [...buildAssets, ...staticShellAssets].filter(isCacheableUrl);
 
@@ -118,6 +110,18 @@ self.addEventListener("activate", (event) => {
           }
           return Promise.resolve(true);
         })
+      );
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith(TOUR_CACHE_PREFIX))
+          .map(async (key) => {
+            const cache = await caches.open(key);
+            const cachedKeys = await cache.keys();
+            if (cachedKeys.length === 0) {
+              return caches.delete(key);
+            }
+            return true;
+          })
       );
       await self.clients.claim();
     })()
