@@ -1,7 +1,14 @@
 <script lang="ts">
   import { base } from "$app/paths";
   import { browser } from "$app/environment";
+  import { page } from "$app/stores";
   import { onMount } from "svelte";
+  import {
+    getDevModeFromSearch,
+    getTourRecords,
+    type TourJson,
+    type TourStatus
+  } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
   import TourCard from "$lib/components/TourCard.svelte";
@@ -9,25 +16,14 @@
   type OfflineFile = { path: string; bytes: number };
   type OfflineManifest = { totalBytes?: number; files?: OfflineFile[] };
 
-  type TourJson = {
-    id?: string;
-    slug?: string;
-    name?: string;
-    offline?: OfflineManifest;
-  };
-
   type TourLink = {
     id: string;
     slug: string;
     name: string;
     ctaLabel: string;
+    status: TourStatus;
     sizeBytes?: number;
   };
-
-  const tourModules = import.meta.glob("$lib/data/tours/*.json", {
-    eager: true,
-    import: "default"
-  }) as Record<string, TourJson>;
 
   const labelOverrides: Record<string, string> = {
     "sendero-arrayanes-audio-01": "Sendero Arrayanes – Audioguía (Llao Llao)",
@@ -39,24 +35,17 @@
     "casa-test-01": "Abrir Test casa"
   };
 
-  const hiddenTourIds = new Set(["casa-test-01"]);
-  const isHiddenTour = (tour: { id?: string; slug?: string }) =>
-    (tour.id && hiddenTourIds.has(tour.id)) || (tour.slug && hiddenTourIds.has(tour.slug));
-
-  const tours: TourLink[] = Object.entries(tourModules)
-    .map(([path, data]) => {
-      const filename = path.split("/").pop() ?? "";
-      const idFromFile = filename.replace(".json", "");
-      const id = typeof data.id === "string" ? data.id : idFromFile;
-      const slug = typeof data.slug === "string" ? data.slug : id;
+  const devMode = $derived(browser ? getDevModeFromSearch($page.url.search) : false);
+  const tours = $derived(
+    getTourRecords(devMode).map(({ id, slug, status, data }) => {
       const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
       const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
       const sizeBytes = data.offline?.totalBytes;
-      return { id, slug, name, ctaLabel, sizeBytes };
+      return { id, slug, name, ctaLabel, status, sizeBytes };
     })
-    .filter((tour) => !isHiddenTour(tour));
+  );
 
-  let downloadState: Record<string, DownloadState> = {};
+  let downloadState = $state<Record<string, DownloadState>>({});
   let unsubscribeStore: (() => void) | null = null;
   const noop = () => undefined;
 
@@ -69,7 +58,7 @@
     setDownloadState(tour.id, { status: "idle", bytes: undefined });
   }
 
-  $: offlineTours = tours.filter((tour) => downloadState[tour.id]?.status === "downloaded");
+  const offlineTours = $derived(tours.filter((tour) => downloadState[tour.id]?.status === "downloaded"));
 
   onMount(() => {
     if (!browser) return;
@@ -107,6 +96,7 @@
             onRequestDownload={noop}
             onDeleteDownload={deleteDownload}
             onResetDownload={noop}
+            showTestBadge={devMode && tour.status === "test"}
           />
         {/each}
       </div>

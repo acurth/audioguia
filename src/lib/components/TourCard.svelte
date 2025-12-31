@@ -9,6 +9,7 @@
   export let onDeleteDownload: TourAction;
   export let onResetDownload: TourResetAction;
   export let isStalled: (state: DownloadState | undefined) => boolean = () => false;
+  export let showTestBadge = false;
 
   type TourSummary = {
     id: string;
@@ -57,6 +58,9 @@
     <div class="tour-top">
       <h2 class="sr-only">{tour.name}</h2>
       <div class="tour-actions">
+        {#if showTestBadge}
+          <span class="tour-badge" aria-label="Tour de prueba">TEST</span>
+        {/if}
         <a
           href={`${base}/${tour.slug ?? tour.id}`}
           class="btn btn-primary tour-cta"
@@ -212,3 +216,17 @@
     {/if}
   </div>
 </article>
+
+<style>
+  .tour-badge {
+    align-self: center;
+    margin-right: 0.5rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #f2c94c;
+    color: #1b1b1b;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+</style>

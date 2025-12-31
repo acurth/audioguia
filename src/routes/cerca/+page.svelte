@@ -1,7 +1,14 @@
 <script lang="ts">
   import { base } from "$app/paths";
   import { browser } from "$app/environment";
+  import { page } from "$app/stores";
   import { onMount } from "svelte";
+  import {
+    getDevModeFromSearch,
+    getTourRecords,
+    type TourJson,
+    type TourStatus
+  } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
   import TourCard from "$lib/components/TourCard.svelte";
@@ -14,29 +21,17 @@
   type OfflineFile = { path: string; bytes: number };
   type OfflineManifest = { totalBytes?: number; files?: OfflineFile[] };
 
-  type TourJson = {
-    id?: string;
-    slug?: string;
-    name?: string;
-    points?: Point[];
-    offline?: OfflineManifest;
-  };
-
   type TourRuntime = {
     id: string;
     slug: string;
     name: string;
     points: Point[];
     ctaLabel: string;
+    status: TourStatus;
     sizeBytes?: number;
     offline?: OfflineManifest;
     raw: TourJson;
   };
-
-  const tourModules = import.meta.glob("$lib/data/tours/*.json", {
-    eager: true,
-    import: "default"
-  }) as Record<string, TourJson>;
 
   const labelOverrides: Record<string, string> = {
     "sendero-arrayanes-audio-01": "Sendero Arrayanes – Audioguía (Llao Llao)",
@@ -48,38 +43,50 @@
     "casa-test-01": "Abrir Test casa"
   };
 
-  const hiddenTourIds = new Set(["casa-test-01"]);
-  const isHiddenTour = (tour: { id?: string; slug?: string }) =>
-    (tour.id && hiddenTourIds.has(tour.id)) || (tour.slug && hiddenTourIds.has(tour.slug));
-
-  const tours: TourRuntime[] = Object.entries(tourModules)
-    .map(([path, data]) => {
-      const filename = path.split("/").pop() ?? "";
-      const idFromFile = filename.replace(".json", "");
-      const id = typeof data.id === "string" ? data.id : idFromFile;
-      const slug = typeof data.slug === "string" ? data.slug : id;
+  const devMode = $derived(browser ? getDevModeFromSearch($page.url.search) : false);
+  const tours = $derived(
+    getTourRecords(devMode).map(({ id, slug, status, data }) => {
       const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
       const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
-      const points = Array.isArray(data.points) ? data.points : [];
+      const points = Array.isArray(data.points) ? (data.points as Point[]) : [];
       return {
         id,
         slug,
         name,
         points,
         ctaLabel,
+        status,
         sizeBytes: data.offline?.totalBytes,
         offline: data.offline,
         raw: data
       };
     })
-    .filter((tour) => !isHiddenTour(tour));
+  );
 
   type LocationStatus = "loading" | "ready" | "denied" | "error";
-  let locationStatus: LocationStatus = "loading";
-  let locationMessage = "";
-  let userPosition: { lat: number; lng: number } | null = null;
-  let downloadState: Record<string, DownloadState> = {};
-  let sortedTours: Array<TourRuntime & { distance: number }> = [];
+  let locationStatus = $state<LocationStatus>("loading");
+  let locationMessage = $state("");
+  let userPosition = $state<{ lat: number; lng: number } | null>(null);
+  let downloadState = $state<Record<string, DownloadState>>({});
+  const sortedTours = $derived(
+    (() => {
+      if (!userPosition) return [];
+      const position = userPosition;
+      return tours
+        .map((tour) => {
+          const firstPoint = tour.points[0];
+          if (!firstPoint || typeof firstPoint.lat !== "number" || typeof firstPoint.lng !== "number") {
+            return { ...tour, distance: Number.POSITIVE_INFINITY };
+          }
+          const distance = getDistanceMeters(position, {
+            lat: firstPoint.lat,
+            lng: firstPoint.lng
+          });
+          return { ...tour, distance };
+        })
+        .sort((a, b) => a.distance - b.distance);
+    })()
+  );
   let unsubscribeStore: (() => void) | null = null;
 
   const ANNOUNCE_INTERVAL_MS = 2000;
@@ -257,27 +264,6 @@
     return Date.now() - lastUpdate > STALL_TIMEOUT_MS;
   }
 
-  $: {
-    if (!userPosition) {
-      sortedTours = [];
-    } else {
-      const position = userPosition;
-      sortedTours = tours
-        .map((tour) => {
-          const firstPoint = tour.points[0];
-          if (!firstPoint || typeof firstPoint.lat !== "number" || typeof firstPoint.lng !== "number") {
-            return { ...tour, distance: Number.POSITIVE_INFINITY };
-          }
-          const distance = getDistanceMeters(position, {
-            lat: firstPoint.lat,
-            lng: firstPoint.lng
-          });
-          return { ...tour, distance };
-        })
-        .sort((a, b) => a.distance - b.distance);
-    }
-  }
-
   onMount(() => {
     if (browser) {
       initOfflineStore();
@@ -410,6 +396,7 @@
             onDeleteDownload={deleteDownload}
             onResetDownload={resetDownload}
             isStalled={isStalled}
+            showTestBadge={devMode && tour.status === "test"}
           />
         {/each}
       </div>

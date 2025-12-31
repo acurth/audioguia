@@ -2,7 +2,14 @@
   import { base } from "$app/paths";
 
   import { browser } from "$app/environment";
+  import { page } from "$app/stores";
   import { onMount } from "svelte";
+  import {
+    getDevModeFromSearch,
+    getTourRecords,
+    type TourJson,
+    type TourStatus
+  } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
   import TourCard from "$lib/components/TourCard.svelte";
@@ -10,30 +17,17 @@
   type OfflineFile = { path: string; bytes: number };
   type OfflineManifest = { totalBytes?: number; files?: OfflineFile[] };
 
-  type TourJson = {
-    id?: string;
-    slug?: string;
-    name?: string;
-    theme?: string;
-    offline?: OfflineManifest;
-    points?: unknown[];
-  };
-
   type TourLink = {
     id: string;
     slug: string;
     name: string;
     ctaLabel: string;
+    status: TourStatus;
     theme?: string;
     sizeBytes?: number;
     offline?: OfflineManifest;
     raw: TourJson;
   };
-
-  const tourModules = import.meta.glob("$lib/data/tours/*.json", {
-    eager: true,
-    import: "default"
-  }) as Record<string, TourJson>;
 
   const labelOverrides: Record<string, string> = {
     "sendero-arrayanes-audio-01": "Sendero Arrayanes – Audioguía (Llao Llao)",
@@ -45,40 +39,31 @@
     "casa-test-01": "Abrir Test casa"
   };
 
-  const hiddenTourIds = new Set(["casa-test-01"]);
-  const isHiddenTour = (tour: { id?: string; slug?: string }) =>
-    (tour.id && hiddenTourIds.has(tour.id)) || (tour.slug && hiddenTourIds.has(tour.slug));
+  const devMode = $derived(browser ? getDevModeFromSearch($page.url.search) : false);
+  const tours = $derived(
+    getTourRecords(devMode)
+      .map(({ id, slug, status, data }) => {
+        const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
+        const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
+        const theme = typeof data.theme === "string" ? data.theme : undefined;
+        const offline = data.offline;
+        const sizeBytes = data.offline?.totalBytes;
 
-  const tours: TourLink[] = Object.entries(tourModules)
-    .map(([path, data]) => {
-      const filename = path.split("/").pop() ?? "";
-      const idFromFile = filename.replace(".json", "");
-
-      const id = typeof data.id === "string" ? data.id : idFromFile;
-      const slug = typeof data.slug === "string" ? data.slug : id;
-      const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
-      const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
-      const theme = typeof data.theme === "string" ? data.theme : undefined;
-      const offline = data.offline;
-      const sizeBytes = data.offline?.totalBytes;
-
-      return { id, slug, name, ctaLabel, theme, sizeBytes, offline, raw: data };
-    })
-    .filter((tour) => !isHiddenTour(tour))
-    .sort((a, b) => {
-      const aIsTest = /test|casa/i.test(a.id);
-      const bIsTest = /test|casa/i.test(b.id);
-      if (aIsTest !== bIsTest) return aIsTest ? 1 : -1;
-      return a.name.localeCompare(b.name);
-    });
+        return { id, slug, name, ctaLabel, status, theme, sizeBytes, offline, raw: data };
+      })
+      .sort((a, b) => {
+        if (a.status !== b.status) return a.status === "test" ? 1 : -1;
+        return a.name.localeCompare(b.name);
+      })
+  );
 
   const TOUR_CACHE_PREFIX = "audioguia-tour-";
   const STALL_TIMEOUT_MS = 30000;
   const ANNOUNCE_INTERVAL_MS = 2000;
 
-  let downloadState: Record<string, DownloadState> = {};
-  let announcedReady: Record<string, boolean> = {};
-  let liveMessage = "";
+  let downloadState = $state<Record<string, DownloadState>>({});
+  let announcedReady = $state<Record<string, boolean>>({});
+  let liveMessage = $state("");
   let hasInitializedAnnouncements = false;
   let unsubscribeStore: (() => void) | null = null;
   let now = Date.now();
@@ -129,14 +114,14 @@
     return 0;
   }
 
-  $: {
+  $effect(() => {
     for (const tour of tours) {
       if (downloadState[tour.id]?.status === "downloaded" && !announcedReady[tour.id]) {
         liveMessage = `Tour listo sin conexión: ${tour.name}`;
         announcedReady = { ...announcedReady, [tour.id]: true };
       }
     }
-  }
+  });
 
   function getTourById(id: string) {
     return tours.find((tour) => tour.id === id);
@@ -409,6 +394,7 @@
             onDeleteDownload={deleteDownload}
             onResetDownload={resetDownload}
             isStalled={isStalled}
+            showTestBadge={devMode && tour.status === "test"}
           />
         {/each}
       {/if}

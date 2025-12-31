@@ -1,5 +1,6 @@
 {
   "id": "casa-test-01",
+  "status": "test",
   "name": "Test: vuelta por casa",
   "points": [
     {
