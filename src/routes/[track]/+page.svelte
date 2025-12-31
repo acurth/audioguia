@@ -3,7 +3,7 @@
   import { base } from "$app/paths";
   import { browser, dev } from "$app/environment";
   import { page } from "$app/stores";
-  import MotionIndicator from "$lib/components/MotionIndicator.svelte";
+  import MovementIndicator from "$lib/components/MovementIndicator.svelte";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
 
@@ -614,7 +614,7 @@
   <header class="track-panel">
     <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
     {#if isTracking}
-      <MotionIndicator isTracking={isTracking} isMoving={isMoving} />
+      <MovementIndicator isTracking={isTracking} isMoving={isMoving} />
     {:else}
       <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
         Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
