@@ -466,14 +466,12 @@
     <p style="font-size: 0.9rem; max-width: 420px; margin: 0;">
       {statusMessage}
     </p>
-    <p class="tracking-status" aria-live="polite">
-      {#if isTracking}
+    {#if isTracking}
+      <p class="tracking-status" aria-live="polite">
         <span class="tracking-dot" aria-hidden="true"></span>
         Seguimiento activo
-      {:else}
-        Seguimiento en pausa
-      {/if}
-    </p>
+      </p>
+    {/if}
   </section>
 
   <section

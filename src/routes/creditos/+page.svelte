@@ -30,7 +30,7 @@
     </section>
 
     <section aria-labelledby="creditos-about-title">
-      <h2 id="creditos-about-title" class="hero-subtitle">Sobre la audioguía</h2>
+      <h3 id="creditos-about-title" class="creditos-subtitle">Sobre la audioguía</h3>
       <span id="ayuda" class="sr-only">Ayuda</span>
       <p>
         Esta audioguía te acompaña en senderos naturales con relatos y sonidos que se activan a
