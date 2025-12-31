@@ -1,10 +1,6 @@
 <script lang="ts">
   import { base } from "$app/paths";
-  import { APP_VERSION, CONTENT_VERSION } from "$lib/version";
-
   const appBase = base;
-  const LAST_UPDATE = new Date().toISOString().slice(0, 10);
-  const CURRENT_YEAR = new Date().getFullYear();
 
   const actions = [
     {
@@ -34,12 +30,8 @@
   <main id="main" class="content ag-main">
     <h1 class="hero-title">Senderos para escuchar</h1>
     <p class="hero-blurb">
-      Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para
-      personas ciegas, abierta a todo público.
-    </p>
-    <p class="hero-subtitle">
-      Elegí un recorrido para empezar a caminar con audio guiado. Se recomienda descargar el tour
-      antes de salir del Wi-Fi o de una buena conexión de datos.
+      Una audioguía accesible para recorrer senderos naturales a través del sonido, pensada para
+      personas con discapacidad visual y abierta a todo público.
     </p>
 
     <div class="home-actions">
@@ -77,23 +69,5 @@
       {/each}
     </div>
 
-    <section class="about" aria-labelledby="about-title">
-      <h2 id="about-title">About</h2>
-      <p>
-        <strong>Iniciativa:</strong> COA Tucúquere Bariloche / Aves Argentinas
-      </p>
-      <p>
-        <strong>Last Update:</strong> {LAST_UPDATE}
-      </p>
-      <p>
-        <strong>Versión App:</strong> {APP_VERSION}
-      </p>
-      <p>
-        <strong>Versión Content:</strong> {CONTENT_VERSION}
-      </p>
-      <p>
-        © {CURRENT_YEAR} Audioguía Natural. Todos los derechos reservados.
-      </p>
-    </section>
   </main>
 </div>

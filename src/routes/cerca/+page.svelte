@@ -382,6 +382,9 @@
   <main id="main" class="content ag-main">
     <h1 class="hero-title">Recorridos cerca de mí</h1>
     <p class="hero-subtitle">Ver recorridos disponibles según tu ubicación.</p>
+    <p class="hero-subtitle">
+      Recomendación: descargá el recorrido antes de salir del Wi-Fi o de una buena conexión de datos.
+    </p>
 
     {#if locationStatus !== "ready"}
       <p class="empty-state">

@@ -20,6 +20,7 @@
 	const isCerca = $derived(normalizedPath.startsWith(`${appBase}/cerca`));
 	const isOffline = $derived(normalizedPath.startsWith(`${appBase}/offline`));
 	const isExplorar = $derived(normalizedPath.startsWith(`${appBase}/explorar`));
+	const isCreditos = $derived(normalizedPath.startsWith(`${appBase}/creditos`));
 
 	onMount(() => {
 		initOfflineStore();
@@ -97,6 +98,12 @@
 					aria-current={isExplorar ? 'page' : undefined}
 				>
 					Explorar
+				</a>
+				<a
+					href={`${appBase}/creditos`}
+					aria-current={isCreditos ? 'page' : undefined}
+				>
+					Créditos
 				</a>
 			</nav>
 		</div>

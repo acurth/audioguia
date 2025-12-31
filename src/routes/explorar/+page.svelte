@@ -385,6 +385,9 @@
       {liveMessage}
     </div>
     <h1 class="hero-title">Explorar recorridos</h1>
+    <p class="hero-subtitle">
+      Recomendación: descargá el recorrido antes de salir del Wi-Fi o de una buena conexión de datos.
+    </p>
 
     <div class="tour-list">
       {#if tours.length === 0}
