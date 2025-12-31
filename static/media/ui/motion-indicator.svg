@@ -69,6 +69,9 @@
     <line class="stroke" x1="32" y1="36" x2="46" y2="48" />
     <line class="stroke" x1="32" y1="54" x2="22" y2="78" />
     <line class="stroke" x1="32" y1="54" x2="42" y2="78" />
+    <path class="stroke wave" d="M18 14c-4 4-4 10 0 14" />
+    <path class="stroke wave second" d="M14 10c-6 6-6 14 0 20" />
+    <path class="stroke wave third" d="M10 6c-8 8-8 18 0 26" />
     <path class="stroke wave" d="M46 14c4 4 4 10 0 14" />
     <path class="stroke wave second" d="M50 10c6 6 6 14 0 20" />
     <path class="stroke wave third" d="M54 6c8 8 8 18 0 26" />
