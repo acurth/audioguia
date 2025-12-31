@@ -83,6 +83,8 @@
   $: isOfflineReady = Boolean(
     selectedTour?.id && downloadState[selectedTour.id]?.status === "downloaded"
   );
+  $: tourSlug = selectedTour?.slug ?? selectedTour?.id ?? "";
+  $: backgroundUrl = tourSlug ? `${appBase}/media/tours/${tourSlug}/background.webp` : "";
 
   // Estado general
   let isTracking = false;
@@ -383,8 +385,8 @@
 </script>
 
 <main
-  class="ag-main"
-  style="
+  class="ag-main track-page"
+  style={`
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -394,7 +396,12 @@
     padding: 0 1rem 3rem;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     gap: 1.5rem;
-  "
+    background-image: url('${backgroundUrl}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  `}
 >
   <div class="track-header">
     <a class="track-back" href={`${appBase}/`}>← Menú principal</a>

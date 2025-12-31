@@ -228,6 +228,8 @@
     });
 
     const files = tour.offline?.files?.map((f) => f.path) ?? [];
+    const backgroundPath = `media/tours/${tour.slug}/background.webp`;
+    const downloadFiles = [...files, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     console.info("[offline] user requested tour download", {
@@ -242,7 +244,7 @@
       payload: {
         id: tour.id,
         slug: tour.slug,
-        files,
+        files: downloadFiles,
         json: jsonPayload
       }
     });

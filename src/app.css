@@ -233,6 +233,25 @@ a:hover {
   gap: 0.4rem;
 }
 
+.track-page {
+  position: relative;
+  background-color: #fbf9f6;
+}
+
+.track-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(251, 249, 246, 0.88);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.track-page > * {
+  position: relative;
+  z-index: 1;
+}
+
 .tracking-dot {
   width: 8px;
   height: 8px;
