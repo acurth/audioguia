@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import { base } from "$app/paths";
-  import { browser, dev } from "$app/environment";
+  import { browser } from "$app/environment";
   import { page } from "$app/stores";
   import MovementIndicator from "$lib/components/MovementIndicator.svelte";
+  import { getDevModeFromStorage } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
 
@@ -37,9 +38,9 @@
     offline?: OfflineManifest;
   };
 
-  const MIN_EFFECTIVE_RADIUS_METERS = 8;
+  const DEFAULT_TRIGGER_RADIUS_METERS = 10;
   const MAX_EFFECTIVE_RADIUS_METERS = 25;
-  const ACCURACY_MULTIPLIER = 2.5;
+  const ACCURACY_MULTIPLIER = 1.5;
   const POOR_ACCURACY_THRESHOLD_METERS = 20;
   const MAX_ACCURACY_FOR_TRIGGER_METERS = 50;
   const MOTION_DISTANCE_METERS = 8;
@@ -107,6 +108,7 @@
   let currentLat: number | null = null;
   let currentLng: number | null = null;
   let currentAccuracy: number | null = null;
+  let currentEffectiveRadius: number | null = null;
   let gpsWarningMessage: string | null = null;
   let isMoving = false;
   let lastMotionSample: { lat: number; lng: number; time: number } | null = null;
@@ -127,6 +129,11 @@
   let lastTriggeredAccuracy: number | null = null;
   let lastTriggeredEffectiveRadius: number | null = null;
   let lastTriggeredInsideRadius: boolean | null = null;
+
+  let nextArmedPoint: Point | null = null;
+  let distanceToNextPointMeters: number | null = null;
+
+  let devMode = false;
 
   // Reproductor de audio
   let audioPlayer: HTMLAudioElement | null = null;
@@ -224,9 +231,9 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  function getEffectiveRadius(accuracy: number, baseRadius: number): number {
-    const scaled = Math.max(baseRadius, accuracy * ACCURACY_MULTIPLIER);
-    return clamp(scaled, MIN_EFFECTIVE_RADIUS_METERS, MAX_EFFECTIVE_RADIUS_METERS);
+  function getEffectiveRadius(accuracy: number): number {
+    const scaled = Math.max(DEFAULT_TRIGGER_RADIUS_METERS, accuracy * ACCURACY_MULTIPLIER);
+    return clamp(scaled, DEFAULT_TRIGGER_RADIUS_METERS, MAX_EFFECTIVE_RADIUS_METERS);
   }
 
   async function playPointAudio(point: Point) {
@@ -314,6 +321,7 @@
     currentLat = latitude;
     currentLng = longitude;
     currentAccuracy = accuracy;
+    currentEffectiveRadius = getEffectiveRadius(accuracy);
     gpsWarningMessage = accuracy > POOR_ACCURACY_THRESHOLD_METERS ? "GPS poco preciso" : null;
 
     // Distancia al punto 1 del recorrido (si existe)
@@ -362,12 +370,13 @@
 
     if (!isTracking) return;
 
+    const effectiveRadius = currentEffectiveRadius;
+
     for (const point of points) {
       if (triggeredPointIds.includes(point.id)) continue;
 
       const dist = distanceMeters(latitude, longitude, point.lat, point.lng);
-      const baseRadius = Number.isFinite(point.radius) ? point.radius : 10;
-      const effectiveRadius = getEffectiveRadius(accuracy, baseRadius);
+      if (effectiveRadius === null) continue;
       const insideRadius = dist <= effectiveRadius;
       const accuracyOk = accuracy <= MAX_ACCURACY_FOR_TRIGGER_METERS;
 
@@ -550,6 +559,13 @@
       unsubscribeStore();
     }
   });
+
+  $: devMode = browser ? getDevModeFromStorage() : false;
+  $: nextArmedPoint = points.find((point) => !triggeredPointIds.includes(point.id)) ?? null;
+  $: distanceToNextPointMeters =
+    nextArmedPoint && pointDistances[nextArmedPoint.id] !== undefined
+      ? pointDistances[nextArmedPoint.id]
+      : null;
 </script>
 
 <main
@@ -700,7 +716,7 @@
     {/if}
   {/if}
 
-  {#if dev}
+  {#if devMode}
     <section
       style="
         width: 100%;
@@ -753,6 +769,14 @@
       <p class="tracking-status" aria-live="polite">
         <span class="tracking-dot" aria-hidden="true"></span>
         Seguimiento activo
+      </p>
+    {/if}
+    {#if devMode}
+      <p style="font-size: 0.75rem; margin: 0; opacity: 0.75;">
+        Acc: {currentAccuracy !== null ? Math.round(currentAccuracy) : "—"} m ·
+        Radio: {currentEffectiveRadius !== null ? Math.round(currentEffectiveRadius) : "—"} m ·
+        Distancia siguiente: {distanceToNextPointMeters !== null ? Math.round(distanceToNextPointMeters) : "—"} m ·
+        Armado: {nextArmedPoint ? `${nextArmedPoint.id} (${nextArmedPoint.name})` : "—"}
       </p>
     {/if}
   </section>
