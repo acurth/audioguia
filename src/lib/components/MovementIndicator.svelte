@@ -80,6 +80,15 @@
   .motion-icon .wave,
   .motion-icon .body-bob {
     transform-box: fill-box;
+  }
+
+  .motion-icon .leg,
+  .motion-icon .arm {
+    transform-origin: 50% 0%;
+  }
+
+  .motion-icon .wave,
+  .motion-icon .body-bob {
     transform-origin: center;
   }
 
@@ -113,32 +122,32 @@
   }
 
   @keyframes leg-left {
-    0% { transform: rotate(12deg); }
-    50% { transform: rotate(-10deg); }
-    100% { transform: rotate(12deg); }
+    0% { transform: rotate(7deg) translateY(0); }
+    50% { transform: rotate(-7deg) translateY(1px); }
+    100% { transform: rotate(7deg) translateY(0); }
   }
 
   @keyframes leg-right {
-    0% { transform: rotate(-12deg); }
-    50% { transform: rotate(10deg); }
-    100% { transform: rotate(-12deg); }
+    0% { transform: rotate(-7deg) translateY(1px); }
+    50% { transform: rotate(7deg) translateY(0); }
+    100% { transform: rotate(-7deg) translateY(1px); }
   }
 
   @keyframes arm-left {
-    0% { transform: rotate(-8deg); }
+    0% { transform: rotate(-6deg); }
     50% { transform: rotate(6deg); }
-    100% { transform: rotate(-8deg); }
+    100% { transform: rotate(-6deg); }
   }
 
   @keyframes arm-right {
-    0% { transform: rotate(8deg); }
+    0% { transform: rotate(6deg); }
     50% { transform: rotate(-6deg); }
-    100% { transform: rotate(8deg); }
+    100% { transform: rotate(6deg); }
   }
 
   @keyframes body-bob {
     0% { transform: translateY(0); }
-    50% { transform: translateY(2px); }
+    50% { transform: translateY(1px); }
     100% { transform: translateY(0); }
   }
 

@@ -630,7 +630,9 @@
   <header class="track-panel">
     <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
     {#if isTracking}
-      <MovementIndicator isTracking={isTracking} isMoving={isMoving} />
+      <div style="display: flex; justify-content: center; margin: 0.35rem 0;">
+        <MovementIndicator isTracking={isTracking} isMoving={isMoving} />
+      </div>
     {:else}
       <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
         Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
