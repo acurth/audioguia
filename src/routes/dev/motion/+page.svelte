@@ -1,7 +1,8 @@
 <script lang="ts">
   import { base } from "$app/paths";
   import { browser, dev } from "$app/environment";
-  import MovementIndicator from "$lib/components/MovementIndicator.svelte";
+  import FootstepsIndicator from "$lib/components/FootstepsIndicator.svelte";
+  import ListeningFigure from "$lib/components/motion/ListeningFigure.svelte";
   import { getDevModeFromStorage } from "$lib/data/tours";
 
   const appBase = base;
@@ -20,6 +21,8 @@
       padding: 2rem 1rem 3rem;
       gap: 1.5rem;
       text-align: center;
+      background: #1f1f1f;
+      color: #ffffff;
     "
   >
     <a href={`${appBase}/`} style="text-decoration: none; color: inherit;">← Volver</a>
@@ -42,11 +45,11 @@
       "
     >
       <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-        <MovementIndicator isTracking={true} isMoving={true} />
+        <FootstepsIndicator label="Caminando" />
         <span style="font-size: 0.85rem; opacity: 0.7;">Walking</span>
       </div>
       <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-        <MovementIndicator isTracking={true} isMoving={false} />
+        <ListeningFigure active={true} />
         <span style="font-size: 0.85rem; opacity: 0.7;">Listening</span>
       </div>
     </section>
