@@ -20,8 +20,13 @@ export type TourRecord = {
   data: TourJson;
 };
 
-export const getDevModeFromStorage = () =>
-  typeof sessionStorage !== "undefined" && sessionStorage.getItem("devMode") === "1";
+export const getDevModeFromStorage = () => {
+  const inSession =
+    typeof sessionStorage !== "undefined" && sessionStorage.getItem("devMode") === "1";
+  if (inSession) return true;
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("dev") === "1";
+};
 
 const tourModules = import.meta.glob("$lib/data/tours/*.json", {
   eager: true,

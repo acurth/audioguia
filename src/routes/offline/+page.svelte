@@ -20,7 +20,6 @@
     id: string;
     slug: string;
     name: string;
-    ctaLabel: string;
     status: TourStatus;
     sizeBytes?: number;
   };
@@ -30,18 +29,12 @@
     "casa-test-01": "Casa – Tour de prueba"
   };
 
-  const ctaLabelOverrides: Record<string, string> = {
-    "sendero-arrayanes-audio-01": "Abrir Sendero Arrayanes Audio",
-    "casa-test-01": "Abrir Test casa"
-  };
-
   const devMode = $derived(browser ? getDevModeFromStorage() : false);
   const tours = $derived(
     getTourRecords(devMode).map(({ id, slug, status, data }) => {
       const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
-      const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
       const sizeBytes = data.offline?.totalBytes;
-      return { id, slug, name, ctaLabel, status, sizeBytes };
+      return { id, slug, name, status, sizeBytes };
     })
   );
 

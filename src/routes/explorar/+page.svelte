@@ -21,7 +21,6 @@
     id: string;
     slug: string;
     name: string;
-    ctaLabel: string;
     status: TourStatus;
     theme?: string;
     sizeBytes?: number;
@@ -34,22 +33,16 @@
     "casa-test-01": "Casa – Tour de prueba"
   };
 
-  const ctaLabelOverrides: Record<string, string> = {
-    "sendero-arrayanes-audio-01": "Abrir Sendero Arrayanes Audio",
-    "casa-test-01": "Abrir Test casa"
-  };
-
   const devMode = $derived(browser ? getDevModeFromStorage() : false);
   const tours = $derived(
     getTourRecords(devMode)
       .map(({ id, slug, status, data }) => {
         const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
-        const ctaLabel = ctaLabelOverrides[id] ?? "Abrir tour";
         const theme = typeof data.theme === "string" ? data.theme : undefined;
         const offline = data.offline;
         const sizeBytes = data.offline?.totalBytes;
 
-        return { id, slug, name, ctaLabel, status, theme, sizeBytes, offline, raw: data };
+        return { id, slug, name, status, theme, sizeBytes, offline, raw: data };
       })
       .sort((a, b) => {
         if (a.status !== b.status) return a.status === "test" ? 1 : -1;
@@ -196,8 +189,24 @@
     };
   }
 
+  function getAudioFiles(tour: TourLink): string[] {
+    const offlineFiles = tour.offline?.files?.map((file) => file.path).filter(Boolean) ?? [];
+    if (offlineFiles.length) return offlineFiles;
+    const points = Array.isArray(tour.raw?.points) ? tour.raw.points : [];
+    return points
+      .map((point) => {
+        if (!point || typeof point !== "object") return undefined;
+        const audio = (point as { audio?: unknown }).audio;
+        return typeof audio === "string" ? audio : undefined;
+      })
+      .filter((audio): audio is string => typeof audio === "string" && audio.length > 0);
+  }
+
   async function requestDownload(tour: TourLink) {
     if (!browser || !("serviceWorker" in navigator)) return;
+
+    const audioFiles = getAudioFiles(tour);
+    if (audioFiles.length === 0) return;
 
     setState(tour.id, {
       status: "downloading",
@@ -206,7 +215,7 @@
       progress: 0,
       stage: "preparing",
       completedFiles: 0,
-      totalFiles: tour.offline?.files?.length ?? 0,
+      totalFiles: audioFiles.length + 1,
       currentIndex: 0,
       currentUrl: undefined,
       lastUpdate: Date.now(),
@@ -217,15 +226,14 @@
       cacheResult: undefined
     });
 
-    const files = tour.offline?.files?.map((f) => f.path) ?? [];
     const backgroundPath = `media/tours/${tour.slug}/background.webp`;
-    const downloadFiles = [...files, backgroundPath];
+    const downloadFiles = [...audioFiles, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     console.info("[offline] user requested tour download", {
       id: tour.id,
       slug: tour.slug,
-      files: files.length
+      files: audioFiles.length
     });
 
     const registration = await navigator.serviceWorker.ready;

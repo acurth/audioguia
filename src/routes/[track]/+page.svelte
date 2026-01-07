@@ -4,7 +4,7 @@
   import { browser } from "$app/environment";
   import { page } from "$app/stores";
   import MovementIndicator from "$lib/components/MovementIndicator.svelte";
-  import { getDevModeFromStorage } from "$lib/data/tours";
+  import { getDevModeFromStorage, getTourRecords, type TourJson as StoredTourJson } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
 
@@ -27,15 +27,7 @@
     name: string;
     points: Point[];
     offline?: OfflineManifest;
-    raw: TourJson;
-  };
-
-  type TourJson = {
-    id?: string;
-    slug?: string;
-    name?: string;
-    points?: Point[];
-    offline?: OfflineManifest;
+    raw: StoredTourJson;
   };
 
   const DEFAULT_TRIGGER_RADIUS_METERS = 10;
@@ -47,18 +39,24 @@
   const MOTION_STILL_METERS = 3;
   const MOTION_WINDOW_MS = 12000;
 
-  const tourModules = import.meta.glob("$lib/data/tours/*.json", {
-    eager: true,
-    import: "default"
-  }) as Record<string, TourJson>;
+  let devMode = false;
+  let tours: Tour[] = [];
+  let tourMap: Record<string, Tour> = {};
+  let title = "Recorrido no encontrado";
+  let points: Point[] = [];
+  let selectedTour: Tour | undefined = undefined;
+  let downloadState: Record<string, DownloadState> = {};
+  let unsubscribeStore: (() => void) | null = null;
+  let removeSwListener: (() => void) | null = null;
+  let wakeLock: WakeLockSentinel | null = null;
+  let isOfflineReady = false;
 
-  const tours: Tour[] = Object.entries(tourModules)
-    .map(([path, data]) => {
-      const filename = path.split("/").pop() ?? "";
-      const fallbackId = filename.replace(".json", "");
+  const appBase = base;
 
-      const id = typeof data.id === "string" ? data.id : fallbackId;
-      const slug = typeof data.slug === "string" ? data.slug : id;
+  $: devMode = browser ? getDevModeFromStorage() : false;
+
+  $: tours = getTourRecords(devMode)
+    .map(({ id, slug, data }) => {
       const name = typeof data.name === "string" ? data.name : slug;
       const points = Array.isArray(data.points) ? (data.points as Point[]) : [];
       const offline = data.offline;
@@ -67,22 +65,11 @@
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const tourMap = tours.reduce<Record<string, Tour>>((acc, tour) => {
+  $: tourMap = tours.reduce<Record<string, Tour>>((acc, tour) => {
     acc[tour.slug] = tour;
     acc[tour.id] = tour;
     return acc;
   }, {});
-
-  let title: string = tours[0]?.name ?? "Recorrido no encontrado";
-  let points: Point[] = tours[0]?.points ?? [];
-  let selectedTour: Tour | undefined = tours[0];
-  let downloadState: Record<string, DownloadState> = {};
-  let unsubscribeStore: (() => void) | null = null;
-  let removeSwListener: (() => void) | null = null;
-  let wakeLock: WakeLockSentinel | null = null;
-  let isOfflineReady = false;
-
-  const appBase = base;
 
   $: {
     const track = $page.params.track;
@@ -98,6 +85,9 @@
   );
   $: tourSlug = selectedTour?.slug ?? selectedTour?.id ?? "";
   $: backgroundUrl = tourSlug ? `${appBase}/media/tours/${tourSlug}/background.webp` : "";
+  let resolvedBackgroundUrl = "";
+  let backgroundImage = "linear-gradient(160deg, rgba(10, 30, 22, 0.9), rgba(22, 44, 34, 0.7))";
+  let backgroundRequestId = 0;
   $: downloadStatus = selectedTour?.id ? downloadState[selectedTour.id] : undefined;
 
   // Estado general
@@ -133,7 +123,33 @@
   let nextArmedPoint: Point | null = null;
   let distanceToNextPointMeters: number | null = null;
 
-  let devMode = false;
+  function resolveBackground(url: string) {
+    if (!browser) {
+      resolvedBackgroundUrl = "";
+      backgroundImage = "linear-gradient(160deg, rgba(10, 30, 22, 0.9), rgba(22, 44, 34, 0.7))";
+      return;
+    }
+    backgroundRequestId += 1;
+    const requestId = backgroundRequestId;
+    if (!url) {
+      resolvedBackgroundUrl = "";
+      backgroundImage = "linear-gradient(160deg, rgba(10, 30, 22, 0.9), rgba(22, 44, 34, 0.7))";
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      if (requestId !== backgroundRequestId) return;
+      resolvedBackgroundUrl = url;
+      backgroundImage = `linear-gradient(160deg, rgba(10, 30, 22, 0.55), rgba(22, 44, 34, 0.35)), url('${url}')`;
+    };
+    img.onerror = () => {
+      if (requestId !== backgroundRequestId) return;
+      resolvedBackgroundUrl = "";
+      backgroundImage = "linear-gradient(160deg, rgba(10, 30, 22, 0.9), rgba(22, 44, 34, 0.7))";
+    };
+    img.src = url;
+  }
 
   // Reproductor de audio
   let audioPlayer: HTMLAudioElement | null = null;
@@ -181,9 +197,18 @@
     return 0;
   }
 
+  function getAudioFiles(tour: Tour): string[] {
+    const offlineFiles = tour.offline?.files?.map((file) => file.path).filter(Boolean) ?? [];
+    if (offlineFiles.length) return offlineFiles;
+    return tour.points
+      .map((point) => point.audio)
+      .filter((audio) => typeof audio === "string" && audio.length > 0);
+  }
+
   async function requestDownload(tour: Tour) {
     if (!browser || !("serviceWorker" in navigator)) return;
-    if (!tour.offline?.files?.length) return;
+    const audioFiles = getAudioFiles(tour);
+    if (audioFiles.length === 0) return;
 
     setDownloadState(tour.id, {
       status: "downloading",
@@ -192,7 +217,7 @@
       progress: 0,
       stage: "preparing",
       completedFiles: 0,
-      totalFiles: tour.offline?.files?.length ?? 0,
+      totalFiles: audioFiles.length + 1,
       currentIndex: 0,
       currentUrl: undefined,
       lastUpdate: Date.now(),
@@ -203,9 +228,8 @@
       cacheResult: undefined
     });
 
-    const files = tour.offline?.files?.map((f) => f.path) ?? [];
     const backgroundPath = `media/tours/${tour.slug}/background.webp`;
-    const downloadFiles = [...files, backgroundPath];
+    const downloadFiles = [...audioFiles, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     const registration = await navigator.serviceWorker.ready;
@@ -475,6 +499,8 @@
     }
   }
 
+  $: resolveBackground(backgroundUrl);
+
   onMount(() => {
     if (!browser) return;
     initOfflineStore();
@@ -560,7 +586,6 @@
     }
   });
 
-  $: devMode = browser ? getDevModeFromStorage() : false;
   $: nextArmedPoint = points.find((point) => !triggeredPointIds.includes(point.id)) ?? null;
   $: distanceToNextPointMeters =
     nextArmedPoint && pointDistances[nextArmedPoint.id] !== undefined
@@ -580,7 +605,8 @@
     padding: 0 1rem 3rem;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     gap: 1.5rem;
-    background-image: url('${backgroundUrl}');
+    background-color: #0f1c18;
+    background-image: ${backgroundImage};
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

@@ -1,0 +1,144 @@
+{
+  "id": "cascada-duendes-audio-01",
+  "status": "test",
+  "name": "Cascada de los Duendes",
+  "slug": "cascada-duendes-audio-01",
+  "lang": "es",
+  "points": [
+    {
+      "id": "p01",
+      "name": "Inicio Sendero Cascada de los Duendes",
+      "lat": -41.179408,
+      "lng": -71.414213,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/001.mp3"
+    },
+    {
+      "id": "p02",
+      "name": "Arroyo Pescadero",
+      "lat": -41.179691,
+      "lng": -71.415017,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/002.mp3"
+    },
+    {
+      "id": "p03",
+      "name": "El Rayadito",
+      "lat": -41.18011,
+      "lng": -71.41539,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/003.mp3"
+    },
+    {
+      "id": "p04",
+      "name": "Sentir el Arroyo",
+      "lat": -41.18066,
+      "lng": -71.41567,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/004.mp3"
+    },
+    {
+      "id": "p05",
+      "name": "Escalera de Piedras",
+      "lat": -41.181439,
+      "lng": -71.416328,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/005.mp3"
+    },
+    {
+      "id": "p06",
+      "name": "Seguimos la senda principal",
+      "lat": -41.1818,
+      "lng": -71.4166,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/006.mp3"
+    },
+    {
+      "id": "p07",
+      "name": "El Carpintero Gigante",
+      "lat": -41.18187,
+      "lng": -71.416979,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/007.mp3"
+    },
+    {
+      "id": "p08",
+      "name": "Bifurcación del Fío Fío",
+      "lat": -41.182172,
+      "lng": -71.417297,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/008.mp3"
+    },
+    {
+      "id": "p09",
+      "name": "El puente",
+      "lat": -41.1821,
+      "lng": -71.418,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/009.mp3"
+    },
+    {
+      "id": "p10",
+      "name": "La Cascada de Los Duendes",
+      "lat": -41.182097,
+      "lng": -71.418481,
+      "alt": 0,
+      "radius": 20,
+      "audio": "audio/tours/cascada-duendes-audio-01/es/010.mp3"
+    }
+  ],
+  "offline": {
+    "totalBytes": 10292800,
+    "files": [
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/001.mp3",
+        "bytes": 1092112
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/002.mp3",
+        "bytes": 1032160
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/003.mp3",
+        "bytes": 1134400
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/004.mp3",
+        "bytes": 730960
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/005.mp3",
+        "bytes": 384544
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/006.mp3",
+        "bytes": 495040
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/007.mp3",
+        "bytes": 1102336
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/008.mp3",
+        "bytes": 1239568
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/009.mp3",
+        "bytes": 680752
+      },
+      {
+        "path": "audio/tours/cascada-duendes-audio-01/es/010.mp3",
+        "bytes": 2400928
+      }
+    ]
+  }
+}

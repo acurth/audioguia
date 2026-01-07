@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { DownloadState } from "$lib/stores/offline";
+  import { openTourLabel } from "$lib/utils/tourLabels";
 
   export let tour: TourSummary;
   export let base: string;
@@ -17,7 +18,6 @@
     distance?: number;
     sizeBytes?: number;
     slug?: string;
-    ctaLabel?: string;
   };
   type TourAction = {
     bivarianceHack(tour: TourSummary): void | Promise<void>;
@@ -25,8 +25,6 @@
   type TourResetAction = {
     bivarianceHack(tour: TourSummary, restart?: boolean): void | Promise<void>;
   }["bivarianceHack"];
-
-  const defaultCtaLabel = "Abrir tour";
 
   function formatMB(bytes?: number) {
     if (!bytes) return "0 MB";
@@ -64,9 +62,9 @@
         <a
           href={`${base}/${tour.slug ?? tour.id}`}
           class="btn btn-primary tour-cta"
-          aria-label={tour.ctaLabel ?? defaultCtaLabel}
+          aria-label={openTourLabel(tour)}
         >
-          {tour.ctaLabel ?? defaultCtaLabel}
+          {openTourLabel(tour)}
         </a>
       </div>
     </div>
