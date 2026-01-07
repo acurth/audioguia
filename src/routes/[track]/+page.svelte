@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { base } from "$app/paths";
   import { browser } from "$app/environment";
   import { page } from "$app/stores";
@@ -122,6 +122,74 @@
 
   let nextArmedPoint: Point | null = null;
   let distanceToNextPointMeters: number | null = null;
+  let lastManualScrollAt = 0;
+  let lastAutoScrollId: string | null = null;
+  let activePointId: string | null = null;
+  const pointRefs: Record<string, HTMLElement | null> = {};
+  const MANUAL_SCROLL_GUARD_MS = 2000;
+  const STICKY_SCROLL_MAX = 60;
+  const STICKY_ALPHA_MIN = 0.35;
+  const STICKY_ALPHA_MAX = 0.9;
+  let stickyHeaderEl: HTMLDivElement | null = null;
+  let stickyRaf = 0;
+  let removeStickyScroll: (() => void) | null = null;
+
+  function registerPoint(node: HTMLElement, id: string) {
+    pointRefs[id] = node;
+    return {
+      destroy() {
+        if (pointRefs[id] === node) {
+          delete pointRefs[id];
+        }
+      }
+    };
+  }
+
+  function markManualScroll() {
+    lastManualScrollAt = Date.now();
+  }
+
+  function updateStickyVars(scrollTop: number) {
+    if (!stickyHeaderEl) return;
+    const factor = Math.min(1, Math.max(0, scrollTop / STICKY_SCROLL_MAX));
+    const alpha = STICKY_ALPHA_MIN + (STICKY_ALPHA_MAX - STICKY_ALPHA_MIN) * factor;
+    stickyHeaderEl.style.setProperty("--stickyAlpha", alpha.toFixed(3));
+    stickyHeaderEl.style.setProperty("--stickyShadowAlpha", factor.toFixed(3));
+    stickyHeaderEl.style.setProperty("--stickyBorderAlpha", factor.toFixed(3));
+  }
+
+  function disableStickyScroll() {
+    if (removeStickyScroll) {
+      removeStickyScroll();
+      removeStickyScroll = null;
+    }
+    updateStickyVars(0);
+  }
+
+  function enableStickyScroll() {
+    if (!browser || !stickyHeaderEl) return;
+    disableStickyScroll();
+
+    const onScroll = () => {
+      if (stickyRaf) return;
+      stickyRaf = requestAnimationFrame(() => {
+        stickyRaf = 0;
+        const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+        updateStickyVars(scrollTop);
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    removeStickyScroll = () => {
+      window.removeEventListener("scroll", onScroll);
+      if (stickyRaf) {
+        cancelAnimationFrame(stickyRaf);
+        stickyRaf = 0;
+      }
+    };
+  }
 
   function resolveBackground(url: string) {
     if (!browser) {
@@ -464,6 +532,7 @@
     isTracking = true;
     statusMessage = "Iniciando seguimiento de ubicación…";
     void requestWakeLock();
+    void tick().then(() => enableStickyScroll());
 
     watchId = navigator.geolocation.watchPosition(handlePosition, handlePositionError, {
       enableHighAccuracy: true,
@@ -489,6 +558,7 @@
     currentAudioPointId = null;
     isAudioPlaying = false;
     void releaseWakeLock();
+    disableStickyScroll();
   }
 
   function toggleTracking() {
@@ -578,6 +648,7 @@
 
   onDestroy(() => {
     stopTracking();
+    disableStickyScroll();
     if (removeSwListener) {
       removeSwListener();
     }
@@ -591,10 +662,22 @@
     nextArmedPoint && pointDistances[nextArmedPoint.id] !== undefined
       ? pointDistances[nextArmedPoint.id]
       : null;
+  $: activePointId = lastTriggeredPoint?.id ?? null;
+  $: if (!isTracking) {
+    lastAutoScrollId = null;
+  }
+  $: if (isTracking && activePointId && activePointId !== lastAutoScrollId) {
+    const hasRecentManualScroll = Date.now() - lastManualScrollAt < MANUAL_SCROLL_GUARD_MS;
+    if (!hasRecentManualScroll) {
+      const target = pointRefs[activePointId];
+      target?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+    lastAutoScrollId = activePointId;
+  }
 </script>
 
 <main
-  class="ag-main track-page"
+  class={`ag-main track-page ${isTracking ? "is-tracking" : ""}`}
   style={`
     min-height: 100vh;
     display: flex;
@@ -613,64 +696,142 @@
     background-repeat: no-repeat;
   `}
 >
-  <div class="track-header track-panel">
-    <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
-    <span
-      class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}
-      aria-label={`Estado del recorrido: ${isOfflineReady ? "offline" : "online"}`}
-      aria-live="polite"
-    >
-      {#if isOfflineReady}
-        <svg
-          class="track-status-icon"
-          viewBox="0 0 24 24"
-          width="16"
-          height="16"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path
-            d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3 1.4 1.42L12 17.41l-4.7-4.7 1.4-1.42 2.3 2.3V4a1 1 0 0 1 1-1zm-7 16h14v2H5v-2z"
-            fill="currentColor"
-          />
-        </svg>
-        Recorrido offline
-      {:else}
-        <svg
-          class="track-status-icon"
-          viewBox="0 0 24 24"
-          width="16"
-          height="16"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d="M12 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" fill="currentColor" />
-          <path d="M6.3 15.3a8 8 0 0 1 11.4 0l-1.4 1.4a6 6 0 0 0-8.6 0l-1.4-1.4z" fill="currentColor" />
-          <path d="M3.5 12.5a12 12 0 0 1 17 0l-1.4 1.4a10 10 0 0 0-14.2 0l-1.4-1.4z" fill="currentColor" />
-        </svg>
-        Recorrido online
-      {/if}
-    </span>
-  </div>
+  {#if isTracking}
+    <div class="track-active-header" bind:this={stickyHeaderEl}>
+      <div class="track-active-container">
+        <div class="track-header track-panel track-active-row track-active-row--nav">
+          <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
+          <span
+            class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}
+            aria-label={`Estado del recorrido: ${isOfflineReady ? "offline" : "online"}`}
+            aria-live="polite"
+          >
+            {#if isOfflineReady}
+              <svg
+                class="track-status-icon"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3 1.4 1.42L12 17.41l-4.7-4.7 1.4-1.42 2.3 2.3V4a1 1 0 0 1 1-1zm-7 16h14v2H5v-2z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span class="track-pill-text">Recorrido offline</span>
+              <video
+                class="track-offline-orb"
+              src={`${appBase}/media/ui/active-orb.mp4`}
+                muted
+                autoplay
+                loop
+                playsinline
+                preload="auto"
+                aria-hidden="true"
+              ></video>
+              <span class="track-offline-orb-fallback" aria-hidden="true"></span>
+            {:else}
+              <svg
+                class="track-status-icon"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M12 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" fill="currentColor" />
+                <path d="M6.3 15.3a8 8 0 0 1 11.4 0l-1.4 1.4a6 6 0 0 0-8.6 0l-1.4-1.4z" fill="currentColor" />
+                <path d="M3.5 12.5a12 12 0 0 1 17 0l-1.4 1.4a10 10 0 0 0-14.2 0l-1.4-1.4z" fill="currentColor" />
+              </svg>
+              Recorrido online
+            {/if}
+          </span>
+        </div>
 
-  <header class="track-panel">
-    <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
-    {#if isTracking}
-      <div style="display: flex; justify-content: center; margin: 0.35rem 0;">
-        <MovementIndicator isTracking={isTracking} isMoving={isMoving} />
+        <header class="track-panel track-active-row track-active-row--title">
+          <div class="track-title-grid">
+            <h1 class="track-title">{title}</h1>
+            <div class="track-title-indicator">
+              <MovementIndicator isTracking={isTracking} isMoving={isMoving} />
+            </div>
+          </div>
+        </header>
+
+        <section class="track-panel track-active-row track-active-row--status">
+          <div class="track-status-stack">
+            <p class="track-status-line">{statusMessage}</p>
+            <p class="tracking-status" aria-live="polite">
+              <span class="tracking-dot" aria-hidden="true"></span>
+              Seguimiento activo
+            </p>
+          </div>
+          <button
+            on:click={toggleTracking}
+            class={`btn track-btn ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
+            aria-label="Detener recorrido"
+            aria-pressed={isTracking}
+          >
+            Detener recorrido
+          </button>
+        </section>
       </div>
-    {:else}
+    </div>
+  {:else}
+    <div class="track-header track-panel">
+      <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
+      <span
+        class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}
+        aria-label={`Estado del recorrido: ${isOfflineReady ? "offline" : "online"}`}
+        aria-live="polite"
+      >
+        {#if isOfflineReady}
+          <svg
+            class="track-status-icon"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3 1.4 1.42L12 17.41l-4.7-4.7 1.4-1.42 2.3 2.3V4a1 1 0 0 1 1-1zm-7 16h14v2H5v-2z"
+              fill="currentColor"
+            />
+          </svg>
+          Recorrido offline
+        {:else}
+          <svg
+            class="track-status-icon"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M12 18.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" fill="currentColor" />
+            <path d="M6.3 15.3a8 8 0 0 1 11.4 0l-1.4 1.4a6 6 0 0 0-8.6 0l-1.4-1.4z" fill="currentColor" />
+            <path d="M3.5 12.5a12 12 0 0 1 17 0l-1.4 1.4a10 10 0 0 0-14.2 0l-1.4-1.4z" fill="currentColor" />
+          </svg>
+          Recorrido online
+        {/if}
+      </span>
+    </div>
+
+    <header class="track-panel">
+      <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
       <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
         Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
         caminás. Si el teléfono bloquea la pantalla, puede pausar el seguimiento.
       </p>
-    {/if}
-  </header>
+    </header>
+  {/if}
 
   {#if selectedTour}
     {#if isOfflineReady}
       <section
-        class="track-panel"
+        class="track-panel track-offline-section"
         style="
           width: 100%;
           max-width: 640px;
@@ -695,7 +856,7 @@
       </section>
     {:else}
       <section
-        class="track-panel"
+        class="track-panel track-offline-section"
         style="
           width: 100%;
           max-width: 640px;
@@ -746,6 +907,7 @@
 
   {#if devMode}
     <section
+      class="track-dev-section"
       style="
         width: 100%;
         max-width: 640px;
@@ -768,49 +930,139 @@
     </section>
   {/if}
 
+  {#if !isTracking}
+    <section
+      class="track-panel track-start-section"
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+      "
+    >
+      <button
+        on:click={toggleTracking}
+        class={`btn track-btn ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
+        aria-label="Iniciar recorrido"
+        aria-pressed={isTracking}
+      >
+        Iniciar recorrido
+      </button>
+
+      <p style="font-size: 0.9rem; max-width: 420px; margin: 0;">
+        {statusMessage}
+      </p>
+      {#if devMode}
+        <p style="font-size: 0.75rem; margin: 0; opacity: 0.75;">
+          Acc: {currentAccuracy !== null ? Math.round(currentAccuracy) : "—"} m ·
+          Radio: {currentEffectiveRadius !== null ? Math.round(currentEffectiveRadius) : "—"} m ·
+          Distancia siguiente: {distanceToNextPointMeters !== null ? Math.round(distanceToNextPointMeters) : "—"} m ·
+          Armado: {nextArmedPoint ? `${nextArmedPoint.id} (${nextArmedPoint.name})` : "—"}
+        </p>
+      {/if}
+    </section>
+  {/if}
+
   <section
-    class="track-panel"
+    class="track-panel track-points-section"
     style="
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
+      width: 100%;
+      max-width: 640px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      text-align: left;
+      margin-top: 1rem;
     "
   >
-    <button
-      on:click={toggleTracking}
-      class={`btn track-btn ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
-      aria-label="Iniciar recorrido"
-      aria-pressed={isTracking}
+    <div
+      style="
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(0,0,0,0.1);
+      "
     >
-      {#if isTracking}
-        Detener recorrido
-      {:else}
-        Iniciar recorrido
-      {/if}
-    </button>
+      <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Puntos del recorrido</h2>
+      <ul
+        style="list-style: none; padding: 0; margin: 0;"
+        on:wheel={markManualScroll}
+        on:touchmove={markManualScroll}
+      >
+        {#each points as point}
+          <li
+            use:registerPoint={point.id}
+            aria-current={point.id === activePointId ? "true" : undefined}
+            style="
+              font-size: 0.85rem;
+              padding: 0.6rem 0;
+              min-height: 52px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 0.5rem;
+            "
+          >
+            <span>
+              {point.id}: {point.name}
+            </span>
 
-    <p style="font-size: 0.9rem; max-width: 420px; margin: 0;">
-      {statusMessage}
-    </p>
-    {#if isTracking}
-      <p class="tracking-status" aria-live="polite">
-        <span class="tracking-dot" aria-hidden="true"></span>
-        Seguimiento activo
-      </p>
-    {/if}
-    {#if devMode}
-      <p style="font-size: 0.75rem; margin: 0; opacity: 0.75;">
-        Acc: {currentAccuracy !== null ? Math.round(currentAccuracy) : "—"} m ·
-        Radio: {currentEffectiveRadius !== null ? Math.round(currentEffectiveRadius) : "—"} m ·
-        Distancia siguiente: {distanceToNextPointMeters !== null ? Math.round(distanceToNextPointMeters) : "—"} m ·
-        Armado: {nextArmedPoint ? `${nextArmedPoint.id} (${nextArmedPoint.name})` : "—"}
-      </p>
-    {/if}
+            <span
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.35rem;
+              "
+            >
+              <button
+                type="button"
+                on:click={() => togglePlayPoint(point)}
+                aria-label={`${currentAudioPointId === point.id && isAudioPlaying ? "Pausar" : "Reproducir"} punto: ${point.name}`}
+                style="
+                  border: none;
+                  border-radius: 999px;
+                  padding: 0.45rem 0.9rem;
+                  min-width: 44px;
+                  min-height: 44px;
+                  font-size: 0.75rem;
+                  cursor: pointer;
+                  background: #ffffff;
+                  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                {#if currentAudioPointId === point.id && isAudioPlaying}
+                  ⏸
+                {:else}
+                  ▶︎
+                {/if}
+              </button>
+
+              <span style="font-size: 0.8rem;">
+                {#if pointDistances[point.id] !== undefined}
+                  {formatDistance(pointDistances[point.id])}
+                {:else}
+                  —
+                {/if}
+              </span>
+
+              <span>
+                {#if triggeredPointIds.includes(point.id)}
+                  ✅
+                {:else}
+                  ⚪️
+                {/if}
+              </span>
+            </span>
+          </li>
+        {/each}
+      </ul>
+    </div>
   </section>
 
   <section
-    class="track-panel"
+    class="track-panel track-debug-section"
     style="
       width: 100%;
       max-width: 640px;
@@ -898,85 +1150,6 @@
         </p>
       {/if}
     </div>
-
-    <div
-      style="
-        padding: 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(0,0,0,0.1);
-      "
-    >
-      <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Puntos del recorrido</h2>
-      <ul style="list-style: none; padding: 0; margin: 0;">
-        {#each points as point}
-          <li
-            style="
-              font-size: 0.85rem;
-              padding: 0.6rem 0;
-              min-height: 52px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              gap: 0.5rem;
-            "
-          >
-            <span>
-              {point.id}: {point.name}
-            </span>
-
-            <span
-              style="
-                display: flex;
-                align-items: center;
-                gap: 0.35rem;
-              "
-            >
-              <button
-                type="button"
-                on:click={() => togglePlayPoint(point)}
-                aria-label={`${currentAudioPointId === point.id && isAudioPlaying ? "Pausar" : "Reproducir"} punto: ${point.name}`}
-                style="
-                  border: none;
-                  border-radius: 999px;
-                  padding: 0.45rem 0.9rem;
-                  min-width: 44px;
-                  min-height: 44px;
-                  font-size: 0.75rem;
-                  cursor: pointer;
-                  background: #ffffff;
-                  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                "
-              >
-                {#if currentAudioPointId === point.id && isAudioPlaying}
-                  ⏸
-                {:else}
-                  ▶︎
-                {/if}
-              </button>
-
-              <span style="font-size: 0.8rem;">
-                {#if pointDistances[point.id] !== undefined}
-                  {formatDistance(pointDistances[point.id])}
-                {:else}
-                  —
-                {/if}
-              </span>
-
-              <span>
-                {#if triggeredPointIds.includes(point.id)}
-                  ✅
-                {:else}
-                  ⚪️
-                {/if}
-              </span>
-            </span>
-          </li>
-        {/each}
-      </ul>
-    </div>
   </section>
 </main>
 
@@ -1008,5 +1181,155 @@
   .track-page .offline-inline-link:hover,
   .track-page .offline-inline-link:focus-visible {
     text-decoration: underline;
+  }
+
+  .track-page .track-pill {
+    padding-right: 0.35rem;
+  }
+
+  .track-active-header {
+    --stickyAlpha: 0.35;
+    --stickyShadowAlpha: 0;
+    --stickyBorderAlpha: 0;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, var(--stickyAlpha));
+    border-bottom: 1px solid rgba(255, 255, 255, var(--stickyBorderAlpha));
+    box-shadow: 0 6px 18px rgba(0, 0, 0, var(--stickyShadowAlpha));
+  }
+
+  .track-active-container {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .track-pill-text {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .track-offline-orb {
+    width: 12px;
+    height: 12px;
+    margin-left: 0.5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    flex: 0 0 auto;
+  }
+
+  .track-offline-orb-fallback {
+    display: none;
+    width: 8px;
+    height: 8px;
+    margin-left: 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    flex: 0 0 auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track-offline-orb {
+      display: none;
+    }
+
+    .track-offline-orb-fallback {
+      display: inline-block;
+    }
+  }
+
+  .track-page.is-tracking .track-active-header .track-panel {
+    background: rgba(0, 0, 0, var(--stickyAlpha));
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .track-page.is-tracking .track-active-header .track-header {
+    margin: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .track-active-row--nav {
+    margin-bottom: 0;
+    padding: 0.7rem 0;
+  }
+
+  .track-active-row--title {
+    padding: 1.25rem 0;
+  }
+
+  .track-title-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .track-title {
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.2;
+    text-align: left;
+  }
+
+  .track-title-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .track-active-row--status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+    padding: 0.95rem 0;
+  }
+
+  .track-status-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .track-status-line {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .track-page.is-tracking .track-active-header {
+    order: 0;
+  }
+
+  .track-page.is-tracking .track-points-section {
+    order: 1;
+  }
+
+  .track-page.is-tracking .track-offline-section {
+    order: 2;
+  }
+
+  .track-page.is-tracking .track-dev-section {
+    order: 3;
+  }
+
+  .track-page.is-tracking .track-debug-section {
+    order: 4;
+  }
+
+  .track-page li[aria-current="true"] {
+    border-radius: 0.5rem;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
   }
 </style>
