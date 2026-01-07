@@ -1,4 +1,4 @@
-export function openTourLabel(tour: { name?: string; slug?: string }): string {
-  if (tour.name) return `Abrir ${tour.name}`;
-  return "Abrir recorrido";
+export function openTourLabel(tour: { id?: string; name?: string; slug?: string }): string {
+  const label = tour.name ?? tour.slug ?? tour.id ?? "recorrido";
+  return `Abrir ${label}`;
 }

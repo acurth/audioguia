@@ -28,16 +28,11 @@
     raw: TourJson;
   };
 
-  const labelOverrides: Record<string, string> = {
-    "sendero-arrayanes-audio-01": "Sendero Arrayanes – Audioguía (Llao Llao)",
-    "casa-test-01": "Casa – Tour de prueba"
-  };
-
   const devMode = $derived(browser ? getDevModeFromStorage() : false);
   const tours = $derived(
     getTourRecords(devMode)
       .map(({ id, slug, status, data }) => {
-        const name = labelOverrides[id] ?? (typeof data.name === "string" ? data.name : id);
+        const name = typeof data.name === "string" ? data.name : slug;
         const theme = typeof data.theme === "string" ? data.theme : undefined;
         const offline = data.offline;
         const sizeBytes = data.offline?.totalBytes;
