@@ -7,6 +7,7 @@
   import { getDevModeFromStorage, getTourRecords, type TourJson as StoredTourJson } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
+  import { isWakeLockSupported, releaseWakeLock, requestWakeLock } from "$lib/utils/wakeLock";
 
   type Point = {
     id: string;
@@ -48,7 +49,6 @@
   let downloadState: Record<string, DownloadState> = {};
   let unsubscribeStore: (() => void) | null = null;
   let removeSwListener: (() => void) | null = null;
-  let wakeLock: WakeLockSentinel | null = null;
   let isOfflineReady = false;
 
   const appBase = base;
@@ -93,6 +93,9 @@
   // Estado general
   let isTracking = false;
   let statusMessage = "Listo para iniciar el recorrido";
+  let isWakeLockActive = false;
+  let isWakeLockAvailable = false;
+  let wakeLockStatusLine = "";
 
   // Posición actual
   let currentLat: number | null = null;
@@ -133,6 +136,8 @@
   let stickyHeaderEl: HTMLDivElement | null = null;
   let stickyRaf = 0;
   let removeStickyScroll: (() => void) | null = null;
+  let removeVisibilityListener: (() => void) | null = null;
+  let removeWakeLockReleaseListener: (() => void) | null = null;
 
   function registerPoint(node: HTMLElement, id: string) {
     pointRefs[id] = node;
@@ -493,27 +498,14 @@
     statusMessage = `Error de geolocalización (${err.code}): ${err.message}`;
   }
 
-  async function requestWakeLock() {
-    if (!("wakeLock" in navigator)) return;
-    try {
-      wakeLock = await navigator.wakeLock.request("screen");
-      wakeLock.addEventListener("release", () => {
-        wakeLock = null;
-      });
-    } catch {
-      wakeLock = null;
-    }
+  async function syncWakeLockRequest() {
+    const acquired = await requestWakeLock();
+    isWakeLockActive = acquired;
   }
 
-  async function releaseWakeLock() {
-    if (!wakeLock) return;
-    try {
-      await wakeLock.release();
-    } catch {
-      // ignore
-    } finally {
-      wakeLock = null;
-    }
+  async function syncWakeLockRelease() {
+    await releaseWakeLock();
+    isWakeLockActive = false;
   }
 
   function startTracking() {
@@ -531,7 +523,7 @@
     lastTriggeredInsideRadius = null;
     isTracking = true;
     statusMessage = "Iniciando seguimiento de ubicación…";
-    void requestWakeLock();
+    void syncWakeLockRequest();
     void tick().then(() => enableStickyScroll());
 
     watchId = navigator.geolocation.watchPosition(handlePosition, handlePositionError, {
@@ -557,7 +549,7 @@
     }
     currentAudioPointId = null;
     isAudioPlaying = false;
-    void releaseWakeLock();
+    void syncWakeLockRelease();
     disableStickyScroll();
   }
 
@@ -577,6 +569,29 @@
     unsubscribeStore = downloadStateStore.subscribe((state) => {
       downloadState = state;
     });
+    isWakeLockAvailable = isWakeLockSupported();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        void syncWakeLockRelease();
+        return;
+      }
+      if (isTracking) {
+        void syncWakeLockRequest();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    removeVisibilityListener = () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+
+    const handleWakeLockRelease = () => {
+      isWakeLockActive = false;
+    };
+    window.addEventListener("wake-lock-release", handleWakeLockRelease);
+    removeWakeLockReleaseListener = () => {
+      window.removeEventListener("wake-lock-release", handleWakeLockRelease);
+    };
 
     if ("serviceWorker" in navigator) {
       const handleMessage = (event: MessageEvent) => {
@@ -649,6 +664,12 @@
   onDestroy(() => {
     stopTracking();
     disableStickyScroll();
+    if (removeVisibilityListener) {
+      removeVisibilityListener();
+    }
+    if (removeWakeLockReleaseListener) {
+      removeWakeLockReleaseListener();
+    }
     if (removeSwListener) {
       removeSwListener();
     }
@@ -673,6 +694,15 @@
       target?.scrollIntoView({ block: "center", behavior: "smooth" });
     }
     lastAutoScrollId = activePointId;
+  }
+  $: if (!isTracking) {
+    wakeLockStatusLine = "";
+  } else if (!isWakeLockAvailable) {
+    wakeLockStatusLine = "Pantalla activa: no disponible en este navegador";
+  } else if (isWakeLockActive) {
+    wakeLockStatusLine = "Pantalla activa: sí";
+  } else {
+    wakeLockStatusLine = "Pantalla activa: no (podés desactivar el bloqueo automático del teléfono)";
   }
 </script>
 
@@ -766,6 +796,9 @@
               <span class="tracking-dot" aria-hidden="true"></span>
               Seguimiento activo
             </p>
+            {#if wakeLockStatusLine}
+              <p class="tracking-wakelock" aria-live="polite">{wakeLockStatusLine}</p>
+            {/if}
           </div>
           <button
             on:click={toggleTracking}
@@ -1306,6 +1339,16 @@
   .track-status-line {
     margin: 0;
     font-size: 0.9rem;
+  }
+
+  .tracking-status,
+  .tracking-wakelock {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  .tracking-wakelock {
+    color: rgba(255, 255, 255, 0.78);
   }
 
   .track-page.is-tracking .track-active-header {
