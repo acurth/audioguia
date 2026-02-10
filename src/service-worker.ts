@@ -34,7 +34,12 @@ const isCacheableUrl = (url: string) => {
   return true;
 };
 
-const shellStaticAllowlist = new Set(["/manifest.webmanifest", "/robots.txt"]);
+const shellStaticAllowlist = new Set([
+  "/manifest.webmanifest",
+  "/robots.txt",
+  "/media/ui/tracking-on.mp3",
+  "/media/ui/tracking-off.mp3"
+]);
 const shellStaticPrefixes = ["/branding/", "/og/"];
 
 const isStaticShellAsset = (url: string) => {

@@ -7,6 +7,7 @@
   import { getDevModeFromStorage, getTourRecords, type TourJson as StoredTourJson } from "$lib/data/tours";
   import { downloadStateStore, initOfflineStore, setDownloadState } from "$lib/stores/offline";
   import type { DownloadState } from "$lib/stores/offline";
+  import { playTrackingOff, playTrackingOn } from "$lib/utils/earcons";
   import { isWakeLockSupported, releaseWakeLock, requestWakeLock } from "$lib/utils/wakeLock";
 
   type Point = {
@@ -553,11 +554,13 @@
     disableStickyScroll();
   }
 
-  function toggleTracking() {
+  async function toggleTracking() {
     if (isTracking) {
+      void playTrackingOff();
       stopTracking();
     } else {
       startTracking();
+      await playTrackingOn();
     }
   }
 
@@ -730,7 +733,17 @@
     <div class="track-active-header" bind:this={stickyHeaderEl}>
       <div class="track-active-container">
         <div class="track-header track-panel track-active-row track-active-row--nav">
-          <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
+          <a
+            class="track-back"
+            href={`${appBase}/`}
+            on:click={() => {
+              if (isTracking) {
+                void playTrackingOff();
+              }
+            }}
+          >
+            ← Menú principal
+          </a>
           <span
             class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}
             aria-label={`Estado del recorrido: ${isOfflineReady ? "offline" : "online"}`}
@@ -813,7 +826,17 @@
     </div>
   {:else}
     <div class="track-header track-panel">
-      <a class="track-back" href={`${appBase}/`}>← Menú principal</a>
+      <a
+        class="track-back"
+        href={`${appBase}/`}
+        on:click={() => {
+          if (isTracking) {
+            void playTrackingOff();
+          }
+        }}
+      >
+        ← Menú principal
+      </a>
       <span
         class={`track-pill ${isOfflineReady ? "is-offline" : "is-online"}`}
         aria-label={`Estado del recorrido: ${isOfflineReady ? "offline" : "online"}`}
