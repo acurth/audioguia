@@ -26,7 +26,7 @@
         audios quedan disponibles incluso cuando no hay señal o datos móviles.
       </p>
       <p>
-        Agradecimientos: a Los Búhos Bariloche, a Yamila, Lucas, Karin, Andre, Guille y Axel.
+        Agradecimientos: Pablo, Yamila, Lucas, Karin, Andre, Guille, Lorenzo, Juan y Axel.
       </p>
     </section>
 

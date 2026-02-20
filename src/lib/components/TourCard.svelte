@@ -53,27 +53,36 @@
 
 <article class="tour-card" class:offline-ready={state?.status === "downloaded"}>
   <div class="tour-card-inner">
-    <div class="tour-top">
-      <h2 class="sr-only">{tour.name}</h2>
-      <div class="tour-actions">
-        {#if showTestBadge}
-          <span class="tour-badge" aria-label="Tour de prueba">TEST</span>
-        {/if}
-        <a
-          href={`${base}/${tour.slug ?? tour.id}`}
-          class="btn btn-primary tour-cta"
-          aria-label={openTourLabel(tour)}
-        >
-          {openTourLabel(tour)}
-        </a>
-      </div>
-    </div>
+    <div class="tour-card-body">
+      <div
+        class="tour-image-placeholder"
+        style={`background-image: url('${base}/media/tours/${tour.slug ?? tour.id}/background.webp')`}
+        aria-hidden="true"
+      ></div>
 
-    <div class="tour-bottom">
-      {#if metaText}
-        <p class="status-text">{metaText}</p>
-      {/if}
-      <p class="offline-status">
+      <div class="tour-content">
+        <div class="tour-top">
+          <h2 class="sr-only">{tour.name}</h2>
+          <div class="tour-actions">
+            {#if showTestBadge}
+              <span class="tour-badge" aria-label="Tour de prueba">TEST</span>
+            {/if}
+            <a
+              href={`${base}/${tour.slug ?? tour.id}`}
+              class="tour-cta"
+              aria-label={`Abrir ${tour.name ?? tour.slug ?? tour.id ?? "recorrido"}`}
+            >
+              <span class="tour-cta-title">{tour.name ?? tour.slug ?? tour.id ?? "Recorrido"}</span>
+              <span class="tour-cta-action" aria-hidden="true">Abrir</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="tour-bottom">
+          {#if metaText}
+            <p class="status-text">{metaText}</p>
+          {/if}
+          <p class="offline-status">
         {#if state?.status === "downloaded"}
           <span class="offline-ready-icon" aria-hidden="true">✓</span>
         {/if}
@@ -128,21 +137,31 @@
               Descargar
             </button>
           {/if}
-        </span>
-      </p>
+          </span>
+        </p>
 
-      {#if state?.status === "downloading" || state?.status === "error"}
-        <div class="offline-actions">
-          {#if state?.status === "downloading"}
-            <button
-              type="button"
-              on:click={() => onResetDownload(tour)}
-              class="btn btn-reset"
-              aria-label={`Restablecer descarga del tour ${tour.name}`}
-            >
-              Restablecer
-            </button>
-            {#if isStalled(state) || state?.errorMessage}
+        {#if state?.status === "downloading" || state?.status === "error"}
+          <div class="offline-actions">
+            {#if state?.status === "downloading"}
+              <button
+                type="button"
+                on:click={() => onResetDownload(tour)}
+                class="btn btn-reset"
+                aria-label={`Restablecer descarga del tour ${tour.name}`}
+              >
+                Restablecer
+              </button>
+              {#if isStalled(state) || state?.errorMessage}
+                <button
+                  type="button"
+                  on:click={() => onResetDownload(tour, true)}
+                  class="btn btn-retry"
+                  aria-label={`Reintentar descarga del tour ${tour.name}`}
+                >
+                  Reintentar
+                </button>
+              {/if}
+            {:else}
               <button
                 type="button"
                 on:click={() => onResetDownload(tour, true)}
@@ -151,54 +170,45 @@
               >
                 Reintentar
               </button>
+              <button
+                type="button"
+                on:click={() => onResetDownload(tour)}
+                class="btn btn-reset"
+                aria-label={`Restablecer descarga del tour ${tour.name}`}
+              >
+                Restablecer
+              </button>
             {/if}
-          {:else}
-            <button
-              type="button"
-              on:click={() => onResetDownload(tour, true)}
-              class="btn btn-retry"
-              aria-label={`Reintentar descarga del tour ${tour.name}`}
-            >
-              Reintentar
-            </button>
-            <button
-              type="button"
-              on:click={() => onResetDownload(tour)}
-              class="btn btn-reset"
-              aria-label={`Restablecer descarga del tour ${tour.name}`}
-            >
-              Restablecer
-            </button>
-          {/if}
-        </div>
-      {/if}
-    </div>
-
-    {#if state?.status === "downloading"}
-      <div class="progress">
-        <div class="progress-header">
-          <span class="progress-label">Descargando…</span>
-          <span class="progress-percent">{getProgressPercent(state)}%</span>
-        </div>
-        <div
-          class="progress-bar"
-          role="progressbar"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow={getProgressPercent(state)}
-        >
-          <div class="progress-fill" style={`width: ${getProgressPercent(state)}%`}></div>
-        </div>
-        {#if state?.errorMessage}
-          <p class="progress-error">{state?.errorMessage}</p>
+          </div>
         {/if}
-        {#if state?.screenreaderText}
-          <p class="sr-only" aria-live="polite">
-            {state?.screenreaderText}
-          </p>
+
+        {#if state?.status === "downloading"}
+          <div class="progress">
+            <div class="progress-header">
+              <span class="progress-label">Descargando…</span>
+              <span class="progress-percent">{getProgressPercent(state)}%</span>
+            </div>
+            <div
+              class="progress-bar"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={getProgressPercent(state)}
+            >
+              <div class="progress-fill" style={`width: ${getProgressPercent(state)}%`}></div>
+            </div>
+            {#if state?.errorMessage}
+              <p class="progress-error">{state?.errorMessage}</p>
+            {/if}
+            {#if state?.screenreaderText}
+              <p class="sr-only" aria-live="polite">
+                {state?.screenreaderText}
+              </p>
+            {/if}
+          </div>
         {/if}
       </div>
-    {/if}
+    </div>
   </div>
 </article>
 
