@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "npm run build:manifests && vite build",
 		"preview": "vite preview",
 		"build:manifests": "node scripts/build-manifests.mjs",
 		"prepare": "svelte-kit sync || echo ''",
