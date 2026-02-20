@@ -9,7 +9,6 @@ async function playEarcon(filename: string) {
 
   const audio = new Audio(getEarconUrl(filename));
   audio.volume = EARCON_VOLUME;
-
   try {
     await audio.play();
   } catch {

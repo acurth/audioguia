@@ -236,6 +236,38 @@
     }
   }
 
+  async function unlockMainAudioPlayer() {
+    initAudioPlayer();
+    if (!audioPlayer) return;
+
+    // Autoplay unlock: first geo-triggered play is not a user gesture (iOS/Chrome policy).
+    const previousSrc = audioPlayer.src;
+    const previousTime = audioPlayer.currentTime;
+    const previousMuted = audioPlayer.muted;
+    const previousVolume = audioPlayer.volume;
+    const unlockSrc = previousSrc || `${appBase}/media/ui/tracking-on.mp3`;
+
+    audioPlayer.muted = true;
+    audioPlayer.volume = 0;
+    audioPlayer.src = unlockSrc;
+    audioPlayer.currentTime = 0;
+
+    try {
+      await audioPlayer.play();
+      audioPlayer.pause();
+    } catch {
+      // Ignore autoplay or playback failures.
+    }
+
+    audioPlayer.currentTime = 0;
+    audioPlayer.muted = previousMuted;
+    audioPlayer.volume = previousVolume;
+    audioPlayer.src = previousSrc;
+    if (previousSrc) {
+      audioPlayer.currentTime = previousTime;
+    }
+  }
+
   function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371000; // metros
     const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -559,6 +591,7 @@
       void playTrackingOff();
       stopTracking();
     } else {
+      await unlockMainAudioPlayer();
       startTracking();
       await playTrackingOn();
     }
