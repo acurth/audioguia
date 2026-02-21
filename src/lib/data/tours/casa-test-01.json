@@ -10,7 +10,10 @@
       "lng": -71.34829852928893,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/001.mp3"
+      "audio": "audio/tours/casa-test-01/es/001.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/001.webp"
+      ]
     },
     {
       "id": "2",
@@ -19,7 +22,10 @@
       "lng": -71.348342,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/002.mp3"
+      "audio": "audio/tours/casa-test-01/es/002.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/002.webp"
+      ]
     },
     {
       "id": "3",
@@ -28,7 +34,10 @@
       "lng": -71.348964,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/003.mp3"
+      "audio": "audio/tours/casa-test-01/es/003.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/003.webp"
+      ]
     },
     {
       "id": "4",
@@ -37,16 +46,22 @@
       "lng": -71.34937324631645,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/004.mp3"
+      "audio": "audio/tours/casa-test-01/es/004.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/004.webp"
+      ]
     },
     {
       "id": "5",
       "name": "Colihue 58 - Subida",
-      "lat": -41.128852,
-      "lng": -71.349547,
+      "lat": -41.129078,
+      "lng": -71.3497,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/005.mp3"
+      "audio": "audio/tours/casa-test-01/es/005.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/005.webp"
+      ]
     },
     {
       "id": "6",
@@ -55,7 +70,10 @@
       "lng": -71.349876,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/006.mp3"
+      "audio": "audio/tours/casa-test-01/es/006.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/006.webp"
+      ]
     },
     {
       "id": "7",
@@ -64,7 +82,10 @@
       "lng": -71.34982531520453,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/007.mp3"
+      "audio": "audio/tours/casa-test-01/es/007.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/007.webp"
+      ]
     },
     {
       "id": "8",
@@ -73,7 +94,10 @@
       "lng": -71.349257,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/008.mp3"
+      "audio": "audio/tours/casa-test-01/es/008.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/008.webp"
+      ]
     },
     {
       "id": "9",
@@ -82,7 +106,10 @@
       "lng": -71.34890813697967,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/009.mp3"
+      "audio": "audio/tours/casa-test-01/es/009.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/009.webp"
+      ]
     },
     {
       "id": "10",
@@ -91,7 +118,10 @@
       "lng": -71.348444,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/010.mp3"
+      "audio": "audio/tours/casa-test-01/es/010.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/010.webp"
+      ]
     },
     {
       "id": "11",
@@ -100,7 +130,10 @@
       "lng": -71.347587,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/011.mp3"
+      "audio": "audio/tours/casa-test-01/es/011.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/011.webp"
+      ]
     },
     {
       "id": "12",
@@ -109,7 +142,10 @@
       "lng": -71.34665,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/012.mp3"
+      "audio": "audio/tours/casa-test-01/es/012.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/012.webp"
+      ]
     },
     {
       "id": "13",
@@ -118,7 +154,10 @@
       "lng": -71.3462783131596,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/013.mp3"
+      "audio": "audio/tours/casa-test-01/es/013.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/013.webp"
+      ]
     },
     {
       "id": "14",
@@ -127,7 +166,10 @@
       "lng": -71.346817,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/014.mp3"
+      "audio": "audio/tours/casa-test-01/es/014.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/014.webp"
+      ]
     },
     {
       "id": "15",
@@ -136,16 +178,22 @@
       "lng": -71.34741283219603,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/015.mp3"
+      "audio": "audio/tours/casa-test-01/es/015.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/015.webp"
+      ]
     },
     {
       "id": "16",
       "name": "Chilco de Casa - Final",
-      "lat": -41.129216,
-      "lng": -71.347856,
+      "lat": -41.129143,
+      "lng": -71.348177,
       "alt": 0,
       "radius": 10,
-      "audio": "audio/tours/casa-test-01/es/016.mp3"
+      "audio": "audio/tours/casa-test-01/es/016.mp3",
+      "photos": [
+        "media/tours/casa-test-01/points/016.webp"
+      ]
     }
   ],
   "offline": {

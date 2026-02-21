@@ -221,7 +221,7 @@
     }
   ],
   "offline": {
-    "totalBytes": 22725844,
+    "totalBytes": 13125220,
     "files": [
       {
         "path": "audio/tours/sendero-arrayanes-audio-01/es/001.mp3",
@@ -294,78 +294,6 @@
       {
         "path": "audio/tours/sendero-arrayanes-audio-01/es/018.mp3",
         "bytes": 770624
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/001.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/002.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/003.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/004.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/005.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/006.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/007.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/008.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/009.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/010.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/011.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/012.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/013.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/014.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/015.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/016.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/017.webp",
-        "bytes": 533368
-      },
-      {
-        "path": "media/tours/sendero-arrayanes-audio-01/points/018.webp",
-        "bytes": 533368
       }
     ]
   }

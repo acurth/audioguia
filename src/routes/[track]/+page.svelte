@@ -858,6 +858,14 @@
             <div class="track-title-indicator">
               <MovementIndicator isTracking={isTracking} isMoving={isMoving} />
             </div>
+            <button
+              on:click={toggleTracking}
+              class={`btn track-btn track-stop-inline ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
+              aria-label="Detener recorrido"
+              aria-pressed={isTracking}
+            >
+              Detener
+            </button>
           </div>
         </header>
 
@@ -1076,102 +1084,104 @@
     </section>
   {/if}
 
-  <section
-    class="track-panel track-points-section"
-    style="
-      width: 100%;
-      max-width: 640px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.4rem;
-      text-align: left;
-      margin-top: 0;
-    "
-  >
-    <div
-      style="
-        padding: 0.6rem 1rem 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(0,0,0,0.1);
-      "
-    >
-      <ul
-        style="list-style: none; padding: 0; margin: 0;"
-        on:wheel={markManualScroll}
-        on:touchmove={markManualScroll}
-      >
-        {#each points as point, index (point.id)}
-          {@const isActive = hasActivePlayback && currentAudioPointId === point.id}
-          {@const isNear = hasActivePlayback && Math.abs(index - (points.findIndex((p) => p.id === currentAudioPointId))) === 1}
-          {@const isFar = hasActivePlayback && !isActive && !isNear}
-          <li
-            use:registerPoint={point.id}
-            aria-current={point.id === activePointId ? "true" : undefined}
-            class={`track-point-row ${isActive ? "is-active" : ""} ${isNear ? "is-near" : ""} ${isFar ? "is-far" : ""} ${hasActivePlayback ? "has-playback" : ""} ${isOfflineReady ? "is-offline" : "is-online"}`}
-          >
-            <span class="track-point-title">
-              {point.id}: {point.name}
-            </span>
-
-            <span class="track-point-controls">
-              <button
-                type="button"
-                on:click={() => togglePlayPoint(point)}
-                aria-label={`${currentAudioPointId === point.id && isAudioPlaying ? "Pausar" : "Reproducir"} punto: ${point.name}`}
-                aria-pressed={currentAudioPointId === point.id && isAudioPlaying}
-                class="track-point-play"
-              >
-                {#if currentAudioPointId === point.id && isAudioPlaying}
-                  ⏸
-                {:else}
-                  ▶︎
-                {/if}
-              </button>
-
-              <span class="track-point-distance">
-                {#if pointDistances[point.id] !== undefined}
-                  {formatDistance(pointDistances[point.id])}
-                {:else}
-                  —
-                {/if}
-              </span>
-
-              <span class="track-point-status">
-                {#if triggeredPointIds.includes(point.id)}
-                  ✅
-                {:else}
-                  ⚪️
-                {/if}
-              </span>
-            </span>
-          </li>
-        {/each}
-      </ul>
-    </div>
-  </section>
-
-  {#if isTracking}
+  <div class={`track-live-content ${isTracking ? "is-tracking" : ""}`}>
     <section
-      class="track-panel track-photo-section"
+      class="track-panel track-points-section"
       style="
         width: 100%;
         max-width: 640px;
-        padding: 0;
-        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+        text-align: left;
+        margin-top: 0;
       "
     >
-      <div class="track-photo-frame">
-        <img
-          class="track-photo"
-          src={photoUrl}
-          alt={photoPoint?.name ?? "Vista del recorrido"}
-        />
-        <div class="track-photo-label">
-          {photoPoint?.name ?? "Recorrido"}
-        </div>
+      <div
+        style="
+          padding: 0.6rem 1rem 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(0,0,0,0.1);
+        "
+      >
+        <ul
+          style="list-style: none; padding: 0; margin: 0;"
+          on:wheel={markManualScroll}
+          on:touchmove={markManualScroll}
+        >
+          {#each points as point, index (point.id)}
+            {@const isActive = hasActivePlayback && currentAudioPointId === point.id}
+            {@const isNear = hasActivePlayback && Math.abs(index - (points.findIndex((p) => p.id === currentAudioPointId))) === 1}
+            {@const isFar = hasActivePlayback && !isActive && !isNear}
+            <li
+              use:registerPoint={point.id}
+              aria-current={point.id === activePointId ? "true" : undefined}
+              class={`track-point-row ${isActive ? "is-active" : ""} ${isNear ? "is-near" : ""} ${isFar ? "is-far" : ""} ${hasActivePlayback ? "has-playback" : ""} ${isOfflineReady ? "is-offline" : "is-online"}`}
+            >
+              <span class="track-point-title">
+                {point.id}: {point.name}
+              </span>
+
+              <span class="track-point-controls">
+                <button
+                  type="button"
+                  on:click={() => togglePlayPoint(point)}
+                  aria-label={`${currentAudioPointId === point.id && isAudioPlaying ? "Pausar" : "Reproducir"} punto: ${point.name}`}
+                  aria-pressed={currentAudioPointId === point.id && isAudioPlaying}
+                  class="track-point-play"
+                >
+                  {#if currentAudioPointId === point.id && isAudioPlaying}
+                    ⏸
+                  {:else}
+                    ▶︎
+                  {/if}
+                </button>
+
+                <span class="track-point-distance">
+                  {#if pointDistances[point.id] !== undefined}
+                    {formatDistance(pointDistances[point.id])}
+                  {:else}
+                    —
+                  {/if}
+                </span>
+
+                <span class="track-point-status">
+                  {#if triggeredPointIds.includes(point.id)}
+                    ✅
+                  {:else}
+                    ⚪️
+                  {/if}
+                </span>
+              </span>
+            </li>
+          {/each}
+        </ul>
       </div>
     </section>
-  {/if}
+
+    {#if isTracking}
+      <section
+        class="track-panel track-photo-section"
+        style="
+          width: 100%;
+          max-width: 640px;
+          padding: 0;
+          overflow: hidden;
+        "
+      >
+        <div class="track-photo-frame">
+          <img
+            class="track-photo"
+            src={photoUrl}
+            alt={photoPoint?.name ?? "Vista del recorrido"}
+          />
+          <div class="track-photo-label">
+            {photoPoint?.name ?? "Recorrido"}
+          </div>
+        </div>
+      </section>
+    {/if}
+  </div>
 
   {#if !isTracking}
     {#if selectedTour}
@@ -1581,6 +1591,19 @@
     padding-right: 0.35rem;
   }
 
+  .track-live-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .track-live-content .track-points-section,
+  .track-live-content .track-photo-section {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .track-active-header {
     --stickyAlpha: 0.35;
     --stickyShadowAlpha: 0;
@@ -1685,6 +1708,11 @@
     grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
     align-items: center;
     gap: 1rem;
+  }
+
+  .track-stop-inline {
+    display: none;
+    white-space: nowrap;
   }
 
   .track-title {
@@ -2007,5 +2035,96 @@
     display: flex;
     justify-content: center;
     z-index: 5;
+  }
+
+  @media (orientation: landscape) and (hover: none) and (pointer: coarse) and (max-height: 560px) {
+    .track-page.is-tracking {
+      padding-top: 0;
+      padding-left: 0.7rem;
+      padding-right: 0.7rem;
+      padding-bottom: 1.1rem;
+      gap: 0.35rem;
+    }
+
+    .track-page.is-tracking .track-active-container {
+      gap: 0.15rem;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .track-page.is-tracking .track-active-header .track-panel {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    .track-page.is-tracking .track-active-row--nav {
+      margin-bottom: 0.15rem;
+      padding-top: 0.1rem;
+      padding-bottom: 0.1rem;
+    }
+
+    .track-page.is-tracking .track-active-row--title {
+      margin-top: 0;
+      padding: 0.15rem 0;
+    }
+
+    .track-page.is-tracking .track-title-grid {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .track-page.is-tracking .track-title {
+      font-size: 1.12rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-page.is-tracking .track-title-indicator {
+      margin-top: 0;
+    }
+
+    .track-page.is-tracking .track-active-row--status {
+      display: none;
+    }
+
+    .track-page.is-tracking .track-stop-inline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.84rem;
+    }
+
+    .track-page.is-tracking .track-live-content.is-tracking {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+      gap: 0.8rem;
+      align-items: stretch;
+    }
+
+    .track-page.is-tracking .track-live-content.is-tracking .track-points-section,
+    .track-page.is-tracking .track-live-content.is-tracking .track-photo-section {
+      --landscapeContentHeight: clamp(210px, calc(100dvh - 112px), 360px);
+      width: 100%;
+      max-width: none;
+      height: var(--landscapeContentHeight);
+      max-height: var(--landscapeContentHeight);
+      margin-top: 0;
+    }
+
+    .track-page.is-tracking .track-live-content.is-tracking .track-photo {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      object-fit: cover;
+      border-width: 3px;
+    }
   }
 </style>
