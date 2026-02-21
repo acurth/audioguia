@@ -4,170 +4,224 @@
   "name": "Sendero de los Arrayanes",
   "points": [
     {
-      "id": "p1",
+      "id": "1",
       "name": "El sendero de los Arrayanes",
       "lat": -41.052365,
       "lng": -71.540938,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/001.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/001.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/001.webp"
+      ]
     },
     {
-      "id": "p2",
+      "id": "2",
       "name": "Primer bifurcación",
       "lat": -41.05252,
       "lng": -71.541555,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/002.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/002.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/002.webp"
+      ]
     },
     {
-      "id": "p3",
+      "id": "3",
       "name": "El Churrin y el Chucao",
       "lat": -41.052827,
       "lng": -71.540907,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/003.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/003.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/003.webp"
+      ]
     },
     {
-      "id": "p4",
+      "id": "4",
       "name": "El Chimango",
       "lat": -41.05348,
       "lng": -71.54062,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/004.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/004.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/004.webp"
+      ]
     },
     {
-      "id": "p5",
+      "id": "5",
       "name": "El Picaflor Rubi",
       "lat": -41.05402,
       "lng": -71.54084,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/005.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/005.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/005.webp"
+      ]
     },
     {
-      "id": "p6",
+      "id": "6",
       "name": "La caña colihue",
       "lat": -41.053997,
       "lng": -71.541878,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/006.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/006.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/006.webp"
+      ]
     },
     {
-      "id": "p7",
+      "id": "7",
       "name": "El hueco en el Coihue",
       "lat": -41.053744,
       "lng": -71.542764,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/007.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/007.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/007.webp"
+      ]
     },
     {
-      "id": "p8",
+      "id": "8",
       "name": "La Ratona y el sonido de contacto",
       "lat": -41.05355,
       "lng": -71.54369,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/008.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/008.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/008.webp"
+      ]
     },
     {
-      "id": "p9",
+      "id": "9",
       "name": "El Coihue caido",
       "lat": -41.05389,
       "lng": -71.54494,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/009.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/009.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/009.webp"
+      ]
     },
     {
-      "id": "p10",
+      "id": "10",
       "name": "Comienzo pasarela Bosque de Arrayanes",
       "lat": -41.054592,
       "lng": -71.544547,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/010.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/010.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/010.webp"
+      ]
     },
     {
-      "id": "p11",
+      "id": "11",
       "name": "Leyenda del Coihue y el Arrayán",
       "lat": -41.05545,
       "lng": -71.54475,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/011.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/011.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/011.webp"
+      ]
     },
     {
-      "id": "p12",
+      "id": "12",
       "name": "La Ratona y el sonido de canto",
       "lat": -41.05632,
       "lng": -71.54527,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/012.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/012.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/012.webp"
+      ]
     },
     {
-      "id": "p13",
+      "id": "13",
       "name": "El Quintral",
       "lat": -41.05675,
       "lng": -71.546044,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/013.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/013.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/013.webp"
+      ]
     },
     {
-      "id": "p14",
+      "id": "14",
       "name": "El Monito del Monte",
       "lat": -41.056673,
       "lng": -71.546519,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/014.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/014.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/014.webp"
+      ]
     },
     {
-      "id": "p15",
+      "id": "15",
       "name": "Leyenda de las aves pequeñas",
       "lat": -41.05691,
       "lng": -71.5474,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/015.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/015.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/015.webp"
+      ]
     },
     {
-      "id": "p16",
+      "id": "16",
       "name": "El Huet Huet",
       "lat": -41.05737,
       "lng": -71.54795,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/016.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/016.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/016.webp"
+      ]
     },
     {
-      "id": "p17",
+      "id": "17",
       "name": "Próximos a la bifurcación",
       "lat": -41.05817,
       "lng": -71.54994,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/017.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/017.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/017.webp"
+      ]
     },
     {
-      "id": "p18",
+      "id": "18",
       "name": "Cierre y llegada a la playa del lago",
       "lat": -41.058517,
       "lng": -71.548955,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-arrayanes-audio-01/es/018.mp3"
+      "audio": "audio/tours/sendero-arrayanes-audio-01/es/018.mp3",
+      "photos": [
+        "media/tours/sendero-arrayanes-audio-01/points/018.webp"
+      ]
     }
   ],
   "offline": {
-    "totalBytes": 13125220,
+    "totalBytes": 22725844,
     "files": [
       {
         "path": "audio/tours/sendero-arrayanes-audio-01/es/001.mp3",
@@ -240,6 +294,78 @@
       {
         "path": "audio/tours/sendero-arrayanes-audio-01/es/018.mp3",
         "bytes": 770624
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/001.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/002.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/003.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/004.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/005.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/006.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/007.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/008.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/009.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/010.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/011.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/012.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/013.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/014.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/015.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/016.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/017.webp",
+        "bytes": 533368
+      },
+      {
+        "path": "media/tours/sendero-arrayanes-audio-01/points/018.webp",
+        "bytes": 533368
       }
     ]
   }

@@ -34,7 +34,7 @@
 
     <section class="about" aria-labelledby="creditos-meta-title">
       <p>
-        <strong>Iniciativa:</strong> COA Tucúquere Bariloche / Aves Argentinas · audioguia.io
+        <strong>Proyecto:</strong> audioguia.io
       </p>
       <p>
         <strong>Última actualización:</strong> {LAST_UPDATE}

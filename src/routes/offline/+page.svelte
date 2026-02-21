@@ -38,6 +38,7 @@
   const noop = () => undefined;
 
   const appBase = base;
+  const LAST_TOUR_LIST_KEY = "last-tour-list-path";
 
   async function deleteDownload(tour: TourLink) {
     if (!browser || !("serviceWorker" in navigator)) return;
@@ -50,6 +51,7 @@
 
   onMount(() => {
     if (!browser) return;
+    sessionStorage.setItem(LAST_TOUR_LIST_KEY, `${appBase}/offline`);
     initOfflineStore();
     unsubscribeStore = downloadStateStore.subscribe((state) => {
       downloadState = state;

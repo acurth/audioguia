@@ -57,6 +57,7 @@
   let now = Date.now();
 
   const appBase = base;
+  const LAST_TOUR_LIST_KEY = "last-tour-list-path";
 
   function loadState() {
     if (!browser) return;
@@ -91,6 +92,13 @@
     if (stage === "done") return "Listo";
     if (stage === "error") return "Error en la descarga";
     return "Descargando audios…";
+  }
+
+  function getDisplayCounts(next: DownloadState) {
+    const total = Math.max((next.totalFiles ?? 0) - 1, 0);
+    const currentRaw = next.currentIndex ?? next.completedFiles ?? 0;
+    const current = Math.min(currentRaw, total);
+    return { current, total };
   }
 
   function getProgressPercent(state?: DownloadState): number {
@@ -164,8 +172,9 @@
 
     if (shouldAnnounceProgress) {
       if (typeof next.completedFiles === "number" && typeof next.totalFiles === "number") {
+        const { current, total } = getDisplayCounts(next);
         return {
-          screenreaderText: `${label}. Descargando ${next.completedFiles} de ${next.totalFiles}. Archivo ${next.currentIndex ?? 0} de ${next.totalFiles}.`,
+          screenreaderText: `${label}. Descargando ${current} de ${total}. Archivo ${current} de ${total}.`,
           lastAnnouncedProgress: next.completedFiles,
           lastAnnouncedAt: Date.now()
         };
@@ -184,7 +193,7 @@
     };
   }
 
-  function getAudioFiles(tour: TourLink): string[] {
+  function getOfflineFiles(tour: TourLink): string[] {
     const offlineFiles = tour.offline?.files?.map((file) => file.path).filter(Boolean) ?? [];
     if (offlineFiles.length) return offlineFiles;
     const points = Array.isArray(tour.raw?.points) ? tour.raw.points : [];
@@ -192,16 +201,19 @@
       .map((point) => {
         if (!point || typeof point !== "object") return undefined;
         const audio = (point as { audio?: unknown }).audio;
-        return typeof audio === "string" ? audio : undefined;
+        const photos = (point as { photos?: unknown }).photos;
+        const photoList = Array.isArray(photos) ? photos.filter((p) => typeof p === "string") : [];
+        return [audio, ...photoList];
       })
-      .filter((audio): audio is string => typeof audio === "string" && audio.length > 0);
+      .flat()
+      .filter((path): path is string => typeof path === "string" && path.length > 0);
   }
 
   async function requestDownload(tour: TourLink) {
     if (!browser || !("serviceWorker" in navigator)) return;
 
-    const audioFiles = getAudioFiles(tour);
-    if (audioFiles.length === 0) return;
+    const offlineFiles = getOfflineFiles(tour);
+    if (offlineFiles.length === 0) return;
 
     setState(tour.id, {
       status: "downloading",
@@ -210,7 +222,7 @@
       progress: 0,
       stage: "preparing",
       completedFiles: 0,
-      totalFiles: audioFiles.length + 1,
+      totalFiles: offlineFiles.length + 1,
       currentIndex: 0,
       currentUrl: undefined,
       lastUpdate: Date.now(),
@@ -222,7 +234,7 @@
     });
 
     const backgroundPath = `media/tours/${tour.slug}/background.webp`;
-    const downloadFiles = [...audioFiles, backgroundPath];
+    const downloadFiles = [...offlineFiles, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     console.info("[offline] user requested tour download", {
@@ -291,6 +303,9 @@
   }
 
   onMount(() => {
+    if (browser) {
+      sessionStorage.setItem(LAST_TOUR_LIST_KEY, `${appBase}/explorar`);
+    }
     loadState();
     now = Date.now();
     const tick = window.setInterval(() => {

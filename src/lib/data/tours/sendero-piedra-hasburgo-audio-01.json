@@ -4,161 +4,212 @@
   "name": "Sendero a la Piedra de Hasburgo",
   "points": [
     {
-      "id": "p1",
+      "id": "1",
       "name": "Comienzo del Sendero a la Piedra de Hasburgo",
       "lat": -41.1445388888889,
       "lng": -71.3737194444444,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/001.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/001.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/001.webp"
+      ]
     },
     {
-      "id": "p2",
+      "id": "2",
       "name": "El Machetazo",
       "lat": -41.1456944444444,
       "lng": -71.3745027777778,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/002.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/002.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/002.webp"
+      ]
     },
     {
-      "id": "p3",
+      "id": "3",
       "name": "Michay de Lenga",
       "lat": -41.1457944444444,
       "lng": -71.3757555555556,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/003.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/003.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/003.webp"
+      ]
     },
     {
-      "id": "p4",
+      "id": "4",
       "name": "Hueco Comida del Carpintero",
       "lat": -41.1457027777778,
       "lng": -71.376975,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/004.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/004.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/004.webp"
+      ]
     },
     {
-      "id": "p5",
+      "id": "5",
       "name": "Lenga de más de 300 años",
       "lat": -41.1466138888889,
       "lng": -71.3784861111111,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/005.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/005.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/005.webp"
+      ]
     },
     {
-      "id": "p6",
+      "id": "6",
       "name": "Bifurcación del camino",
       "lat": -41.1472055555556,
       "lng": -71.3786166666667,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/006.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/006.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/006.webp"
+      ]
     },
     {
-      "id": "p7",
+      "id": "7",
       "name": "Tronco liso caído",
       "lat": -41.1488,
       "lng": -71.3787,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/007.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/007.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/007.webp"
+      ]
     },
     {
-      "id": "p8",
+      "id": "8",
       "name": "Lenga viva lenga muerta",
       "lat": -41.1487833333333,
       "lng": -71.3797083333333,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/008.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/008.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/008.webp"
+      ]
     },
     {
-      "id": "p9",
+      "id": "9",
       "name": "Ovidia Andina",
       "lat": -41.1481166666667,
       "lng": -71.3813027777778,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/009.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/009.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/009.webp"
+      ]
     },
     {
-      "id": "p10",
+      "id": "10",
       "name": "Interior de tronco caído",
       "lat": -41.1481666666667,
       "lng": -71.3822694444444,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/010.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/010.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/010.webp"
+      ]
     },
     {
-      "id": "p11",
+      "id": "11",
       "name": "Picaflor Rubí y Picaflor Andino",
       "lat": -41.148025,
       "lng": -71.3836361111111,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/011.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/011.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/011.webp"
+      ]
     },
     {
-      "id": "p12",
+      "id": "12",
       "name": "El Llao Llao",
       "lat": -41.1477611111111,
       "lng": -71.3839722222222,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/012.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/012.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/012.webp"
+      ]
     },
     {
-      "id": "p13",
+      "id": "13",
       "name": "El Amancay",
       "lat": -41.1483694444444,
       "lng": -71.3852833333333,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/013.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/013.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/013.webp"
+      ]
     },
     {
-      "id": "p14",
+      "id": "14",
       "name": "Lenga vieja, Lenga nueva",
       "lat": -41.1483333333333,
       "lng": -71.386275,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/014.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/014.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/014.webp"
+      ]
     },
     {
-      "id": "p15",
+      "id": "15",
       "name": "El hábitat de la Ratona",
       "lat": -41.1494972222222,
       "lng": -71.387,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/015.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/015.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/015.webp"
+      ]
     },
     {
-      "id": "p16",
+      "id": "16",
       "name": "Los insectos",
       "lat": -41.1496388888889,
       "lng": -71.3876277777778,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/016.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/016.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/016.webp"
+      ]
     },
     {
-      "id": "p17",
+      "id": "17",
       "name": "El Carpintero Gigante",
       "lat": -41.1500194444444,
       "lng": -71.3882055555556,
       "alt": 900,
       "radius": 20,
-      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/017.mp3"
+      "audio": "audio/tours/sendero-piedra-hasburgo-audio-01/es/017.mp3",
+      "photos": [
+        "media/tours/sendero-piedra-hasburgo-audio-01/points/017.webp"
+      ]
     }
   ],
   "offline": {
-    "totalBytes": 14053864,
+    "totalBytes": 21390996,
     "files": [
       {
         "path": "audio/tours/sendero-piedra-hasburgo-audio-01/es/001.mp3",
@@ -227,6 +278,74 @@
       {
         "path": "audio/tours/sendero-piedra-hasburgo-audio-01/es/017.mp3",
         "bytes": 1561969
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/001.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/002.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/003.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/004.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/005.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/006.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/007.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/008.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/009.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/010.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/011.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/012.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/013.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/014.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/015.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/016.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/017.webp",
+        "bytes": 431596
       }
     ]
   }

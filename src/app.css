@@ -271,6 +271,25 @@ a:hover {
   color: #ffffff;
 }
 
+.track-page:not(.is-tracking) .track-header.track-panel {
+  align-self: center;
+  text-shadow: none;
+  color: #111111;
+}
+
+.track-page:not(.is-tracking) .track-header.track-panel.is-offline {
+  background: #f4debe;
+}
+
+.track-page:not(.is-tracking) .track-header.track-panel.is-online {
+  background: #f4f9ff;
+}
+
+.track-page:not(.is-tracking) .track-header.track-panel .track-back,
+.track-page:not(.is-tracking) .track-header.track-panel .track-pill {
+  color: #111111;
+}
+
 .track-page .track-pill.is-offline {
   text-shadow: none;
   box-shadow: none;
@@ -278,6 +297,33 @@ a:hover {
 
 .track-page .track-pill.is-online {
   background: none;
+}
+
+.track-page.is-tracking .track-active-header .track-header.track-panel {
+  text-shadow: none;
+  color: #111111;
+}
+
+.track-page.is-tracking .track-active-header .track-header.track-panel.is-offline {
+  background: #f4debe;
+}
+
+.track-page.is-tracking .track-active-header .track-header.track-panel.is-online {
+  background: #f4f9ff;
+}
+
+.track-page.is-tracking .track-active-header .track-header.track-panel .track-back,
+.track-page.is-tracking .track-active-header .track-header.track-panel .track-pill {
+  color: #111111;
+}
+
+.track-page.is-tracking .track-active-header {
+  padding-top: 5px;
+}
+
+.track-page.is-tracking .track-active-header .track-active-row--nav {
+  margin-top: 5px;
+  box-sizing: border-box;
 }
 
 .track-status-icon {
@@ -299,6 +345,7 @@ a:hover {
   border: none;
   border-radius: 0.75rem;
   padding: 0.8rem;
+  box-sizing: border-box;
 }
 
 .tracking-dot {
@@ -539,11 +586,12 @@ a:hover {
 }
 
 .offline-status {
-  margin: -0.6rem 0 0;
+  margin: -0.2rem 0 0;
   font-size: 0.9rem;
   color: #1f1f1f;
   min-width: 0;
   text-align: left;
+  padding-left: 15px;
 }
 
 .offline-ready-icon {
@@ -650,6 +698,7 @@ a:hover {
 .status-text {
   font-size: 0.85rem;
   margin: 0;
+  padding-left: 15px;
 }
 
 .tour-bottom {
@@ -744,6 +793,11 @@ a:hover {
 
   .tour-image-placeholder {
     width: 70px;
+  }
+
+  .offline-status {
+    margin-top: calc(-0.2rem + 5px);
+    line-height: 1.2;
   }
 }
 

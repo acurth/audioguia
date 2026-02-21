@@ -4,7 +4,7 @@
   "name": "Test: vuelta por casa",
   "points": [
     {
-      "id": "p1",
+      "id": "1",
       "name": "Bajada de Casa",
       "lat": -41.129428115648516,
       "lng": -71.34829852928893,
@@ -13,7 +13,7 @@
       "audio": "audio/tours/casa-test-01/es/001.mp3"
     },
     {
-      "id": "p2",
+      "id": "2",
       "name": "Portón de casa",
       "lat": -41.129196,
       "lng": -71.348342,
@@ -22,7 +22,7 @@
       "audio": "audio/tours/casa-test-01/es/002.mp3"
     },
     {
-      "id": "p3",
+      "id": "3",
       "name": "Portón Vecino",
       "lat": -41.128882,
       "lng": -71.348964,
@@ -31,7 +31,7 @@
       "audio": "audio/tours/casa-test-01/es/003.mp3"
     },
     {
-      "id": "p4",
+      "id": "4",
       "name": "Esquina Colihue y Bustillo",
       "lat": -41.12850963264438,
       "lng": -71.34937324631645,
@@ -40,7 +40,7 @@
       "audio": "audio/tours/casa-test-01/es/004.mp3"
     },
     {
-      "id": "p5",
+      "id": "5",
       "name": "Colihue 58 - Subida",
       "lat": -41.128852,
       "lng": -71.349547,
@@ -49,7 +49,7 @@
       "audio": "audio/tours/casa-test-01/es/005.mp3"
     },
     {
-      "id": "p6",
+      "id": "6",
       "name": "Casi Esquina Colihue y Tronador",
       "lat": -41.129448,
       "lng": -71.349876,
@@ -58,7 +58,7 @@
       "audio": "audio/tours/casa-test-01/es/006.mp3"
     },
     {
-      "id": "p7",
+      "id": "7",
       "name": "Doblando Tronador y Colihue",
       "lat": -41.12954852172371,
       "lng": -71.34982531520453,
@@ -67,7 +67,7 @@
       "audio": "audio/tours/casa-test-01/es/007.mp3"
     },
     {
-      "id": "p8",
+      "id": "8",
       "name": "Tronador Regador y Arroyito",
       "lat": -41.129773,
       "lng": -71.349257,
@@ -76,7 +76,7 @@
       "audio": "audio/tours/casa-test-01/es/008.mp3"
     },
     {
-      "id": "p9",
+      "id": "9",
       "name": "Oficina",
       "lat": -41.12987887975731,
       "lng": -71.34890813697967,
@@ -85,7 +85,7 @@
       "audio": "audio/tours/casa-test-01/es/009.mp3"
     },
     {
-      "id": "p10",
+      "id": "10",
       "name": "Proximos a llegar a la esquina de Tronador y Lagos Del Sur",
       "lat": -41.130027,
       "lng": -71.348444,
@@ -94,7 +94,7 @@
       "audio": "audio/tours/casa-test-01/es/010.mp3"
     },
     {
-      "id": "p11",
+      "id": "11",
       "name": "Bajando por Lagos del Sur",
       "lat": -41.130028,
       "lng": -71.347587,
@@ -103,7 +103,7 @@
       "audio": "audio/tours/casa-test-01/es/011.mp3"
     },
     {
-      "id": "p12",
+      "id": "12",
       "name": "Atrás de los Remones",
       "lat": -41.129777,
       "lng": -71.34665,
@@ -112,7 +112,7 @@
       "audio": "audio/tours/casa-test-01/es/012.mp3"
     },
     {
-      "id": "p13",
+      "id": "13",
       "name": "Bustillo esquina Lagos del Sur",
       "lat": -41.129496359928936,
       "lng": -71.3462783131596,
@@ -121,7 +121,7 @@
       "audio": "audio/tours/casa-test-01/es/013.mp3"
     },
     {
-      "id": "p14",
+      "id": "14",
       "name": "Bustillo 3330",
       "lat": -41.129394,
       "lng": -71.346817,
@@ -130,7 +130,7 @@
       "audio": "audio/tours/casa-test-01/es/014.mp3"
     },
     {
-      "id": "p15",
+      "id": "15",
       "name": "Complejo El Náutico",
       "lat": -41.12928336593359,
       "lng": -71.34741283219603,
@@ -139,7 +139,7 @@
       "audio": "audio/tours/casa-test-01/es/015.mp3"
     },
     {
-      "id": "p16",
+      "id": "16",
       "name": "Chilco de Casa - Final",
       "lat": -41.129216,
       "lng": -71.347856,

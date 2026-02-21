@@ -5,7 +5,7 @@
 
   const actions = [
     {
-      title: "Recorridos cerca de mí",
+      title: "Recorridos cerca mío",
       subtitle: "Ver recorridos disponibles según tu ubicación",
       href: `${appBase}/cerca`,
       ariaLabel: "Ir a Recorridos cerca de mí"

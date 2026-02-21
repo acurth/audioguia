@@ -18,6 +18,7 @@
     alt: number;
     radius: number;
     audio: string;
+    photos?: string[];
   };
 
   type OfflineFile = { path: string; bytes: number };
@@ -53,6 +54,15 @@
   let isOfflineReady = false;
 
   const appBase = base;
+  const LAST_TOUR_LIST_KEY = "last-tour-list-path";
+  let backHref = `${appBase}/`;
+  $: allowedListPaths = [`${appBase}/cerca`, `${appBase}/offline`, `${appBase}/explorar`];
+  $: {
+    if (browser) {
+      const saved = sessionStorage.getItem(LAST_TOUR_LIST_KEY);
+      backHref = saved && allowedListPaths.includes(saved) ? saved : `${appBase}/`;
+    }
+  }
 
   $: devMode = browser ? getDevModeFromStorage() : false;
 
@@ -90,9 +100,17 @@
   let backgroundImage = "linear-gradient(160deg, rgba(10, 30, 22, 0.9), rgba(22, 44, 34, 0.7))";
   let backgroundRequestId = 0;
   $: downloadStatus = selectedTour?.id ? downloadState[selectedTour.id] : undefined;
+  $: downloadDisplay = getDisplayCounts(downloadStatus);
+  $: photoPoint =
+    points.find((point) => point.id === currentAudioPointId) ??
+    points.find((point) => point.id === activePointId) ??
+    points[0];
+  $: photoPath = photoPoint?.photos?.[0];
+  $: photoUrl = photoPath ? `${appBase}/${photoPath}` : (resolvedBackgroundUrl || backgroundUrl);
 
   // Estado general
   let isTracking = false;
+  let isDebugOpen = false;
   let statusMessage = "Listo para iniciar el recorrido";
   let isWakeLockActive = false;
   let isWakeLockAvailable = false;
@@ -229,6 +247,7 @@
   let audioPlayer: HTMLAudioElement | null = null;
   let currentAudioPointId: string | null = null;
   let isAudioPlaying = false;
+  $: hasActivePlayback = Boolean(currentAudioPointId && isAudioPlaying);
 
   function initAudioPlayer() {
     if (!audioPlayer && typeof window !== "undefined") {
@@ -294,6 +313,13 @@
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   }
 
+  function getDisplayCounts(state?: DownloadState) {
+    const total = Math.max((state?.totalFiles ?? 0) - 1, 0);
+    const currentRaw = state?.currentIndex ?? state?.completedFiles ?? 0;
+    const current = Math.min(currentRaw, total);
+    return { current, total };
+  }
+
   function getProgressPercent(state?: DownloadState): number {
     if (!state) return 0;
     if (typeof state.progress === "number") return state.progress;
@@ -303,18 +329,18 @@
     return 0;
   }
 
-  function getAudioFiles(tour: Tour): string[] {
+  function getOfflineFiles(tour: Tour): string[] {
     const offlineFiles = tour.offline?.files?.map((file) => file.path).filter(Boolean) ?? [];
     if (offlineFiles.length) return offlineFiles;
     return tour.points
-      .map((point) => point.audio)
-      .filter((audio) => typeof audio === "string" && audio.length > 0);
+      .flatMap((point) => [point.audio, ...(point.photos ?? [])])
+      .filter((path) => typeof path === "string" && path.length > 0);
   }
 
   async function requestDownload(tour: Tour) {
     if (!browser || !("serviceWorker" in navigator)) return;
-    const audioFiles = getAudioFiles(tour);
-    if (audioFiles.length === 0) return;
+    const offlineFiles = getOfflineFiles(tour);
+    if (offlineFiles.length === 0) return;
 
     setDownloadState(tour.id, {
       status: "downloading",
@@ -323,7 +349,7 @@
       progress: 0,
       stage: "preparing",
       completedFiles: 0,
-      totalFiles: audioFiles.length + 1,
+      totalFiles: offlineFiles.length + 1,
       currentIndex: 0,
       currentUrl: undefined,
       lastUpdate: Date.now(),
@@ -335,7 +361,7 @@
     });
 
     const backgroundPath = `media/tours/${tour.slug}/background.webp`;
-    const downloadFiles = [...audioFiles, backgroundPath];
+    const downloadFiles = [...offlineFiles, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     const registration = await navigator.serviceWorker.ready;
@@ -765,10 +791,10 @@
   {#if isTracking}
     <div class="track-active-header" bind:this={stickyHeaderEl}>
       <div class="track-active-container">
-        <div class="track-header track-panel track-active-row track-active-row--nav">
+        <div class={`track-header track-panel track-active-row track-active-row--nav ${isOfflineReady ? "is-offline" : "is-online"}`}>
           <a
             class="track-back"
-            href={`${appBase}/`}
+            href={backHref}
             on:click={() => {
               if (isTracking) {
                 void playTrackingOff();
@@ -796,7 +822,7 @@
                   fill="currentColor"
                 />
               </svg>
-              <span class="track-pill-text">Recorrido offline</span>
+              <span class="track-pill-text">Recorrido descargado</span>
               <video
                 class="track-offline-orb"
               src={`${appBase}/media/ui/active-orb.mp4`}
@@ -821,7 +847,7 @@
                 <path d="M6.3 15.3a8 8 0 0 1 11.4 0l-1.4 1.4a6 6 0 0 0-8.6 0l-1.4-1.4z" fill="currentColor" />
                 <path d="M3.5 12.5a12 12 0 0 1 17 0l-1.4 1.4a10 10 0 0 0-14.2 0l-1.4-1.4z" fill="currentColor" />
               </svg>
-              Recorrido online
+              Recorrido no descargado
             {/if}
           </span>
         </div>
@@ -836,16 +862,6 @@
         </header>
 
         <section class="track-panel track-active-row track-active-row--status">
-          <div class="track-status-stack">
-            <p class="track-status-line">{statusMessage}</p>
-            <p class="tracking-status" aria-live="polite">
-              <span class="tracking-dot" aria-hidden="true"></span>
-              Seguimiento activo
-            </p>
-            {#if wakeLockStatusLine}
-              <p class="tracking-wakelock" aria-live="polite">{wakeLockStatusLine}</p>
-            {/if}
-          </div>
           <button
             on:click={toggleTracking}
             class={`btn track-btn ${isOfflineReady ? "btn-offline" : "btn-primary"}`}
@@ -858,10 +874,10 @@
       </div>
     </div>
   {:else}
-    <div class="track-header track-panel">
+    <div class={`track-header track-panel ${isOfflineReady ? "is-offline" : "is-online"}`}>
       <a
         class="track-back"
-        href={`${appBase}/`}
+        href={backHref}
         on:click={() => {
           if (isTracking) {
             void playTrackingOff();
@@ -889,7 +905,7 @@
               fill="currentColor"
             />
           </svg>
-          Recorrido offline
+          Recorrido descargado
         {:else}
           <svg
             class="track-status-icon"
@@ -903,7 +919,7 @@
             <path d="M6.3 15.3a8 8 0 0 1 11.4 0l-1.4 1.4a6 6 0 0 0-8.6 0l-1.4-1.4z" fill="currentColor" />
             <path d="M3.5 12.5a12 12 0 0 1 17 0l-1.4 1.4a10 10 0 0 0-14.2 0l-1.4-1.4z" fill="currentColor" />
           </svg>
-          Recorrido online
+          Recorrido no descargado
         {/if}
       </span>
     </div>
@@ -912,85 +928,93 @@
       <h1 style="font-size: 1.8rem; margin-bottom: 0.25rem;">{title}</h1>
       <p style="max-width: 520px; margin: 0 auto; font-size: 0.95rem;">
         Para que el GPS y los audios se disparen correctamente, mantené la app abierta mientras
-        caminás. Si el teléfono bloquea la pantalla, puede pausar el seguimiento.
+        caminás. Si el teléfono bloquea la pantalla, se pausa el seguimiento.
       </p>
     </header>
   {/if}
 
-  {#if selectedTour}
-    {#if isOfflineReady}
-      <section
-        class="track-panel track-offline-section"
-        style="
-          width: 100%;
-          max-width: 640px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.35rem;
-        "
-      >
-        <p class="offline-inline" style="margin: 0; font-size: 0.95rem;">
-          Offline: listo · {formatMB(selectedTour.offline?.totalBytes)}
-          <button
-            type="button"
-            class="offline-inline-link delete-link delete-inline"
-            on:click={() => deleteDownload(selectedTour!)}
-            aria-label="Eliminar recorrido descargado"
-          >
-            <span aria-hidden="true">✕</span>
-            Eliminar recorrido
-          </button>
-        </p>
-      </section>
-    {:else}
-      <section
-        class="track-panel track-offline-section"
-        style="
-          width: 100%;
-          max-width: 640px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.65rem;
-        "
-      >
-        {#if downloadStatus?.status === "downloading"}
-          <div style="width: 100%;">
-            <div
-              style="height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden;"
-              role="progressbar"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-valuenow={getProgressPercent(downloadStatus)}
-            >
-              <div
-                style={`height: 100%; background: #0b5aa0; width: ${getProgressPercent(downloadStatus)}%;`}
-              ></div>
-            </div>
-            <p style="margin: 0.5rem 0 0; font-size: 0.9rem;" aria-live="polite">
-              Descargando audio {downloadStatus?.currentIndex ?? downloadStatus?.completedFiles ?? 0} de {downloadStatus?.totalFiles ?? 0}
-              ({getProgressPercent(downloadStatus)}%)
-            </p>
-          </div>
-        {:else}
-          <p class="offline-inline" style="margin: 0; font-size: 0.95rem;" aria-live="polite">
-            Offline: no descargado · {formatMB(selectedTour.offline?.totalBytes)}
+  {#if isTracking}
+    <p class="sr-only" aria-live="polite">
+      {statusMessage}. Seguimiento activo.{wakeLockStatusLine ? ` ${wakeLockStatusLine}` : ""}
+    </p>
+  {/if}
+
+  {#if !isTracking}
+    {#if selectedTour}
+      {#if isOfflineReady}
+        <section
+          class="track-panel track-offline-section"
+          style="
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+          "
+        >
+          <p class="offline-inline" style="margin: 0; font-size: 0.95rem;">
+            Offline: listo · {formatMB(selectedTour.offline?.totalBytes)}
             <button
               type="button"
-              class="offline-inline-link"
-              on:click={() => requestDownload(selectedTour!)}
-              aria-label="Descargar para usar sin conexión"
+              class="offline-inline-link delete-link delete-inline"
+              on:click={() => deleteDownload(selectedTour!)}
+              aria-label="Eliminar recorrido descargado"
             >
-              <span aria-hidden="true">↓</span>
-              Descargar
+              <span aria-hidden="true">✕</span>
+              Eliminar recorrido
             </button>
           </p>
-          <p style="margin: 0; font-size: 0.9rem;">
-            Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
-          </p>
-        {/if}
-      </section>
+        </section>
+      {:else}
+        <section
+          class="track-panel track-offline-section"
+          style="
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.65rem;
+          "
+        >
+          {#if downloadStatus?.status === "downloading"}
+            <div style="width: 100%;">
+              <div
+                style="height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden;"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={getProgressPercent(downloadStatus)}
+              >
+                <div
+                  style={`height: 100%; background: #0b5aa0; width: ${getProgressPercent(downloadStatus)}%;`}
+                ></div>
+              </div>
+              <p style="margin: 0.5rem 0 0; font-size: 0.9rem;" aria-live="polite">
+                Descargando archivo {downloadDisplay.current} de {downloadDisplay.total}
+                ({getProgressPercent(downloadStatus)}%)
+              </p>
+            </div>
+          {:else}
+            <p class="offline-inline" style="margin: 0; font-size: 0.95rem;" aria-live="polite">
+              Offline: no descargado · {formatMB(selectedTour.offline?.totalBytes)}
+              <button
+                type="button"
+                class="offline-inline-link"
+                on:click={() => requestDownload(selectedTour!)}
+                aria-label="Descargar para usar sin conexión"
+              >
+                <span aria-hidden="true">↓</span>
+                Descargar
+              </button>
+            </p>
+            <p style="margin: 0; font-size: 0.9rem;">
+              Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
+            </p>
+          {/if}
+        </section>
+      {/if}
     {/if}
   {/if}
 
@@ -1059,67 +1083,43 @@
       max-width: 640px;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1rem;
+      gap: 0.4rem;
       text-align: left;
-      margin-top: 1rem;
+      margin-top: 0;
     "
   >
     <div
       style="
-        padding: 1rem;
+        padding: 0.6rem 1rem 1rem;
         border-radius: 0.75rem;
         border: 1px solid rgba(0,0,0,0.1);
       "
     >
-      <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Puntos del recorrido</h2>
       <ul
         style="list-style: none; padding: 0; margin: 0;"
         on:wheel={markManualScroll}
         on:touchmove={markManualScroll}
       >
-        {#each points as point}
+        {#each points as point, index (point.id)}
+          {@const isActive = hasActivePlayback && currentAudioPointId === point.id}
+          {@const isNear = hasActivePlayback && Math.abs(index - (points.findIndex((p) => p.id === currentAudioPointId))) === 1}
+          {@const isFar = hasActivePlayback && !isActive && !isNear}
           <li
             use:registerPoint={point.id}
             aria-current={point.id === activePointId ? "true" : undefined}
-            style="
-              font-size: 0.85rem;
-              padding: 0.6rem 0;
-              min-height: 52px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              gap: 0.5rem;
-            "
+            class={`track-point-row ${isActive ? "is-active" : ""} ${isNear ? "is-near" : ""} ${isFar ? "is-far" : ""} ${hasActivePlayback ? "has-playback" : ""} ${isOfflineReady ? "is-offline" : "is-online"}`}
           >
-            <span>
+            <span class="track-point-title">
               {point.id}: {point.name}
             </span>
 
-            <span
-              style="
-                display: flex;
-                align-items: center;
-                gap: 0.35rem;
-              "
-            >
+            <span class="track-point-controls">
               <button
                 type="button"
                 on:click={() => togglePlayPoint(point)}
                 aria-label={`${currentAudioPointId === point.id && isAudioPlaying ? "Pausar" : "Reproducir"} punto: ${point.name}`}
-                style="
-                  border: none;
-                  border-radius: 999px;
-                  padding: 0.45rem 0.9rem;
-                  min-width: 44px;
-                  min-height: 44px;
-                  font-size: 0.75rem;
-                  cursor: pointer;
-                  background: #ffffff;
-                  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                "
+                aria-pressed={currentAudioPointId === point.id && isAudioPlaying}
+                class="track-point-play"
               >
                 {#if currentAudioPointId === point.id && isAudioPlaying}
                   ⏸
@@ -1128,7 +1128,7 @@
                 {/if}
               </button>
 
-              <span style="font-size: 0.8rem;">
+              <span class="track-point-distance">
                 {#if pointDistances[point.id] !== undefined}
                   {formatDistance(pointDistances[point.id])}
                 {:else}
@@ -1136,7 +1136,7 @@
                 {/if}
               </span>
 
-              <span>
+              <span class="track-point-status">
                 {#if triggeredPointIds.includes(point.id)}
                   ✅
                 {:else}
@@ -1150,96 +1150,401 @@
     </div>
   </section>
 
-  <section
-    class="track-panel track-debug-section"
-    style="
-      width: 100%;
-      max-width: 640px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-      text-align: left;
-      margin-top: 1rem;
-    "
-  >
-    <div
-      class="track-panel"
+  {#if isTracking}
+    <section
+      class="track-panel track-photo-section"
       style="
-        padding: 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 640px;
+        padding: 0;
+        overflow: hidden;
       "
     >
-      <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Posición actual (debug)</h2>
-      {#if currentLat !== null && currentLng !== null}
-        <p style="font-size: 0.9rem; margin: 0.1rem 0;">
-          Lat: {currentLat}
-        </p>
-        <p style="font-size: 0.9rem; margin: 0.1rem 0;">
-          Lng: {currentLng}
-        </p>
-        {#if currentAccuracy !== null}
-          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
-            Precisión aprox.: {Math.round(currentAccuracy)} m
-          </p>
-        {/if}
-        {#if gpsWarningMessage}
-          <p style="font-size: 0.9rem; margin: 0.1rem 0; color: #c0392b;">
-            {gpsWarningMessage}
-          </p>
-        {/if}
-        {#if distanceToFirstMeters !== null}
-          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
-            Distancia al punto 1 del recorrido: {formatDistance(distanceToFirstMeters)}
-          </p>
-        {/if}
-        {#if lastTriggerEvalEffectiveRadius !== null && lastTriggerEvalInsideRadius !== null}
-          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
-            Radio efectivo ({lastTriggerEvalPointId ?? "—"}): {Math.round(lastTriggerEvalEffectiveRadius)} m
-          </p>
-          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
-            Inside radius: {lastTriggerEvalInsideRadius ? "sí" : "no"}
-          </p>
-        {/if}
-      {:else}
-        <p style="font-size: 0.9rem; margin: 0;">
-          Todavía no se recibió ninguna posición.
-        </p>
-      {/if}
-    </div>
+      <div class="track-photo-frame">
+        <img
+          class="track-photo"
+          src={photoUrl}
+          alt={photoPoint?.name ?? "Vista del recorrido"}
+        />
+        <div class="track-photo-label">
+          {photoPoint?.name ?? "Recorrido"}
+        </div>
+      </div>
+    </section>
+  {/if}
 
-    <div
+  {#if !isTracking}
+    {#if selectedTour}
+      {#if isOfflineReady}
+        <section
+          class="track-panel track-offline-section"
+          style="
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+          "
+        >
+          <p class="offline-inline" style="margin: 0; font-size: 0.95rem;">
+            Offline: listo · {formatMB(selectedTour.offline?.totalBytes)}
+            <button
+              type="button"
+              class="offline-inline-link delete-link delete-inline"
+              on:click={() => deleteDownload(selectedTour!)}
+              aria-label="Eliminar recorrido descargado"
+            >
+              <span aria-hidden="true">✕</span>
+              Eliminar recorrido
+            </button>
+          </p>
+        </section>
+      {:else}
+        <section
+          class="track-panel track-offline-section"
+          style="
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.65rem;
+          "
+        >
+          {#if downloadStatus?.status === "downloading"}
+            <div style="width: 100%;">
+              <div
+                style="height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden;"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={getProgressPercent(downloadStatus)}
+              >
+                <div
+                  style={`height: 100%; background: #0b5aa0; width: ${getProgressPercent(downloadStatus)}%;`}
+                ></div>
+              </div>
+              <p style="margin: 0.5rem 0 0; font-size: 0.9rem;" aria-live="polite">
+                Descargando archivo {downloadDisplay.current} de {downloadDisplay.total}
+                ({getProgressPercent(downloadStatus)}%)
+              </p>
+            </div>
+          {:else}
+            <p class="offline-inline" style="margin: 0; font-size: 0.95rem;" aria-live="polite">
+              Offline: no descargado · {formatMB(selectedTour.offline?.totalBytes)}
+              <button
+                type="button"
+                class="offline-inline-link"
+                on:click={() => requestDownload(selectedTour!)}
+                aria-label="Descargar para usar sin conexión"
+              >
+                <span aria-hidden="true">↓</span>
+                Descargar
+              </button>
+            </p>
+            <p style="margin: 0; font-size: 0.9rem;">
+              Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
+            </p>
+          {/if}
+        </section>
+      {/if}
+    {/if}
+  {/if}
+
+  {#if isTracking}
+    <button
+      type="button"
+      class="debug-toggle"
+      on:click={() => (isDebugOpen = !isDebugOpen)}
+      aria-expanded={isDebugOpen}
+      aria-controls="debug-panel"
+    >
+      <span class="debug-caret" aria-hidden="true"></span>
+      Debug Info
+    </button>
+
+    {#if isDebugOpen}
+      <section
+        id="debug-panel"
+        class="debug-panel"
+        on:click={() => (isDebugOpen = false)}
+        role="region"
+        aria-label="Debug info"
+      >
+        <div
+          class="track-panel"
+          style="
+            width: 100%;
+            max-width: 640px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            text-align: left;
+          "
+        >
+          <div
+            class="track-panel"
+            style="
+              padding: 1rem;
+              border-radius: 0.75rem;
+              border: 1px solid rgba(0,0,0,0.1);
+            "
+          >
+            <h2 style="font-size: 1rem; margin: 0 0 0.25rem;">Estado del seguimiento</h2>
+            <p class="track-status-line">{statusMessage}</p>
+            <p class="tracking-status" aria-live="polite">
+              <span class="tracking-dot" aria-hidden="true"></span>
+              Seguimiento activo
+            </p>
+            {#if wakeLockStatusLine}
+              <p class="tracking-wakelock" aria-live="polite">{wakeLockStatusLine}</p>
+            {/if}
+          </div>
+
+          {#if selectedTour}
+            {#if isOfflineReady}
+              <div
+                class="track-panel"
+                style="
+                  padding: 1rem;
+                  border-radius: 0.75rem;
+                  border: 1px solid rgba(0,0,0,0.1);
+                "
+              >
+                <p class="offline-inline" style="margin: 0; font-size: 0.95rem;">
+                  Offline: listo · {formatMB(selectedTour.offline?.totalBytes)}
+                  <button
+                    type="button"
+                    class="offline-inline-link delete-link delete-inline"
+                    on:click={() => deleteDownload(selectedTour!)}
+                    aria-label="Eliminar recorrido descargado"
+                  >
+                    <span aria-hidden="true">✕</span>
+                    Eliminar recorrido
+                  </button>
+                </p>
+              </div>
+            {:else}
+              <div
+                class="track-panel"
+                style="
+                  padding: 1rem;
+                  border-radius: 0.75rem;
+                  border: 1px solid rgba(0,0,0,0.1);
+                "
+              >
+                {#if downloadStatus?.status === "downloading"}
+                  <div style="width: 100%;">
+                    <div
+                      style="height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden;"
+                      role="progressbar"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow={getProgressPercent(downloadStatus)}
+                    >
+                      <div
+                        style={`height: 100%; background: #0b5aa0; width: ${getProgressPercent(downloadStatus)}%;`}
+                      ></div>
+                    </div>
+                    <p style="margin: 0.5rem 0 0; font-size: 0.9rem;" aria-live="polite">
+                      Descargando archivo {downloadDisplay.current} de {downloadDisplay.total}
+                      ({getProgressPercent(downloadStatus)}%)
+                    </p>
+                  </div>
+                {:else}
+                  <p class="offline-inline" style="margin: 0; font-size: 0.95rem;" aria-live="polite">
+                    Offline: no descargado · {formatMB(selectedTour.offline?.totalBytes)}
+                    <button
+                      type="button"
+                      class="offline-inline-link"
+                      on:click={() => requestDownload(selectedTour!)}
+                      aria-label="Descargar para usar sin conexión"
+                    >
+                      <span aria-hidden="true">↓</span>
+                      Descargar
+                    </button>
+                  </p>
+                  <p style="margin: 0; font-size: 0.9rem;">
+                    Este recorrido no está descargado en tu dispositivo. Descargalo para usarlo sin conexión.
+                  </p>
+                {/if}
+              </div>
+            {/if}
+          {/if}
+
+          <div
+            class="track-panel"
+            style="
+              padding: 1rem;
+              border-radius: 0.75rem;
+              border: 1px solid rgba(0,0,0,0.1);
+            "
+          >
+            <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Posición actual (debug)</h2>
+            {#if currentLat !== null && currentLng !== null}
+              <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+                Lat: {currentLat}
+              </p>
+              <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+                Lng: {currentLng}
+              </p>
+              {#if currentAccuracy !== null}
+                <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+                  Precisión aprox.: {Math.round(currentAccuracy)} m
+                </p>
+              {/if}
+              {#if gpsWarningMessage}
+                <p style="font-size: 0.9rem; margin: 0.1rem 0; color: #c0392b;">
+                  {gpsWarningMessage}
+                </p>
+              {/if}
+              {#if distanceToFirstMeters !== null}
+                <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+                  Distancia al punto 1 del recorrido: {formatDistance(distanceToFirstMeters)}
+                </p>
+              {/if}
+              {#if lastTriggerEvalEffectiveRadius !== null && lastTriggerEvalInsideRadius !== null}
+                <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+                  Radio efectivo ({lastTriggerEvalPointId ?? "—"}): {Math.round(lastTriggerEvalEffectiveRadius)} m
+                </p>
+                <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+                  Inside radius: {lastTriggerEvalInsideRadius ? "sí" : "no"}
+                </p>
+              {/if}
+            {:else}
+              <p style="font-size: 0.9rem; margin: 0;">
+                Todavía no se recibió ninguna posición.
+              </p>
+            {/if}
+          </div>
+
+          <div
+            style="
+              padding: 1rem;
+              border-radius: 0.75rem;
+              border: 1px solid rgba(0,0,0,0.1);
+            "
+          >
+            <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Último punto disparado</h2>
+            {#if lastTriggeredPoint}
+              <p style="font-size: 0.95rem; margin: 0.1rem 0;">
+                <strong>{lastTriggeredPoint.name}</strong>
+              </p>
+              <p style="font-size: 0.85rem; margin: 0.1rem 0%;">
+                ID: {lastTriggeredPoint.id} — Radio: {lastTriggeredPoint.radius} m
+              </p>
+              {#if lastTriggeredAccuracy !== null && lastTriggeredEffectiveRadius !== null}
+                <p style="font-size: 0.85rem; margin: 0.1rem 0;">
+                  Accuracy: {Math.round(lastTriggeredAccuracy)} m — Radio efectivo: {Math.round(lastTriggeredEffectiveRadius)} m
+                </p>
+              {/if}
+              {#if lastTriggeredInsideRadius !== null}
+                <p style="font-size: 0.85rem; margin: 0.1rem 0;">
+                  Inside radius: {lastTriggeredInsideRadius ? "sí" : "no"}
+                </p>
+              {/if}
+            {:else}
+              <p style="font-size: 0.9rem; margin: 0;">
+                Aún no se disparó ningún punto.
+              </p>
+            {/if}
+          </div>
+        </div>
+      </section>
+    {/if}
+  {:else}
+    <section
+      class="track-panel track-debug-section"
       style="
-        padding: 1rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 640px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        text-align: left;
+        margin-top: 1rem;
       "
     >
-      <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Último punto disparado</h2>
-      {#if lastTriggeredPoint}
-        <p style="font-size: 0.95rem; margin: 0.1rem 0;">
-          <strong>{lastTriggeredPoint.name}</strong>
-        </p>
-        <p style="font-size: 0.85rem; margin: 0.1rem 0%;">
-          ID: {lastTriggeredPoint.id} — Radio: {lastTriggeredPoint.radius} m
-        </p>
-        {#if lastTriggeredAccuracy !== null && lastTriggeredEffectiveRadius !== null}
-          <p style="font-size: 0.85rem; margin: 0.1rem 0;">
-            Accuracy: {Math.round(lastTriggeredAccuracy)} m — Radio efectivo: {Math.round(lastTriggeredEffectiveRadius)} m
+      <div
+        class="track-panel"
+        style="
+          padding: 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(0,0,0,0.1);
+        "
+      >
+        <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Posición actual (debug)</h2>
+        {#if currentLat !== null && currentLng !== null}
+          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+            Lat: {currentLat}
+          </p>
+          <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+            Lng: {currentLng}
+          </p>
+          {#if currentAccuracy !== null}
+            <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+              Precisión aprox.: {Math.round(currentAccuracy)} m
+            </p>
+          {/if}
+          {#if gpsWarningMessage}
+            <p style="font-size: 0.9rem; margin: 0.1rem 0; color: #c0392b;">
+              {gpsWarningMessage}
+            </p>
+          {/if}
+          {#if distanceToFirstMeters !== null}
+            <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+              Distancia al punto 1 del recorrido: {formatDistance(distanceToFirstMeters)}
+            </p>
+          {/if}
+          {#if lastTriggerEvalEffectiveRadius !== null && lastTriggerEvalInsideRadius !== null}
+            <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+              Radio efectivo ({lastTriggerEvalPointId ?? "—"}): {Math.round(lastTriggerEvalEffectiveRadius)} m
+            </p>
+            <p style="font-size: 0.9rem; margin: 0.1rem 0;">
+              Inside radius: {lastTriggerEvalInsideRadius ? "sí" : "no"}
+            </p>
+          {/if}
+        {:else}
+          <p style="font-size: 0.9rem; margin: 0;">
+            Todavía no se recibió ninguna posición.
           </p>
         {/if}
-        {#if lastTriggeredInsideRadius !== null}
-          <p style="font-size: 0.85rem; margin: 0.1rem 0;">
-            Inside radius: {lastTriggeredInsideRadius ? "sí" : "no"}
+      </div>
+
+      <div
+        style="
+          padding: 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(0,0,0,0.1);
+        "
+      >
+        <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">Último punto disparado</h2>
+        {#if lastTriggeredPoint}
+          <p style="font-size: 0.95rem; margin: 0.1rem 0;">
+            <strong>{lastTriggeredPoint.name}</strong>
+          </p>
+          <p style="font-size: 0.85rem; margin: 0.1rem 0%;">
+            ID: {lastTriggeredPoint.id} — Radio: {lastTriggeredPoint.radius} m
+          </p>
+          {#if lastTriggeredAccuracy !== null && lastTriggeredEffectiveRadius !== null}
+            <p style="font-size: 0.85rem; margin: 0.1rem 0;">
+              Accuracy: {Math.round(lastTriggeredAccuracy)} m — Radio efectivo: {Math.round(lastTriggeredEffectiveRadius)} m
+            </p>
+          {/if}
+          {#if lastTriggeredInsideRadius !== null}
+            <p style="font-size: 0.85rem; margin: 0.1rem 0;">
+              Inside radius: {lastTriggeredInsideRadius ? "sí" : "no"}
+            </p>
+          {/if}
+        {:else}
+          <p style="font-size: 0.9rem; margin: 0;">
+            Aún no se disparó ningún punto.
           </p>
         {/if}
-      {:else}
-        <p style="font-size: 0.9rem; margin: 0;">
-          Aún no se disparó ningún punto.
-        </p>
-      {/if}
-    </div>
-  </section>
+      </div>
+    </section>
+  {/if}
 </main>
 
 <style>
@@ -1285,9 +1590,9 @@
     z-index: 3;
     width: 100%;
     box-sizing: border-box;
-    background: rgba(0, 0, 0, var(--stickyAlpha));
-    border-bottom: 1px solid rgba(255, 255, 255, var(--stickyBorderAlpha));
-    box-shadow: 0 6px 18px rgba(0, 0, 0, var(--stickyShadowAlpha));
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
   }
 
   .track-active-container {
@@ -1299,6 +1604,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
+  }
+
+  .track-page.is-tracking .track-active-container {
+    padding: 0;
   }
 
   .track-pill-text {
@@ -1325,6 +1634,18 @@
     flex: 0 0 auto;
   }
 
+  .track-page .track-pill.is-offline {
+    position: relative;
+    padding-right: 1.1rem;
+  }
+
+  .track-page .track-pill.is-offline .track-offline-orb,
+  .track-page .track-pill.is-offline .track-offline-orb-fallback {
+    position: absolute;
+    right: 0.2rem;
+    margin-left: 0;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .track-offline-orb {
       display: none;
@@ -1336,24 +1657,27 @@
   }
 
   .track-page.is-tracking .track-active-header .track-panel {
-    background: rgba(0, 0, 0, var(--stickyAlpha));
-    padding-left: 0;
-    padding-right: 0;
+    background: transparent;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+    box-shadow: none;
+    border: none;
   }
 
   .track-page.is-tracking .track-active-header .track-header {
-    margin: 0;
-    max-width: none;
+    margin: 0 auto;
+    max-width: 640px;
     width: 100%;
   }
 
   .track-active-row--nav {
-    margin-bottom: 0;
-    padding: 0.7rem 0;
+    margin-bottom: 0.9rem;
+    padding: 0.8rem 0;
   }
 
   .track-active-row--title {
-    padding: 1.25rem 0;
+    padding: calc(0.8rem - 20px) 0;
+    margin-top: -15px;
   }
 
   .track-title-grid {
@@ -1374,6 +1698,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 10px;
   }
 
   .track-active-row--status {
@@ -1390,6 +1715,31 @@
     flex-direction: column;
     gap: 0.35rem;
     min-width: 0;
+  }
+
+  .track-page.is-tracking .track-active-row--status {
+    flex-direction: column-reverse;
+    align-items: center;
+    text-align: center;
+    margin-top: -20px;
+    margin-bottom: 10px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .track-page.is-tracking .track-active-row--status .track-status-stack {
+    align-items: center;
+    max-width: 520px;
+  }
+
+  .track-page.is-tracking .track-active-row--status .track-status-line,
+  .track-page.is-tracking .track-active-row--status .tracking-status,
+  .track-page.is-tracking .track-active-row--status .tracking-wakelock {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .track-status-line {
@@ -1411,24 +1761,251 @@
     order: 0;
   }
 
-  .track-page.is-tracking .track-points-section {
-    order: 1;
+  .track-page.is-tracking {
+    gap: 0;
   }
 
-  .track-page.is-tracking .track-offline-section {
+  .track-page.is-tracking .track-points-section {
+    order: 1;
+    margin-top: 10px;
+  }
+
+  .track-page.is-tracking .track-status-section {
     order: 2;
   }
 
-  .track-page.is-tracking .track-dev-section {
+  .track-page.is-tracking .track-photo-section {
+    order: 2;
+  }
+
+  .track-page.is-tracking .track-offline-section {
     order: 3;
   }
 
-  .track-page.is-tracking .track-debug-section {
+  .track-page.is-tracking .track-dev-section {
     order: 4;
+  }
+
+  .track-page.is-tracking .track-debug-section {
+    order: 5;
+  }
+
+  .track-page.is-tracking .track-points-section {
+    height: calc(25vh + 50px);
+    max-height: calc(25vh + 50px);
+  }
+
+  .track-page.is-tracking .track-photo-section {
+    height: 290px;
+    max-height: 290px;
+  }
+
+  @media (max-width: 520px) {
+    .track-page.is-tracking .track-photo-section {
+      height: 290px;
+      max-height: 290px;
+    }
+  }
+
+  .track-page.is-tracking .track-points-section {
+    overflow: visible;
+  }
+
+  .track-page.is-tracking .track-points-section > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .track-page.is-tracking .track-points-section ul {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: visible;
+  }
+
+  .track-photo {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 290px;
+    display: block;
+    border: 4px solid #ffffff;
+    transform: none;
+    box-sizing: border-box;
+    margin: 0;
+    position: relative;
+    z-index: 6;
+  }
+
+  .track-photo-frame {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    position: relative;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .track-photo-label {
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    max-width: 85%;
+    text-align: center;
+    z-index: 7;
+  }
+
+  .track-point-row {
+    font-size: 0.95rem;
+    padding: 0.6rem 0;
+    min-height: 52px;
+    display: grid;
+    grid-template-columns: minmax(0, 60%) minmax(0, 40%);
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    position: relative;
+    z-index: 1;
+    --active-bg: linear-gradient(180deg, #f28b1a 0%, #ff922b 45%, #e17612 100%);
+  }
+
+  .track-point-title {
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .track-point-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    justify-items: center;
+    gap: 0.35rem;
+  }
+
+  .track-point-play {
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background: #ffffff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .track-point-distance {
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .track-point-status {
+    text-align: center;
+  }
+
+  .track-point-row.has-playback.is-active {
+    transform: scale(1.08);
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 0.7rem 1.4rem;
+    z-index: 2;
+  }
+
+  .track-point-row.has-playback.is-active.is-online {
+    --active-bg: linear-gradient(180deg, #0a4b86 0%, #0b5aa0 45%, #083b6b 100%);
+    color: #ffffff;
+  }
+
+  .track-point-row.has-playback.is-active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -0.4rem;
+    right: -0.4rem;
+    background: var(--active-bg);
+    border-radius: 5px;
+    z-index: -1;
+  }
+
+  .track-point-row.has-playback.is-near {
+    transform: scale(1.05);
+    opacity: 0.85;
+    padding: 0.65rem 1.1rem;
+    margin: 0 0.2rem;
+    border-radius: 0.5rem;
+  }
+
+  .track-point-row.has-playback.is-far {
+    transform: scale(0.95);
+    opacity: 0.6;
   }
 
   .track-page li[aria-current="true"] {
     border-radius: 0.5rem;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  }
+
+  .debug-toggle {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    background: #171709;
+    color: #ffffff;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 4;
+  }
+
+  .debug-caret {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 7px solid #ffffff;
+  }
+
+  .debug-toggle[aria-expanded="true"] .debug-caret {
+    border-bottom: none;
+    border-top: 7px solid #ffffff;
+  }
+
+  .debug-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 40px;
+    height: 50vh;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.75rem 1rem 1rem;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    z-index: 5;
   }
 </style>
