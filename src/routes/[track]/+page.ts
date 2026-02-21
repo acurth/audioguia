@@ -1,5 +1,7 @@
 export const prerender = true;
 
+import { getTourRecords } from "$lib/data/tours";
+
 export const entries = async () => {
-	return [{ track: 'casa-test-01' }];
+	return getTourRecords(false).map((tour) => ({ track: tour.slug }));
 };
