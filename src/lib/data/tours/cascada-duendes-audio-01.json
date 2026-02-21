@@ -127,7 +127,7 @@
     }
   ],
   "offline": {
-    "totalBytes": 10292800,
+    "totalBytes": 12153114,
     "files": [
       {
         "path": "audio/tours/cascada-duendes-audio-01/es/001.mp3",
@@ -168,6 +168,50 @@
       {
         "path": "audio/tours/cascada-duendes-audio-01/es/010.mp3",
         "bytes": 2400928
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/background.webp",
+        "bytes": 368754
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/001.webp",
+        "bytes": 198588
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/002.webp",
+        "bytes": 145764
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/003.webp",
+        "bytes": 151886
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/004.webp",
+        "bytes": 141970
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/005.webp",
+        "bytes": 140806
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/006.webp",
+        "bytes": 127926
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/007.webp",
+        "bytes": 149530
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/008.webp",
+        "bytes": 149186
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/009.webp",
+        "bytes": 134798
+      },
+      {
+        "path": "media/tours/cascada-duendes-audio-01/points/010.webp",
+        "bytes": 151106
       }
     ]
   }

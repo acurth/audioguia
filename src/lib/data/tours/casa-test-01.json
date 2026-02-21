@@ -197,7 +197,7 @@
     }
   ],
   "offline": {
-    "totalBytes": 5381412,
+    "totalBytes": 7705120,
     "files": [
       {
         "path": "audio/tours/casa-test-01/es/001.mp3",
@@ -262,6 +262,74 @@
       {
         "path": "audio/tours/casa-test-01/es/016.mp3",
         "bytes": 1013060
+      },
+      {
+        "path": "media/tours/casa-test-01/background.webp",
+        "bytes": 347288
+      },
+      {
+        "path": "media/tours/casa-test-01/points/001.webp",
+        "bytes": 109322
+      },
+      {
+        "path": "media/tours/casa-test-01/points/002.webp",
+        "bytes": 109516
+      },
+      {
+        "path": "media/tours/casa-test-01/points/003.webp",
+        "bytes": 89592
+      },
+      {
+        "path": "media/tours/casa-test-01/points/004.webp",
+        "bytes": 147414
+      },
+      {
+        "path": "media/tours/casa-test-01/points/005.webp",
+        "bytes": 202918
+      },
+      {
+        "path": "media/tours/casa-test-01/points/006.webp",
+        "bytes": 124918
+      },
+      {
+        "path": "media/tours/casa-test-01/points/007.webp",
+        "bytes": 99428
+      },
+      {
+        "path": "media/tours/casa-test-01/points/008.webp",
+        "bytes": 125588
+      },
+      {
+        "path": "media/tours/casa-test-01/points/009.webp",
+        "bytes": 141802
+      },
+      {
+        "path": "media/tours/casa-test-01/points/010.webp",
+        "bytes": 121240
+      },
+      {
+        "path": "media/tours/casa-test-01/points/011.webp",
+        "bytes": 92056
+      },
+      {
+        "path": "media/tours/casa-test-01/points/012.webp",
+        "bytes": 120634
+      },
+      {
+        "path": "media/tours/casa-test-01/points/013.webp",
+        "bytes": 118252
+      },
+      {
+        "path": "media/tours/casa-test-01/points/014.webp",
+        "bytes": 95772
+      },
+      {
+        "path": "media/tours/casa-test-01/points/015.webp",
+        "bytes": 112588
+      },
+      {
+        "path": "media/tours/casa-test-01/points/016.webp",
+        "bytes": 165380
       }
     ]
   }

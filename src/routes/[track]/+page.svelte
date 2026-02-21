@@ -331,16 +331,19 @@
 
   function getOfflineFiles(tour: Tour): string[] {
     const offlineFiles = tour.offline?.files?.map((file) => file.path).filter(Boolean) ?? [];
-    if (offlineFiles.length) return offlineFiles;
-    return tour.points
+    if (offlineFiles.length) return Array.from(new Set(offlineFiles));
+
+    const fallbackFiles = tour.points
       .flatMap((point) => [point.audio, ...(point.photos ?? [])])
       .filter((path) => typeof path === "string" && path.length > 0);
+    fallbackFiles.push(`media/tours/${tour.slug}/background.webp`);
+    return Array.from(new Set(fallbackFiles));
   }
 
   async function requestDownload(tour: Tour) {
     if (!browser || !("serviceWorker" in navigator)) return;
-    const offlineFiles = getOfflineFiles(tour);
-    if (offlineFiles.length === 0) return;
+    const downloadFiles = getOfflineFiles(tour);
+    if (downloadFiles.length === 0) return;
 
     setDownloadState(tour.id, {
       status: "downloading",
@@ -349,7 +352,7 @@
       progress: 0,
       stage: "preparing",
       completedFiles: 0,
-      totalFiles: offlineFiles.length + 1,
+      totalFiles: downloadFiles.length,
       currentIndex: 0,
       currentUrl: undefined,
       lastUpdate: Date.now(),
@@ -360,8 +363,6 @@
       cacheResult: undefined
     });
 
-    const backgroundPath = `media/tours/${tour.slug}/background.webp`;
-    const downloadFiles = [...offlineFiles, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     const registration = await navigator.serviceWorker.ready;

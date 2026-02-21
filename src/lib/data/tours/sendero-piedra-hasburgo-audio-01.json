@@ -209,7 +209,7 @@
     }
   ],
   "offline": {
-    "totalBytes": 14053864,
+    "totalBytes": 23844130,
     "files": [
       {
         "path": "audio/tours/sendero-piedra-hasburgo-audio-01/es/001.mp3",
@@ -278,6 +278,78 @@
       {
         "path": "audio/tours/sendero-piedra-hasburgo-audio-01/es/017.mp3",
         "bytes": 1561969
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/background.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/001.webp",
+        "bytes": 241078
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/002.webp",
+        "bytes": 302164
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/003.webp",
+        "bytes": 357916
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/004.webp",
+        "bytes": 377942
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/005.webp",
+        "bytes": 378760
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/006.webp",
+        "bytes": 313004
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/007.webp",
+        "bytes": 390698
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/008.webp",
+        "bytes": 334414
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/009.webp",
+        "bytes": 317130
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/010.webp",
+        "bytes": 3820660
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/011.webp",
+        "bytes": 352492
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/012.webp",
+        "bytes": 346886
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/013.webp",
+        "bytes": 431596
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/014.webp",
+        "bytes": 388926
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/015.webp",
+        "bytes": 378304
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/016.webp",
+        "bytes": 281670
+      },
+      {
+        "path": "media/tours/sendero-piedra-hasburgo-audio-01/points/017.webp",
+        "bytes": 345030
       }
     ]
   }

@@ -196,9 +196,9 @@
 
   function getOfflineFiles(tour: TourRuntime): string[] {
     const offlineFiles = tour.offline?.files?.map((file) => file.path).filter(Boolean) ?? [];
-    if (offlineFiles.length) return offlineFiles;
+    if (offlineFiles.length) return Array.from(new Set(offlineFiles));
     const points = Array.isArray(tour.raw?.points) ? tour.raw.points : [];
-    return points
+    const fallbackFiles = points
       .map((point) => {
         if (!point || typeof point !== "object") return undefined;
         const audio = (point as { audio?: unknown }).audio;
@@ -208,12 +208,14 @@
       })
       .flat()
       .filter((path): path is string => typeof path === "string" && path.length > 0);
+    fallbackFiles.push(`media/tours/${tour.slug}/background.webp`);
+    return Array.from(new Set(fallbackFiles));
   }
 
   async function requestDownload(tour: TourRuntime) {
     if (!browser || !("serviceWorker" in navigator)) return;
-    const offlineFiles = getOfflineFiles(tour);
-    if (offlineFiles.length === 0) return;
+    const downloadFiles = getOfflineFiles(tour);
+    if (downloadFiles.length === 0) return;
     setState(tour.id, {
       status: "downloading",
       bytes: tour.offline?.totalBytes,
@@ -221,7 +223,7 @@
       progress: 0,
       stage: "preparing",
       completedFiles: 0,
-      totalFiles: offlineFiles.length + 1,
+      totalFiles: downloadFiles.length,
       currentIndex: 0,
       currentUrl: undefined,
       lastUpdate: Date.now(),
@@ -232,14 +234,12 @@
       cacheResult: undefined
     });
 
-    const backgroundPath = `media/tours/${tour.slug}/background.webp`;
-    const downloadFiles = [...offlineFiles, backgroundPath];
     const jsonPayload = JSON.stringify(tour.raw);
 
     console.info("[offline] user requested tour download", {
       id: tour.id,
       slug: tour.slug,
-      files: audioFiles.length
+      files: downloadFiles.length
     });
 
     const registration = await navigator.serviceWorker.ready;
