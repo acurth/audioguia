@@ -2,6 +2,9 @@
   "id": "sendero-arrayanes-audio-01",
   "status": "prod",
   "name": "Sendero de los Arrayanes",
+  "place": "Bariloche",
+  "difficulty": "facil",
+  "description": "Un sendero entre el bosque y el lago, con mucha presencia de aves: el chucao, el churrín, el chimango, la ratona y el picaflor rubí. El relato se detiene en el hueco de un coihue y en la caña colihue, y cuenta dos leyendas, la del coihue y el arrayán y la de las aves pequeñas. Pasa por la pasarela del bosque de arrayanes y termina en la playa del lago.",
   "points": [
     {
       "id": "1",

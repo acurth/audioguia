@@ -13,6 +13,7 @@
 
 {#if canShow}
   <main
+    id="main"
     style="
       min-height: 100vh;
       display: flex;
@@ -55,7 +56,7 @@
     </section>
   </main>
 {:else}
-  <main style="min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 2rem;">
+  <main id="main" style="min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 2rem;">
     <p style="margin: 0;">Esta página solo está disponible en modo dev.</p>
   </main>
 {/if}

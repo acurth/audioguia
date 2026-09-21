@@ -1,0 +1,151 @@
+/* audioguia.io — design tokens and the self-hosted typeface.
+   Source: audioguia-rediseno/tokens.css plus the brand guide v1.0.
+   Every redesigned component reads from these variables. Do not hardcode
+   hex values in components. */
+
+/* ---- Typeface ----------------------------------------------------------
+   Atkinson Hyperlegible Next, from the brand guide. It is self-hosted on
+   purpose: the app has to work with no signal on the trail, and a Google
+   Fonts request fails there. One variable file covers weights 200 to 800.
+   Licence: SIL Open Font License 1.1, see the OFL.txt next to the files
+   and the public copy at static/fonts/OFL.txt. */
+
+@font-face {
+	font-family: 'Atkinson Hyperlegible Next';
+	font-style: normal;
+	font-weight: 200 800;
+	font-display: swap;
+	src: url('../assets/fonts/atkinson-hyperlegible-next-normal-latin.woff2') format('woff2');
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+	font-family: 'Atkinson Hyperlegible Next';
+	font-style: normal;
+	font-weight: 200 800;
+	font-display: swap;
+	src: url('../assets/fonts/atkinson-hyperlegible-next-normal-latin-ext.woff2') format('woff2');
+	unicode-range:
+		U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+		U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+		U+A720-A7FF;
+}
+
+:root {
+	/* ---- Brand ---------------------------------------------------------- */
+	--ag-navy: #102c44; /* app background, primary surface            */
+	--ag-navy-panel: #1a3e5a; /* raised panel on navy (point card)          */
+	--ag-navy-nav: #0b2033; /* bottom nav on dark screens                 */
+	--ag-green: #348e4e; /* Natural Green: accents on light            */
+	--ag-green-ink: #2a7440; /* same green, darker: small text on white    */
+	--ag-green-on-navy: #4fb56c; /* accent on the navy page background         */
+	/* The raised panel is lighter than the page, and the accent green only
+	   reaches 4.34:1 on it. This one clears 4.5:1 there, and it is also the
+	   green used for the trail progress fill, which needs 3:1 against its
+	   own track. */
+	--ag-green-on-panel: #5cbe78;
+	--ag-green-soft: #e9f4ed; /* tinted fill                                */
+	--ag-green-line: #a9d6b8; /* tinted border                              */
+
+	/* GPS blue: the only colour outside the brand. It must never read as one
+	   more trail point on a green forest, so it stays blue on purpose. */
+	--ag-gps: #3b9dff;
+
+	/* ---- Neutrals -------------------------------------------------------- */
+	--ag-page: #f5f8fa;
+	--ag-surface: #ffffff;
+	--ag-border: #dce4eb; /* hairlines between blocks: decorative only  */
+	/* The edge of anything you can press. The hairline above is 1.29:1 on
+	   white, which is invisible to many people, and WCAG asks for 3:1 on the
+	   boundary of a control. This clears 3:1 on white, on the page and on the
+	   green tint. Use --ag-border for decoration, this one for controls. */
+	--ag-border-control: #7c8a98;
+	--ag-fg-1: #102c44; /* headings, primary text                     */
+	--ag-fg-2: #44586b; /* body text                                  */
+	/* fg-3 and muted are darker than the mockups. The mockup values
+	   (#6B7C8C and #9AA8B4) give 4.03:1 and 2.28:1 on the page background,
+	   so neither reached the 4.5:1 minimum for small text. These values are
+	   the lightest greys on the same hue that do: 4.99:1 and 4.58:1. The
+	   brand guide needs the same correction. */
+	--ag-fg-3: #5b6d80; /* meta                                       */
+	--ag-muted: #617385; /* the lightest text allowed on the page      */
+	--ag-on-dark-2: #a9c4d6; /* secondary text on navy                     */
+	--ag-on-dark-3: #7e9cb4; /* meta text on navy                          */
+
+	/* ---- Feedback --------------------------------------------------------
+	   Not in the mockups. Errors must never be carried by colour alone, but
+	   they still need a colour that is not the brand green. */
+	--ag-danger: #b3261e; /* 6.4:1 on white                             */
+	--ag-danger-on-navy: #ff9d94;
+
+	/* ---- Spacing ---------------------------------------------------------- */
+	--ag-side: 16px; /* horizontal page padding, portrait             */
+	--ag-side-land: 20px; /* horizontal page padding, landscape / tablet   */
+	--ag-section: 24px; /* between blocks                                */
+	--ag-eyebrow-gap: 12px; /* under every eyebrow                           */
+	--ag-top-logo: 55px; /* where the full isologo starts, portrait       */
+
+	/* ---- Navigation -------------------------------------------------------
+	   The bottom bar in portrait, the left rail in landscape and on tablet.
+	   Pages read the two inset variables and never test the breakpoint
+	   themselves: one of the two is always zero. */
+	--ag-nav-height: 64px; /* bar height, without the safe-area inset       */
+	--ag-rail-width: 0px; /* rail width, zero while the bar is showing     */
+	--ag-nav-inset-block: calc(var(--ag-nav-height) + env(safe-area-inset-bottom, 0px));
+	--ag-nav-inset-inline: 0px;
+
+	/* ---- Touch targets ----------------------------------------------------
+	   44 px floor, 38 px in landscape only, where the height is scarce. */
+	--ag-target: 44px;
+
+	/* ---- Radii ------------------------------------------------------------ */
+	--ag-r-sm: 8px;
+	--ag-r-md: 10px;
+	--ag-r-lg: 14px;
+	--ag-r-pill: 999px;
+
+	/* ---- Type ------------------------------------------------------------- */
+	--ag-font:
+		'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', 'Avenir Next', 'Helvetica Neue',
+		system-ui, sans-serif;
+
+	/* ---- Motion ------------------------------------------------------------
+	   Brand guide: 200-600 ms, no flashing. */
+	--ag-motion-fast: 180ms;
+	--ag-motion: 280ms;
+	--ag-ease: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* Landscape phone, 600 to 839: the rail replaces the bottom bar, because in
+   landscape the scarce resource is the height. Targets drop to 38 px here
+   only, which is the minimum the spec accepts. */
+@media (min-width: 600px) and (orientation: landscape) {
+	:root {
+		--ag-rail-width: 76px;
+		--ag-nav-inset-block: 0px;
+		--ag-nav-inset-inline: 76px;
+		--ag-target: 38px;
+	}
+}
+
+/* Tablet and desktop browsers: same rail, wider, full targets. Desktop
+   browsers land here by width, so they get the tablet layout.
+
+   The height condition is not in the spec's table, and it has to be: a phone
+   in landscape is now 932 px wide, which is well past 840, so width alone
+   would hand a phone the tablet layout. A tablet in landscape is 834 px
+   tall, a phone about 430, so the height is what actually tells them
+   apart. */
+@media (min-width: 840px) and (min-height: 600px) and (orientation: landscape) {
+	:root {
+		--ag-rail-width: 92px;
+		--ag-nav-inset-block: 0px;
+		--ag-nav-inset-inline: 92px;
+		--ag-target: 44px;
+	}
+}
+
+/* Tablet in portrait is not covered by the two queries above on purpose: it
+   keeps the phone structure of the root block, scaled, with the bottom bar. */

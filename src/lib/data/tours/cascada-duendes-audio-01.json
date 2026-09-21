@@ -4,6 +4,9 @@
   "name": "Cascada de los Duendes",
   "slug": "cascada-duendes-audio-01",
   "lang": "es",
+  "place": "Bariloche",
+  "difficulty": "facil",
+  "description": "Un recorrido corto que acompaña al arroyo Pescadero hasta la cascada. En el camino el relato presenta al rayadito, al fío fío y al carpintero gigante, y avisa dónde cambia el terreno: la escalera de piedras, la bifurcación y el puente. Termina frente a la caída de agua.",
   "points": [
     {
       "id": "01",

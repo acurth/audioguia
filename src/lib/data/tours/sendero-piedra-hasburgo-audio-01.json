@@ -2,6 +2,9 @@
   "id": "sendero-piedra-hasburgo-audio-01",
   "status": "prod",
   "name": "Sendero a la Piedra de Hasburgo",
+  "place": "Bariloche",
+  "difficulty": "exigente",
+  "description": "El más largo y el más exigente de los tres. Sube entre lengas, algunas de más de trescientos años, y el relato se detiene en lo que vive con ellas: el llao llao, el michay, el amancay y los insectos de los troncos caídos. También aparecen el picaflor rubí, la ratona y el carpintero gigante.",
   "points": [
     {
       "id": "1",

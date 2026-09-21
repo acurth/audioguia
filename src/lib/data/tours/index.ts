@@ -9,6 +9,18 @@ export type TourJson = {
   name?: string;
   theme?: string;
   status?: TourStatus;
+  /** Town or park the trail is in, printed under the title on Detalle. */
+  place?: string;
+  /** "facil" or "exigente". Drives the pill on every tour card. */
+  difficulty?: string;
+  /**
+   * Set it on trails that are suitable for visitors with reduced mobility.
+   * The Accesibles filter in Explorar only appears once at least one tour
+   * carries the flag, so an unset field never shows a dead control.
+   */
+  accessible?: boolean;
+  /** Prose for the Detalle screen. */
+  description?: string;
   offline?: OfflineManifest;
   points?: unknown[];
 };

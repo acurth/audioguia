@@ -5,50 +5,82 @@
 	import { env } from '$env/dynamic/public';
 	import { getTourRecords } from '$lib/data/tours';
 	import { initOfflineStore, mergeDownloadState } from '$lib/stores/offline';
+	import AppNav from '$lib/components/ui/AppNav.svelte';
+	import MiniPlayer from '$lib/components/ui/MiniPlayer.svelte';
+	import { sectionForRoute } from '$lib/nav';
+	import { togglePlay, tourSession } from '$lib/stores/tourSession';
 	import '../app.css';
 
 	let { children } = $props();
 
+	// The walk keeps running when the person leaves the tour screen, so every
+	// other screen offers the mini player as the way back into it.
+	let session = $state($tourSession);
+
 	const DEFAULT_SITE_ORIGIN = 'https://audioguia.io';
 	const siteOrigin = (env.PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN).replace(/\/+$/, '');
-	const toAbsoluteUrl = (path: string) => `${siteOrigin}${path.startsWith('/') ? path : `/${path}`}`;
-	const toursForSeo = getTourRecords(true).map((tour) => ({ ...tour, name: tour.data.name ?? tour.slug }));
-	const tourNameByKey = toursForSeo.reduce<Record<string, string>>((acc, tour) => {
-		acc[tour.slug] = tour.name;
-		acc[tour.id] = tour.name;
-		return acc;
-	}, {});
+	/**
+	 * Absolute URL for metadata. The path must be root-relative and must not
+	 * carry the app base: with `paths.relative` the base resolves to '.' or
+	 * '..', which turns into URLs like https://audioguia.io/./og/image.png.
+	 * If the app is ever served from a subfolder, put the subfolder in
+	 * PUBLIC_SITE_URL.
+	 */
+	const toAbsoluteUrl = (path: string) =>
+		`${siteOrigin}${path.startsWith('/') ? path : `/${path}`}`;
+	const toursForSeo = getTourRecords(true).map((tour) => ({
+		...tour,
+		name: tour.data.name ?? tour.slug
+	}));
+	const tourByKey = toursForSeo.reduce<Record<string, (typeof toursForSeo)[number]>>(
+		(acc, tour) => {
+			acc[tour.slug] = tour;
+			acc[tour.id] = tour;
+			return acc;
+		},
+		{}
+	);
 
 	const appBase = base;
-	const appBaseForAbsolute = appBase === '.' ? '' : appBase;
-	const normalizedPath = $derived($page.url.pathname.replace(/\/$/, ''));
 	const canonicalPath = $derived($page.url.pathname || '/');
 	const canonicalUrl = $derived(toAbsoluteUrl(canonicalPath));
 	const ogUrl = $derived(canonicalUrl);
-	const ogImage = $derived(toAbsoluteUrl(`${appBaseForAbsolute}/og/audioguia-natural-og.png`));
-	const logoSrc = $derived(`${appBase}/branding/audioguia-natural-cropped.png`);
-	const isHome = $derived(normalizedPath === (appBase || ''));
-	const isCerca = $derived(normalizedPath.startsWith(`${appBase}/cerca`));
-	const isOffline = $derived(normalizedPath.startsWith(`${appBase}/offline`));
-	const isExplorar = $derived(normalizedPath.startsWith(`${appBase}/explorar`));
-	const isCreditos = $derived(normalizedPath.startsWith(`${appBase}/creditos`));
+	const ogImage = $derived(toAbsoluteUrl('/og/audioguia-natural-og.png'));
+
+	// Route id rather than pathname: it is the same string whether the app is
+	// served from the domain root or from a subfolder.
+	const routeId = $derived($page.route.id);
+	const navSection = $derived(sectionForRoute(routeId));
+	const isHome = $derived(routeId === '/');
+	const isOffline = $derived(routeId?.startsWith('/offline') ?? false);
+	const isExplorar = $derived(routeId?.startsWith('/explorar') ?? false);
+	const isSobre = $derived(routeId?.startsWith('/sobre') ?? false);
+	const isCuenta = $derived(routeId?.startsWith('/cuenta') ?? false);
 	const isTrack = $derived(Boolean($page.params.track));
+	const isRecorrido = $derived(routeId === '/[track]/recorrido');
 	const currentTrack = $derived($page.params.track);
-	const currentTrackName = $derived(currentTrack ? tourNameByKey[currentTrack] : null);
+	const currentTour = $derived(currentTrack ? tourByKey[currentTrack] : null);
+	const currentTrackName = $derived(currentTour?.name ?? null);
+
+	// Detalle keeps the tab bar, with no tab current. The tour in progress
+	// gets its own inverted bar when that screen is rebuilt.
+	const showChrome = $derived(!isRecorrido);
+	const showMiniPlayer = $derived(showChrome && session.status === 'tracking' && !!session.slug);
+
 	const metaTitle = $derived.by(() => {
+		if (isRecorrido) return `En recorrido: ${currentTrackName ?? 'Sendero'} | Audioguía Natural`;
 		if (isTrack) return `${currentTrackName ?? 'Recorrido'} | Audioguía Natural`;
-		if (isCerca) return 'Recorridos Cerca Mío | Audioguía Natural';
 		if (isExplorar) return 'Explorar Recorridos | Audioguía Natural';
 		if (isOffline) return 'Recorridos Offline | Audioguía Natural';
-		if (isCreditos) return 'Créditos | Audioguía Natural';
+		if (isCuenta) return 'Cuenta | Audioguía Natural';
+		if (isSobre) return 'Sobre la audioguía | Audioguía Natural';
 		return 'Audioguía Natural – Senderos para escuchar';
 	});
 	const metaDescription = $derived.by(() => {
 		if (isTrack) {
+			const own = currentTour?.data?.description;
+			if (typeof own === 'string' && own.length > 0) return own;
 			return `Recorrido guiado por audio: ${currentTrackName ?? 'Sendero'}. Escuchá puntos geolocalizados y usalo también sin conexión.`;
-		}
-		if (isCerca) {
-			return 'Descubrí recorridos cercanos para escuchar en Bariloche con una audioguía accesible y geolocalizada.';
 		}
 		if (isExplorar) {
 			return 'Explorá todos los recorridos disponibles de Audioguía Natural: senderos para escuchar en Bariloche.';
@@ -56,12 +88,19 @@
 		if (isOffline) {
 			return 'Gestioná recorridos descargados para escuchar sin conexión y continuar la experiencia de audioguía en cualquier momento.';
 		}
-		if (isCreditos) {
-			return 'Conocé el proyecto Audioguía Natural, una propuesta accesible de senderos para escuchar en Bariloche.';
+		if (isCuenta) {
+			return 'Tu cuenta en Audioguía Natural: descargas, accesibilidad y ajustes de la aplicación.';
+		}
+		if (isSobre) {
+			return 'Conocé el proyecto Audioguía Natural, una propuesta accesible de senderos para escuchar en Bariloche: cómo funciona, quiénes la hacen y cómo usarla sin conexión.';
 		}
 		return 'Una audioguía accesible para recorrer senderos naturales a través del sonido en Bariloche.';
 	});
-	const robotsContent = $derived((isOffline ? 'noindex,follow' : 'index,follow'));
+	// Offline and Cuenta are app screens with nothing to rank for: they stay
+	// out of the index but keep passing link equity.
+	const robotsContent = $derived(
+		isOffline || isCuenta || isRecorrido ? 'noindex,follow' : 'index,follow'
+	);
 	const jsonLd = $derived.by(() => {
 		const graph: Record<string, unknown>[] = [
 			{
@@ -77,7 +116,7 @@
 				'@id': `${siteOrigin}#organization`,
 				name: 'Audioguía Natural',
 				url: siteOrigin,
-				logo: toAbsoluteUrl(`${appBaseForAbsolute}/branding/icon-180.png`)
+				logo: toAbsoluteUrl('/branding/icon-180.png')
 			},
 			{
 				'@type': 'WebPage',
@@ -90,13 +129,23 @@
 			}
 		];
 
-		if (isTrack && currentTrackName) {
+		if (isTrack && !isRecorrido && currentTour) {
+			const pointCount = Array.isArray(currentTour.data?.points)
+				? currentTour.data.points.length
+				: 0;
 			graph.push({
 				'@type': 'TouristTrip',
-				name: currentTrackName,
+				name: currentTour.name,
 				description: metaDescription,
 				url: canonicalUrl,
-				inLanguage: 'es-AR'
+				inLanguage: 'es-AR',
+				touristType: 'Personas con discapacidad visual y público general',
+				image: toAbsoluteUrl(`/media/tours/${currentTour.slug}/background.webp`),
+				...(currentTour.data?.place
+					? { location: { '@type': 'Place', name: currentTour.data.place } }
+					: {}),
+				...(pointCount ? { itinerary: { '@type': 'ItemList', numberOfItems: pointCount } } : {}),
+				provider: { '@id': `${siteOrigin}#organization` }
 			});
 		}
 
@@ -107,6 +156,10 @@
 	});
 
 	onMount(() => {
+		const stopSession = tourSession.subscribe((value) => {
+			session = value;
+		});
+
 		const params = new URLSearchParams(window.location.search);
 		if (params.get('dev') === '1') {
 			sessionStorage.setItem('devMode', '1');
@@ -140,9 +193,12 @@
 				.catch((err) => console.error('SW registration failed', err));
 
 			return () => {
+				stopSession();
 				navigator.serviceWorker.removeEventListener('message', handleMessage);
 			};
 		}
+
+		return stopSession;
 	});
 </script>
 
@@ -150,6 +206,7 @@
 	<title>{metaTitle}</title>
 	<meta name="description" content={metaDescription} />
 	<meta name="robots" content={robotsContent} />
+	<meta name="theme-color" content="#102C44" />
 	<link rel="canonical" href={canonicalUrl} />
 
 	<link rel="icon" type="image/png" sizes="32x32" href={`${appBase}/branding/icon-32.png`} />
@@ -172,46 +229,50 @@
 	{@html `<script type="application/ld+json">${jsonLd}</script>`}
 </svelte:head>
 
-<div class="app-shell">
-	{#if !isTrack}
-		<header class="site-header">
-			<div class="site-header-inner">
-				<a class="site-logo" href={`${appBase}/`} aria-label="Ir al inicio">
-					<img src={logoSrc} alt="Audioguía Natural" class="site-logo-img" />
-				</a>
-				<nav class="site-nav" aria-label="Navegación principal">
-					<a href={`${appBase}/`} aria-current={isHome ? 'page' : undefined}>
-						Inicio
-					</a>
-					<a
-						href={`${appBase}/cerca`}
-						aria-current={isCerca ? 'page' : undefined}
-					>
-						Cerca mío
-					</a>
-					<a
-						class="nav-offline"
-						href={`${appBase}/offline`}
-						aria-current={isOffline ? 'page' : undefined}
-					>
-						Offline
-					</a>
-					<a
-						href={`${appBase}/explorar`}
-						aria-current={isExplorar ? 'page' : undefined}
-					>
-						Explorar
-					</a>
-					<a
-						href={`${appBase}/creditos`}
-						aria-current={isCreditos ? 'page' : undefined}
-					>
-						Créditos
-					</a>
-				</nav>
-			</div>
-		</header>
+<div class="ag-shell" class:has-chrome={showChrome} class:has-miniplayer={showMiniPlayer}>
+	<!-- First focusable element of every page. Each screen marks its own
+	     content with id="main". -->
+	<a class="skip-link" href="#main">Saltar al contenido</a>
+
+	<div class="ag-shell-main">
+		{@render children()}
+	</div>
+
+	{#if showMiniPlayer}
+		<MiniPlayer {session} onTogglePlay={togglePlay} />
 	{/if}
 
-	{@render children()}
+	{#if showChrome}
+		<AppNav current={navSection} />
+	{/if}
 </div>
+
+<style>
+	.ag-shell {
+		min-height: 100vh;
+		min-height: 100dvh;
+		display: flex;
+		flex-direction: column;
+		background: var(--ag-page);
+	}
+
+	/* The bar sits at the bottom in portrait and turns into a left rail in
+	   landscape. Both insets come from tokens.css, and one of them is always
+	   zero, so the shell needs no breakpoint of its own. */
+	.ag-shell.has-chrome {
+		padding-bottom: var(--ag-nav-inset-block);
+		padding-left: var(--ag-nav-inset-inline);
+	}
+
+	/* Room for the mini player, which sits just above the tab bar. */
+	.ag-shell.has-miniplayer {
+		padding-bottom: calc(var(--ag-nav-inset-block) + 61px);
+	}
+
+	.ag-shell-main {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+</style>

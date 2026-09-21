@@ -53,12 +53,12 @@ async function main() {
   const lastmod = await getLastUpdate();
   const tourSlugs = await getTourSlugs();
 
+  // Only indexable pages belong here. /offline and /cuenta are app screens
+  // served with robots noindex, and /cerca and /creditos are 301s now.
   const baseEntries = [
     renderEntry("/", lastmod, "weekly", 1.0),
-    renderEntry("/cerca", lastmod, "weekly", 0.8),
     renderEntry("/explorar", lastmod, "weekly", 0.9),
-    renderEntry("/creditos", lastmod, "monthly", 0.5),
-    renderEntry("/offline", lastmod, "weekly", 0.4)
+    renderEntry("/sobre", lastmod, "monthly", 0.5)
   ];
 
   const trackEntries = tourSlugs.map((slug) => renderEntry(`/${slug}`, lastmod, "weekly", 0.9));

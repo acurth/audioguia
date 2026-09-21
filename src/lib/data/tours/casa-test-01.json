@@ -2,6 +2,8 @@
   "id": "casa-test-01",
   "status": "test",
   "name": "Test: vuelta por casa",
+  "place": "Bariloche",
+  "difficulty": "facil",
   "points": [
     {
       "id": "1",

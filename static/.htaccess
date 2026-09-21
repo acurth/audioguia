@@ -2,6 +2,13 @@ DirectoryIndex index.html
 Options -MultiViews
 RewriteEngine On
 
+# -1) Redirecciones permanentes de las URLs que dejaron de existir con el
+#     rediseño. Van antes que todo lo demás para que no las tome el fallback.
+#     /cerca pasó a ser un orden dentro de Explorar, no una pantalla aparte.
+RewriteRule ^cerca/?$ /explorar?orden=cerca [R=301,L]
+#     /creditos se llama /sobre.
+RewriteRule ^creditos/?$ /sobre [R=301,L]
+
 # 0) Si existe un archivo o carpeta real, servilo tal cual
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

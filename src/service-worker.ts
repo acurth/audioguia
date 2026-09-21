@@ -40,7 +40,9 @@ const shellStaticAllowlist = new Set([
   "/media/ui/tracking-on.mp3",
   "/media/ui/tracking-off.mp3"
 ]);
-const shellStaticPrefixes = ["/branding/", "/og/"];
+// /media/home/ holds the Inicio photos, which are part of the app shell and
+// not of any single tour, so they have to survive with no signal too.
+const shellStaticPrefixes = ["/branding/", "/og/", "/media/home/"];
 
 const isStaticShellAsset = (url: string) => {
   const relPath = getRelativePath(url);

@@ -19,3 +19,9 @@ pnpm-debug.log*
 # env
 .env
 .env.*
+
+# session leftovers, not part of the project
+Claude outputs/
+claude_code_recommendations.md
+codex_recommendations.md
+.claude/settings.local.json
