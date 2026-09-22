@@ -453,8 +453,6 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 		return;
 	}
 
-	await unlockAudio();
-
 	startedAt = Date.now();
 	lastMotionSample = null;
 
@@ -468,6 +466,16 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 		statusMessage: 'Iniciando seguimiento de ubicación…'
 	});
 
+	/**
+	 * Everything from here up runs synchronously, on purpose: the walk is
+	 * already running when this returns, so a caller can navigate to the
+	 * Recorrido screen straight away and find it started.
+	 *
+	 * The audio unlock still has to be fired from inside the tap, which it is,
+	 * but it is no longer awaited. Its play() promise does not always settle,
+	 * and while this function waited on it the walk never started at all.
+	 */
+	void unlockAudio();
 	void syncWakeLock(true);
 	void playTrackingOn();
 
