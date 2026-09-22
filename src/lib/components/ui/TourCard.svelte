@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import { startTour } from '$lib/stores/tourSession';
 	import type { TourView } from '$lib/data/tourView';
 	import type { DownloadState } from '$lib/stores/offline';
 	import { getDisplayCounts, getProgressPercent, isStalled } from '$lib/stores/downloads';
@@ -58,6 +60,23 @@
 	const hasFailed = $derived(state?.status === 'error' || isStalled(state, now));
 	const percent = $derived(getProgressPercent(state));
 	const counts = $derived(getDisplayCounts(state));
+
+	/**
+	 * Play starts the walk, it does not open a screen that offers to start it.
+	 * The tour is running by the time the screen appears, so there is no such
+	 * thing as the Recorrido screen sitting idle: the screen for a trail that
+	 * is not running is Detalle.
+	 *
+	 * startTour has to be called inside the click, not after the navigation,
+	 * because unlocking the audio needs the gesture. It is not awaited: the
+	 * screen opens at once and the GPS and the audio come up behind it.
+	 */
+	function handlePlay(event: MouseEvent) {
+		if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+		event.preventDefault();
+		void startTour(tour, base);
+		void goto(startHref);
+	}
 
 	// One sentence covering everything the pills and the meta row say, so the
 	// download button announces the whole state instead of just "Descargar".
@@ -130,7 +149,8 @@
 		<a
 			class="tc-action tc-action--play"
 			href={startHref}
-			aria-label={`Iniciar recorrido: ${tour.name}`}
+			aria-label={`Arrancar el recorrido: ${tour.name}`}
+			onclick={handlePlay}
 		>
 			<Icon name="play" size={14} />
 		</a>

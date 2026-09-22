@@ -61,13 +61,12 @@
 </script>
 
 <div class="page-detalle">
-	<header class="de-bar">
-		<a class="de-round" href={backHref} aria-label="Volver">
-			<Icon name="chevron-left" size={18} />
-		</a>
-		<span class="de-kicker">Detalle del recorrido</span>
-		<span class="de-round-spacer" aria-hidden="true"></span>
-	</header>
+	<!-- The screen opens on the photo. The only thing over it is the way back,
+	     inverted so it reads on any photo. There is no title bar: the trail's
+	     name is the heading, on the photo itself. -->
+	<a class="de-back" href={backHref} aria-label="Volver">
+		<Icon name="chevron-left" size={18} />
+	</a>
 
 	<main id="main">
 		{#if tour}
@@ -96,6 +95,7 @@
 
 <style>
 	.page-detalle {
+		position: relative;
 		flex: 1;
 		display: flex;
 		flex-direction: column;
@@ -103,47 +103,35 @@
 		background: var(--ag-surface);
 	}
 
-	.de-bar {
-		flex: none;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		height: 52px;
-		padding: 0 14px;
-		background: var(--ag-surface);
-		box-sizing: border-box;
-	}
-
-	.de-round,
-	.de-round-spacer {
-		width: var(--ag-target);
-		height: var(--ag-target);
-		flex: none;
-	}
-
-	.de-round {
+	/* Same 0.72 navy as the panel under the trail's name, for the same reason:
+	   over the brightest part of a photo it still gives the white arrow 5.8:1,
+	   well past the 3:1 a control needs. */
+	.de-back {
+		position: absolute;
+		top: calc(12px + env(safe-area-inset-top, 0px));
+		left: 12px;
+		z-index: 5;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--ag-page);
-		border: 1px solid var(--ag-border-control);
+		width: var(--ag-target);
+		height: var(--ag-target);
+		background: rgba(16, 44, 68, 0.72);
+		border: 1px solid rgba(255, 255, 255, 0.4);
 		border-radius: var(--ag-r-pill);
-		color: var(--ag-fg-1);
+		color: #ffffff;
 		text-decoration: none;
+		box-sizing: border-box;
 	}
 
-	.de-round:hover {
-		border-color: var(--ag-green);
-		color: var(--ag-green-ink);
+	.de-back:hover {
+		background: rgba(16, 44, 68, 0.88);
+		border-color: #ffffff;
+		color: #ffffff;
 	}
 
-	.de-kicker {
-		font-size: 11.5px;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--ag-fg-3);
+	.de-back:focus-visible {
+		outline-color: #ffffff;
 	}
 
 	main {
@@ -178,36 +166,5 @@
 		font-size: 14px;
 		font-weight: 700;
 		text-decoration: none;
-	}
-
-	@media (min-width: 600px) and (orientation: landscape) {
-		/* The photo column runs the full height of the screen, so the bar
-		   floats over it instead of taking a row of its own. */
-		.de-bar {
-			position: absolute;
-			top: 0;
-			inset-inline-start: var(--ag-nav-inset-inline);
-			z-index: 3;
-			height: auto;
-			width: 330px;
-			padding: 14px;
-			background: transparent;
-		}
-
-		.de-kicker,
-		.de-round-spacer {
-			display: none;
-		}
-
-		.de-round {
-			background: rgba(16, 44, 68, 0.72);
-			border-color: rgba(255, 255, 255, 0.35);
-			color: #ffffff;
-		}
-
-		.de-round:hover {
-			background: var(--ag-navy);
-			color: #ffffff;
-		}
 	}
 </style>
