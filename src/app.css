@@ -28,13 +28,17 @@ a:hover {
   color: #1f5a31;
 }
 
-/* The focus ring is two-tone on purpose. The green carries the contrast on
-   the navy screens, the dark halo carries it on the light ones, so the
-   indicator stays visible on every surface in the app. */
+/* One ring, not two. The old rule added a 6 px translucent halo on top of
+   the outline, which read as a thick grey border around anything focused.
+   The default is the navy ring, which carries the contrast on every light
+   surface; the dark screens and the green card override the colour. */
 :focus-visible {
-  outline: 3px solid var(--ag-green-on-navy);
+  outline: 3px solid var(--ag-fg-1);
   outline-offset: 2px;
-  box-shadow: 0 0 0 6px rgba(16, 44, 68, 0.65);
+}
+
+.track-page :focus-visible {
+  outline-color: var(--ag-green-on-navy);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -58,10 +62,14 @@ a:hover {
   text-align: center;
 }
 
+/* Moved out of sight with a transform rather than a negative left. A box at
+   left: -999px is the one thing on the page that sits outside the viewport,
+   and it is the first thing to suspect when a phone scrolls sideways. */
 .skip-link {
   position: absolute;
-  left: -999px;
+  left: 0.75rem;
   top: 0.75rem;
+  transform: translateY(-300%);
   display: inline-flex;
   align-items: center;
   min-height: var(--ag-target);
@@ -74,7 +82,7 @@ a:hover {
 }
 
 .skip-link:focus {
-  left: 0.75rem;
+  transform: none;
 }
 
 .hero {

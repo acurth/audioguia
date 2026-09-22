@@ -123,9 +123,12 @@
    only, which is the minimum the spec accepts. */
 @media (min-width: 600px) and (orientation: landscape) {
 	:root {
-		--ag-rail-width: 76px;
+		/* The rail carries the left safe area itself: on a phone held in
+		   landscape the notch eats up to 59 px on that side, and without this
+		   the rail's own labels are pushed out over the page content. */
+		--ag-rail-width: calc(76px + env(safe-area-inset-left, 0px));
 		--ag-nav-inset-block: 0px;
-		--ag-nav-inset-inline: 76px;
+		--ag-nav-inset-inline: calc(76px + env(safe-area-inset-left, 0px));
 		--ag-target: 38px;
 	}
 }
@@ -140,9 +143,9 @@
    apart. */
 @media (min-width: 840px) and (min-height: 600px) and (orientation: landscape) {
 	:root {
-		--ag-rail-width: 92px;
+		--ag-rail-width: calc(92px + env(safe-area-inset-left, 0px));
 		--ag-nav-inset-block: 0px;
-		--ag-nav-inset-inline: 92px;
+		--ag-nav-inset-inline: calc(92px + env(safe-area-inset-left, 0px));
 		--ag-target: 44px;
 	}
 }

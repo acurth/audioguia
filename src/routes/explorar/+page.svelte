@@ -375,6 +375,8 @@
 		color: var(--ag-green-ink);
 	}
 
+	/* 16 px is a hard floor: under it, iOS Safari zooms the page in when the
+	   field is tapped and leaves it zoomed. */
 	.ex-search input {
 		flex: 1;
 		min-width: 0;
@@ -382,7 +384,7 @@
 		outline: none;
 		background: transparent;
 		font-family: inherit;
-		font-size: 15px;
+		font-size: 16px;
 		color: var(--ag-fg-1);
 	}
 

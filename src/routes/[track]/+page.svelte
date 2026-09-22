@@ -11,9 +11,8 @@
 	import type { DownloadState } from '$lib/stores/offline';
 	import { deleteDownload, listenToDownloadProgress, requestDownload } from '$lib/stores/downloads';
 	import { favouritesStore, initFavourites, toggleFavourite } from '$lib/stores/favourites';
+	import { readListOrigin } from '$lib/stores/listOrigin';
 	import { shareLink } from '$lib/utils/share';
-
-	const LAST_TOUR_LIST_KEY = 'last-tour-list-path';
 
 	const devMode = $derived(browser ? getDevModeFromStorage() : false);
 	const tours = $derived(getTourViews(devMode));
@@ -42,10 +41,8 @@
 		initFavourites();
 
 		// Back goes to whichever list you came from, and to Explorar when you
-		// arrived straight from a link.
-		const allowed = [`${base}/explorar`, `${base}/offline`];
-		const saved = sessionStorage.getItem(LAST_TOUR_LIST_KEY);
-		if (saved && allowed.includes(saved)) backHref = saved;
+		// arrived straight from a link. The same answer marks the tab.
+		backHref = readListOrigin(base);
 
 		const stopStore = downloadStateStore.subscribe((state) => {
 			downloadState = state;

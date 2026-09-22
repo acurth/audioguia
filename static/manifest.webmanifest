@@ -1,7 +1,7 @@
 {
   "name": "Audioguía Natural — Senderos para escuchar",
   "short_name": "Audioguía Natural",
-  "description": "Una audioguía accesible para recorrer senderos naturales a través del sonido. Pensada para personas ciegas, abierta a todo público.",
+  "description": "Una audioguía accesible para recorrer senderos a través del sonido. Pensada para personas ciegas, abierta a todo público.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

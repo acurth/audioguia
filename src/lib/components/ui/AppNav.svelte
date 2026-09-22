@@ -36,11 +36,16 @@
 </nav>
 
 <style>
-	/* Portrait phone, and tablet in portrait: a fixed bar across the bottom. */
-	/* The bar is exactly --ag-nav-height tall, plus the safe area. Pages and
-	   the mini player reserve that same amount through --ag-nav-inset-block,
-	   so nothing has to measure the bar at runtime. */
+	/* Portrait phone, and tablet in portrait: a bar across the bottom of the
+	   screen. It is exactly --ag-nav-height tall, plus the safe area, and
+	   pages read that same amount from --ag-nav-inset-block, so nothing has
+	   to measure the bar at runtime. */
 	.ag-nav {
+		/* Fixed, not sticky. Sticky puts the bar in the flow at the end of the
+		   page, and Safari does not honour bottom-sticky inside a flex column,
+		   so the bar drifted with the content. Fixed pins it to the bottom of
+		   the window whatever the page height, which is what this bar is for.
+		   The page reserves the same height through --ag-nav-inset-block. */
 		position: fixed;
 		inset: auto 0 0 0;
 		z-index: 40;
@@ -139,6 +144,7 @@
 	   because the height is what runs out in landscape. */
 	@media (min-width: 600px) and (orientation: landscape) {
 		.ag-nav {
+			/* Landscape turns the same bar into a rail down the left edge. */
 			inset: 0 auto 0 0;
 			height: auto;
 			width: var(--ag-rail-width);

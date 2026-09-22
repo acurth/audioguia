@@ -41,9 +41,7 @@
 				height="248"
 			/>
 			<h1>Senderos para escuchar</h1>
-			<p class="so-lede">
-				Una audioguía accesible para recorrer senderos naturales a través del sonido.
-			</p>
+			<p class="so-lede">Una audioguía accesible para recorrer senderos a través del sonido.</p>
 
 			<ul class="so-features">
 				{#each features as feature (feature.title)}

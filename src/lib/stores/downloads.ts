@@ -105,11 +105,46 @@ function nextAnnouncement(
 	};
 }
 
+/**
+ * Why this device cannot download, or null when it can. Downloading needs the
+ * service worker, and a service worker needs a secure context: https, or
+ * localhost. A phone opening the dev server by its LAN address gets plain
+ * http, where the browser does not expose one at all. Without this check the
+ * Descargar button returns in silence and reads as broken.
+ */
+export function offlineUnavailableReason(): string | null {
+	if (!browser) return null;
+	if ('serviceWorker' in navigator) return null;
+	if (!window.isSecureContext) {
+		return 'Para descargar hay que abrir la app en una dirección https. En http el navegador no habilita el guardado sin conexión.';
+	}
+	return 'Este navegador no puede guardar recorridos para escuchar sin conexión.';
+}
+
 export async function requestDownload(tour: TourView): Promise<void> {
-	if (!browser || !('serviceWorker' in navigator)) return;
+	if (!browser) return;
+
+	const unavailable = offlineUnavailableReason();
+	if (unavailable) {
+		setDownloadState(tour.id, {
+			status: 'error',
+			bytes: tour.sizeBytes,
+			stage: 'error',
+			errorMessage: unavailable
+		});
+		return;
+	}
 
 	const files = getOfflineFiles(tour);
-	if (files.length === 0) return;
+	if (files.length === 0) {
+		setDownloadState(tour.id, {
+			status: 'error',
+			bytes: tour.sizeBytes,
+			stage: 'error',
+			errorMessage: 'Este recorrido todavía no tiene archivos para descargar.'
+		});
+		return;
+	}
 
 	setDownloadState(tour.id, {
 		status: 'downloading',

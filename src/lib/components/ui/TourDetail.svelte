@@ -45,6 +45,14 @@
 	const counts = $derived(getDisplayCounts(state));
 	const startHref = $derived(`${base}/${tour.slug}/recorrido`);
 
+	// Shown in the live region under the buttons, so it reaches a screen
+	// reader as well as the screen.
+	const downloadError = $derived(
+		state?.status === 'error'
+			? (state.errorMessage ?? 'No pudimos descargar este recorrido. Probá de nuevo.')
+			: ''
+	);
+
 	const downloadLabel = $derived.by(() => {
 		if (isDownloading) return `Descargando, ${percent} por ciento`;
 		if (isDownloaded) return `Descargado. Tocá para eliminar los ${formatMB(tour.sizeBytes)}`;
@@ -54,48 +62,46 @@
 
 <div class="td td--{variant}">
 	<div class="td-photo">
-		<img src={`${base}/${tour.imagePath}`} alt="" width="1200" height="800" />
+		<img src={`${base}/${tour.imagePath}`} alt="" width="900" height="1200" />
 	</div>
 
 	<div class="td-body">
-		<p class="td-pills">
-			{#if difficulty}
-				<span class="td-pill">
-					<Icon name="mountain" size={13} stroke={2.2} />
-					{difficulty}
-				</span>
-			{/if}
-			{#if isDownloaded}
-				<span class="td-pill td-pill--ready">
-					<Icon name="check" size={12} stroke={2.6} />
-					Offline listo
-				</span>
-			{/if}
-		</p>
-
-		<h1 class="td-title">{tour.name}</h1>
-
-		<p class="td-meta">
-			{#if tour.place}
-				<span>{tour.place}</span>
-				<span class="td-dot" aria-hidden="true"></span>
-			{/if}
-			<span>{formatKm(tour.lengthMeters)} aprox.</span>
-			<span class="td-dot" aria-hidden="true"></span>
-			<span>{formatPointCount(tour.pointCount)}</span>
-			<span class="td-dot" aria-hidden="true"></span>
-			<span>{formatMB(tour.sizeBytes)}</span>
-		</p>
-
-		{#if variant === 'page'}
-			<p class="td-author">
-				<img src={`${base}/branding/app-icon.png`} alt="" width="256" height="212" />
-				<span>
-					<span class="td-author-name">Audioguía Natural</span>
-					<span class="td-author-role">Relato y grabación</span>
-				</span>
+		<!-- The name and the badges belong to the body, and where the photo is
+		     wide they are lifted onto its lower edge, over a flat panel that
+		     carries the contrast. The panel is a solid colour, not a gradient:
+		     its worst case, over a white part of a photo, still gives 5.8:1
+		     for white text. In landscape the photo is a narrow column whose
+		     lower edge is off screen, so there they stay in the body. -->
+		<div class="td-photo-head">
+			<p class="td-pills">
+				{#if difficulty}
+					<span class="td-pill">
+						<Icon name="mountain" size={13} stroke={2.2} />
+						{difficulty}
+					</span>
+				{/if}
+				{#if isDownloaded}
+					<span class="td-pill td-pill--ready">
+						<Icon name="check" size={12} stroke={2.6} />
+						Offline listo
+					</span>
+				{/if}
 			</p>
-		{/if}
+
+			<h1 class="td-title">{tour.name}</h1>
+
+			<p class="td-meta">
+				{#if tour.place}
+					<span>{tour.place}</span>
+					<span class="td-dot" aria-hidden="true"></span>
+				{/if}
+				<span>{formatKm(tour.lengthMeters)} aprox.</span>
+				<span class="td-dot" aria-hidden="true"></span>
+				<span>{formatPointCount(tour.pointCount)}</span>
+				<span class="td-dot" aria-hidden="true"></span>
+				<span>{formatMB(tour.sizeBytes)}</span>
+			</p>
+		</div>
 
 		<div class="td-actions">
 			<a class="td-start" href={startHref}>
@@ -161,6 +167,9 @@
 		{/if}
 
 		<div role="status" aria-live="polite" class="td-notice">
+			{#if downloadError}
+				<p class="td-notice--error">{downloadError}</p>
+			{/if}
 			{#if shareNotice}
 				<p>{shareNotice}</p>
 			{/if}
@@ -195,15 +204,68 @@
 </div>
 
 <style>
+	.td-photo {
+		position: relative;
+	}
+
+	/* The trail photos are portrait, 900 x 1200. A square mask keeps most of
+	   that shape, so the walkers read as people on a trail rather than as a
+	   row of heads. The crop sits below centre because in these photos the
+	   group walks in the lower half. One value for every trail today; when
+	   the photos vary enough to need it, it becomes a field in the tour JSON
+	   and this becomes its default. */
 	.td-photo img {
 		width: 100%;
-		height: 206px;
+		/* height: auto, or the img's own height attribute wins and the ratio
+		   below is ignored. */
+		height: auto;
+		aspect-ratio: 1 / 1;
 		display: block;
 		object-fit: cover;
+		object-position: 50% 62%;
 		background: var(--ag-navy);
 	}
 
+	/* bottom: 100% puts the panel immediately above the body, which is the
+	   lower edge of the photo, without anyone having to know how tall the
+	   photo is. */
+	.td-photo-head {
+		position: absolute;
+		inset: auto 0 100% 0;
+		padding: 13px var(--ag-side) 15px;
+		/* 0.8, not 0.72: the panel now carries three lines instead of two, and
+		   this is what holds the small grey-free meta line above 4.5:1 even
+		   over the brightest part of a photo. */
+		background: rgba(16, 44, 68, 0.8);
+	}
+
+	.td-photo-head .td-title {
+		margin: 0 0 7px;
+		color: #ffffff;
+	}
+
+	/* 14 px rather than the 13 px it had in the body, and white instead of
+	   grey, because here it sits on a photo. */
+	.td-photo-head .td-meta {
+		margin: 0;
+		font-size: 14px;
+		color: #ffffff;
+	}
+
+	.td-photo-head .td-dot {
+		background: rgba(255, 255, 255, 0.75);
+	}
+
+	.td-photo-head .td-pills {
+		margin: 0 0 9px;
+	}
+
+	.td-photo-head .td-pills:empty {
+		display: none;
+	}
+
 	.td-body {
+		position: relative;
 		padding: 16px var(--ag-side) 24px;
 	}
 
@@ -259,38 +321,6 @@
 		height: 3px;
 		border-radius: 50%;
 		background: var(--ag-muted);
-	}
-
-	.td-author {
-		display: flex;
-		align-items: center;
-		gap: 11px;
-		margin: 0 0 18px;
-	}
-
-	.td-author img {
-		width: 42px;
-		height: 42px;
-		flex: none;
-		border-radius: 10px;
-		object-fit: contain;
-		background: var(--ag-page);
-	}
-
-	.td-author-name,
-	.td-author-role {
-		display: block;
-	}
-
-	.td-author-name {
-		font-size: 14px;
-		font-weight: 700;
-		color: var(--ag-fg-1);
-	}
-
-	.td-author-role {
-		font-size: 12.5px;
-		color: var(--ag-fg-3);
 	}
 
 	.td-start {
@@ -412,6 +442,14 @@
 		color: var(--ag-green-ink);
 	}
 
+	/* An error is not carried by colour alone: it also says what went wrong
+	   and what to do about it. */
+	.td-notice p.td-notice--error {
+		background: #fdeceb;
+		border-color: var(--ag-danger);
+		color: var(--ag-danger);
+	}
+
 	.td-section {
 		margin-top: var(--ag-section);
 	}
@@ -466,9 +504,37 @@
 			flex: none;
 		}
 
+		/* Here the photo is a tall column, near the shape of the original, so
+		   the crop stays centred and the aspect ratio gives way to the height
+		   of the screen. */
 		.td--page .td-photo img {
 			height: 100%;
 			min-height: 100%;
+			aspect-ratio: auto;
+			object-position: 50% 50%;
+		}
+
+		/* The photo runs past the bottom of the screen here, so the panel goes
+		   back into the flow at the top of the text column. */
+		.td--page .td-photo-head {
+			position: static;
+			padding: 0;
+			background: none;
+		}
+
+		.td--page .td-photo-head .td-title {
+			margin: 0 0 9px;
+			color: var(--ag-fg-1);
+		}
+
+		.td--page .td-photo-head .td-meta {
+			margin: 0 0 16px;
+			font-size: 13px;
+			color: var(--ag-fg-3);
+		}
+
+		.td--page .td-photo-head .td-dot {
+			background: var(--ag-muted);
 		}
 
 		.td--page .td-body {
@@ -498,9 +564,16 @@
 		}
 	}
 
-	/* The tablet pane scrolls as one column under a taller photo. */
+	/* The tablet pane scrolls as one column under the photo. The pane is wide,
+	   so a square would be enormous: 5 by 4 keeps it tall without taking the
+	   whole pane. */
 	.td--pane .td-photo img {
-		height: 260px;
+		aspect-ratio: 5 / 4;
+		object-position: 50% 70%;
+	}
+
+	.td--pane .td-photo-head {
+		padding: 16px 20px 18px;
 	}
 
 	@media (min-width: 840px) {

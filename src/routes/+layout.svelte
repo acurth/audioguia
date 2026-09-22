@@ -8,6 +8,7 @@
 	import AppNav from '$lib/components/ui/AppNav.svelte';
 	import MiniPlayer from '$lib/components/ui/MiniPlayer.svelte';
 	import { sectionForRoute } from '$lib/nav';
+	import { listOrigin } from '$lib/stores/listOrigin';
 	import { togglePlay, tourSession } from '$lib/stores/tourSession';
 	import '../app.css';
 
@@ -50,7 +51,6 @@
 	// Route id rather than pathname: it is the same string whether the app is
 	// served from the domain root or from a subfolder.
 	const routeId = $derived($page.route.id);
-	const navSection = $derived(sectionForRoute(routeId));
 	const isHome = $derived(routeId === '/');
 	const isOffline = $derived(routeId?.startsWith('/offline') ?? false);
 	const isExplorar = $derived(routeId?.startsWith('/explorar') ?? false);
@@ -62,8 +62,12 @@
 	const currentTour = $derived(currentTrack ? tourByKey[currentTrack] : null);
 	const currentTrackName = $derived(currentTour?.name ?? null);
 
-	// Detalle keeps the tab bar, with no tab current. The tour in progress
-	// gets its own inverted bar when that screen is rebuilt.
+	// Detalle is not a tab of its own, so it marks the list it was opened
+	// from. Everywhere else the route decides.
+	const navSection = $derived(isTrack && !isRecorrido ? $listOrigin : sectionForRoute(routeId));
+
+	// The tour in progress gets its own inverted bar when that screen is
+	// rebuilt, so it carries no tab bar here.
 	const showChrome = $derived(!isRecorrido);
 	const showMiniPlayer = $derived(showChrome && session.status === 'tracking' && !!session.slug);
 
@@ -94,7 +98,7 @@
 		if (isSobre) {
 			return 'Conocé el proyecto Audioguía Natural, una propuesta accesible de senderos para escuchar en Bariloche: cómo funciona, quiénes la hacen y cómo usarla sin conexión.';
 		}
-		return 'Una audioguía accesible para recorrer senderos naturales a través del sonido en Bariloche.';
+		return 'Una audioguía accesible para recorrer senderos a través del sonido en Bariloche.';
 	});
 	// Offline and Cuenta are app screens with nothing to rank for: they stay
 	// out of the index but keep passing link equity.
@@ -249,6 +253,10 @@
 
 <style>
 	.ag-shell {
+		/* border-box, so the room reserved for the nav is inside the 100dvh
+		   rather than added to it. Without it every screen is one nav bar
+		   taller than the window and scrolls with nothing to show. */
+		box-sizing: border-box;
 		min-height: 100vh;
 		min-height: 100dvh;
 		display: flex;
