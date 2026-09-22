@@ -84,6 +84,19 @@
 	--ag-side: 16px; /* horizontal page padding, portrait             */
 	--ag-side-land: 20px; /* horizontal page padding, landscape / tablet   */
 	--ag-section: 24px; /* between blocks                                */
+
+	/* ---- The app's own width ----------------------------------------------
+	   The widest the app ever gets, and the margin left over on each side of
+	   it. A browser window is far wider than any tablet, and the layout was
+	   built for a tablet: past this the columns stop reading as one screen.
+	   The rail sits inside this block too, so the whole app stays together
+	   instead of the navigation drifting off to the far edge.
+
+	   1194 px is the iPad in landscape, the width the tablet layout was drawn
+	   for. The gutter is zero on every phone and tablet, so nothing below that
+	   width is affected. */
+	--ag-app-max: 1194px;
+	--ag-app-gutter: max(0px, calc((100vw - var(--ag-app-max)) / 2));
 	--ag-eyebrow-gap: 12px; /* under every eyebrow                           */
 	--ag-top-logo: 55px; /* where the full isologo starts, portrait       */
 

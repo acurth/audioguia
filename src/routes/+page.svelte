@@ -407,13 +407,6 @@
 			height: 100%;
 			box-sizing: border-box;
 			padding: 0;
-			/* The mockup caps the whole app at 1440 px. The rail is outside this
-			   grid, so it comes off the cap. */
-			/* width, then the cap: an auto inline margin on a flex item makes it
-			   shrink to its content instead of filling the row. */
-			width: 100%;
-			max-width: calc(1440px - var(--ag-rail-width));
-			margin-inline: auto;
 		}
 
 		main::before {

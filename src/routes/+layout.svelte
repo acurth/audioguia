@@ -267,9 +267,16 @@
 	/* The bar sits at the bottom in portrait and turns into a left rail in
 	   landscape. Both insets come from tokens.css, and one of them is always
 	   zero, so the shell needs no breakpoint of its own. */
+	/* The margins that keep the app at --ag-app-max on a wide window. Both are
+	   zero on a phone and on a tablet. */
+	.ag-shell {
+		padding-left: var(--ag-app-gutter);
+		padding-right: var(--ag-app-gutter);
+	}
+
 	.ag-shell.has-chrome {
 		padding-bottom: var(--ag-nav-inset-block);
-		padding-left: var(--ag-nav-inset-inline);
+		padding-left: calc(var(--ag-app-gutter) + var(--ag-nav-inset-inline));
 	}
 
 	/* Room for the mini player, which sits just above the tab bar. */

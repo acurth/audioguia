@@ -47,7 +47,8 @@
 		   the window whatever the page height, which is what this bar is for.
 		   The page reserves the same height through --ag-nav-inset-block. */
 		position: fixed;
-		inset: auto 0 0 0;
+		/* Inside the app's own width, not against the window's edges. */
+		inset: auto var(--ag-app-gutter) 0 var(--ag-app-gutter);
 		z-index: 40;
 		box-sizing: border-box;
 		height: calc(var(--ag-nav-height) + env(safe-area-inset-bottom, 0px));
@@ -144,8 +145,9 @@
 	   because the height is what runs out in landscape. */
 	@media (min-width: 600px) and (orientation: landscape) {
 		.ag-nav {
-			/* Landscape turns the same bar into a rail down the left edge. */
-			inset: 0 auto 0 0;
+			/* Landscape turns the same bar into a rail down the left edge of the
+			   app, which on a wide window is not the edge of the screen. */
+			inset: 0 auto 0 var(--ag-app-gutter);
 			height: auto;
 			width: var(--ag-rail-width);
 			padding-bottom: 0;
