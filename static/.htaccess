@@ -1,5 +1,9 @@
 DirectoryIndex index.html
 Options -MultiViews
+# Apache would answer /sendero-x with a 301 to /sendero-x/, because that folder
+# exists (it holds recorrido.html). Rule -0.5 removes the slash again, and the
+# two redirect to each other forever. The slash is handled by rule -0.5 alone.
+DirectorySlash Off
 RewriteEngine On
 
 # -1) Redirecciones permanentes de las URLs que dejaron de existir con el
@@ -23,17 +27,18 @@ RewriteRule ^arrayanes/?$ /sendero-arrayanes-audio-01 [R=301,L]
 RewriteCond %{REQUEST_URI} !^/$
 RewriteRule ^(.+)/$ /$1 [R=301,L]
 
-# 0) Si existe un archivo o carpeta real, servilo tal cual
+# 0) Si existe algo.html, servirlo para /algo
+#    Esto es lo que hace que /cascada-duendes-audio-01 resuelva a
+#    cascada-duendes-audio-01.html, que es como los tres senderos conservan
+#    sus direcciones de siempre. Va antes que la regla de carpetas reales: cada
+#    sendero tiene también una carpeta con su nombre, y la página es el .html.
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+# 1) Si existe un archivo o carpeta real, servilo tal cual
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
-
-# 1) Si existe algo.html, servirlo para /algo
-#    Esto es lo que hace que /cascada-duendes-audio-01 resuelva a
-#    cascada-duendes-audio-01.html, que es como los tres senderos conservan
-#    sus direcciones de siempre.
-RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^(.+?)/?$ $1.html [L]
 
 # 2) Fallback SPA: todo lo demás va a index.html
 RewriteRule ^ index.html [L]
