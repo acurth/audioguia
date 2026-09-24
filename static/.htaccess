@@ -4,6 +4,20 @@ Options -MultiViews
 # exists (it holds recorrido.html). Rule -0.5 removes the slash again, and the
 # two redirect to each other forever. The slash is handled by rule -0.5 alone.
 DirectorySlash Off
+
+# The service worker decides which version of the app every phone runs, so no
+# cache may keep an old copy: not the browser, and not Cloudflare, which
+# otherwise follows the hosting's 30-day default for .js files. The browser
+# asks for this file on every visit and gets a new one after each deploy.
+<IfModule mod_headers.c>
+	<Files "service-worker.js">
+		Header set Cache-Control "no-cache, max-age=0"
+	</Files>
+	<Files "favicon.ico">
+		Header set Cache-Control "public, max-age=86400"
+	</Files>
+</IfModule>
+
 RewriteEngine On
 
 # -2) Una sola dirección para todo el sitio: https y sin www. Sin esto,
