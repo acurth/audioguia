@@ -62,7 +62,7 @@
 	const canonicalPath = $derived($page.url.pathname || '/');
 	const canonicalUrl = $derived(toAbsoluteUrl(canonicalPath));
 	const ogUrl = $derived(canonicalUrl);
-	const ogImage = $derived(toAbsoluteUrl('/og/audioguia-natural-og.png'));
+	const ogImage = $derived(toAbsoluteUrl('/og/audioguia-io-og.png'));
 
 	// Route id rather than pathname: it is the same string whether the app is
 	// served from the domain root or from a subfolder.
@@ -141,7 +141,7 @@
 				'@id': `${siteOrigin}#organization`,
 				name: 'Audioguía Natural',
 				url: siteOrigin,
-				logo: toAbsoluteUrl('/branding/icon-180.png')
+				logo: toAbsoluteUrl('/branding/app-icon-180.png')
 			},
 			{
 				'@type': 'WebPage',
@@ -235,9 +235,9 @@
 	<meta name="theme-color" content="#102C44" />
 	<link rel="canonical" href={canonicalUrl} />
 
-	<link rel="icon" type="image/png" sizes="32x32" href={`${appBase}/branding/icon-32.png`} />
-	<link rel="icon" type="image/png" sizes="16x16" href={`${appBase}/branding/icon-16.png`} />
-	<link rel="apple-touch-icon" sizes="180x180" href={`${appBase}/branding/icon-180.png`} />
+	<link rel="icon" type="image/png" sizes="32x32" href={`${appBase}/branding/app-icon-32.png`} />
+	<link rel="icon" type="image/png" sizes="16x16" href={`${appBase}/branding/app-icon-16.png`} />
+	<link rel="apple-touch-icon" sizes="180x180" href={`${appBase}/branding/app-icon-180.png`} />
 	<link rel="manifest" href={`${appBase}/manifest.webmanifest`} />
 
 	<meta property="og:title" content={metaTitle} />
