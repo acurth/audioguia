@@ -66,6 +66,14 @@
 			</p>
 		</section>
 
+		<section class="so-block" aria-labelledby="so-contact">
+			<Eyebrow label="Contacto" />
+			<h2 id="so-contact" class="sr-only">Contacto</h2>
+			<p class="so-thanks-text">
+				¿Una duda o una sugerencia? <a href={`${base}/contacto`}>Escribinos</a>.
+			</p>
+		</section>
+
 		<section class="so-block so-meta" aria-labelledby="so-meta-title">
 			<h2 id="so-meta-title" class="sr-only">Datos del proyecto</h2>
 			<dl>

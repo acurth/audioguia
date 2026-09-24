@@ -1,0 +1,26 @@
+# Paths rsync never sends to the server and never deletes there, even when a
+# manual run asks for --delete. Paths are relative to build/, which is what
+# gets deployed.
+
+# version control and CI
+.git/
+.github/
+
+# OS and editor leftovers
+.DS_Store
+*.log
+
+# secrets: they live only on the server, above the document root
+.env
+.env.*
+audioguia-mail.php
+audioguia-mail.local.php
+
+# only in production, created by the hosting (certificates, stats)
+.well-known/
+.dh-diag
+stats/
+favicon.ico
+
+# never needed to serve the site
+node_modules/

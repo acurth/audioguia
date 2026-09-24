@@ -34,6 +34,8 @@ export function sectionForRoute(routeId: string | null): NavSection | null {
 	if (routeId.startsWith('/explorar')) return 'explorar';
 	if (routeId.startsWith('/offline')) return 'offline';
 	if (routeId.startsWith('/cuenta')) return 'cuenta';
+	// Contacto is opened from Cuenta, so Cuenta stays marked.
+	if (routeId.startsWith('/contacto')) return 'cuenta';
 	return null;
 }
 

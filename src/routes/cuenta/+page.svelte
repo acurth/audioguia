@@ -16,6 +16,7 @@
 		<nav class="cuenta-links" aria-label="Ajustes">
 			<a href={`${appBase}/offline`}>Descargas y espacio</a>
 			<a href={`${appBase}/sobre`}>Sobre la audioguía</a>
+			<a href={`${appBase}/contacto`}>Contacto</a>
 		</nav>
 
 		<p class="about-version">audioguia.io · versión {APP_VERSION}</p>

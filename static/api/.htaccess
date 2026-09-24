@@ -1,0 +1,7 @@
+# Only the endpoint is public. Helpers start with an underscore and are never
+# served, and there is no directory listing.
+Options -Indexes
+
+<FilesMatch "^_">
+	Require all denied
+</FilesMatch>

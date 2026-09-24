@@ -30,3 +30,9 @@ Claude outputs/
 claude_code_recommendations.md
 codex_recommendations.md
 .claude/settings.local.json
+
+# contact form mail settings: real credentials, never committed.
+# The template audioguia-mail.example.php is committed.
+audioguia-mail.php
+audioguia-mail.local.php
+*.log

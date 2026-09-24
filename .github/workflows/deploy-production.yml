@@ -1,0 +1,131 @@
+name: Deploy Production
+
+# Builds the SvelteKit static site and copies build/ to the server with rsync.
+# Runs by hand (Actions → Deploy Production → Run workflow) or when a tag
+# deploy-prod-* is pushed. A push to main never deploys by itself.
+# Setup and operation: GITHUB_DEPLOY.md and SHIP.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only list what would change, send nothing'
+        type: boolean
+        default: true
+      delete_remote:
+        description: 'Delete server files that are not in build/ (.deployignore paths are kept)'
+        type: boolean
+        default: false
+      run_lint:
+        description: 'Lint the PHP files'
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'deploy-prod-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up PHP
+        if: github.event_name == 'push' || inputs.run_lint
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: none
+
+      - name: Lint PHP
+        if: github.event_name == 'push' || inputs.run_lint
+        run: |
+          set -e
+          find static -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          # Public Mapbox token (pk.), compiled into the page on purpose.
+          # Stored as an environment variable, not a secret. Optional.
+          VITE_MAPBOX_TOKEN: ${{ vars.VITE_MAPBOX_TOKEN }}
+        run: npm run build
+
+      - name: Check the build output
+        run: |
+          set -e
+          test -f build/index.html
+          test -f build/.htaccess
+          test -f build/api/contacto.php
+          if find build -name 'audioguia-mail.php' | grep -q .; then
+            echo "audioguia-mail.php must never be in build/" >&2
+            exit 1
+          fi
+
+      - name: Load SSH key
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Trust the server host key
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -e
+          if [ -z "$SSH_KNOWN_HOSTS" ]; then
+            echo "SSH_KNOWN_HOSTS secret is empty. See GITHUB_DEPLOY.md, step 4." >&2
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Build rsync flags
+        id: flags
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          DELETE_REMOTE: ${{ inputs.delete_remote }}
+        run: |
+          flags="-az --itemize-changes --omit-dir-times --checksum"
+          # A tag push is always a real deploy without deletions.
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ "$DRY_RUN" = "true" ]; then flags="$flags --dry-run"; fi
+            if [ "$DELETE_REMOTE" = "true" ]; then flags="$flags --delete"; fi
+          fi
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+          echo "rsync flags: $flags"
+
+      - name: Deploy with rsync
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+          FLAGS: ${{ steps.flags.outputs.flags }}
+        run: |
+          set -e
+          # shellcheck disable=SC2086
+          rsync $FLAGS \
+            --exclude-from .deployignore \
+            -e "ssh -p ${SSH_PORT} -o StrictHostKeyChecking=yes" \
+            build/ "${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}/"
