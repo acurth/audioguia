@@ -87,11 +87,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Contacto · Audioguía Natural</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
-
 <div class="page-contacto">
 	<!-- Contacto is reached from Cuenta, so its back button goes there. -->
 	<a class="co-back" href={`${base}/cuenta`} aria-label="Volver a Cuenta">

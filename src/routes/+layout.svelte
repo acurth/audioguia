@@ -72,6 +72,7 @@
 	const isExplorar = $derived(routeId?.startsWith('/explorar') ?? false);
 	const isSobre = $derived(routeId?.startsWith('/sobre') ?? false);
 	const isCuenta = $derived(routeId?.startsWith('/cuenta') ?? false);
+	const isContacto = $derived(routeId?.startsWith('/contacto') ?? false);
 	const isDev = $derived(routeId?.startsWith('/dev') ?? false);
 	const isTrack = $derived(Boolean($page.params.track));
 	const isRecorrido = $derived(routeId === '/[track]/recorrido');
@@ -95,6 +96,7 @@
 		if (isOffline) return 'Recorridos Offline | Audioguía Natural';
 		if (isCuenta) return 'Cuenta | Audioguía Natural';
 		if (isSobre) return 'Sobre la audioguía | Audioguía Natural';
+		if (isContacto) return 'Contacto | Audioguía Natural';
 		return 'Audioguía Natural – Senderos para escuchar';
 	});
 	const metaDescription = $derived.by(() => {
@@ -117,14 +119,22 @@
 		}
 		return 'Una audioguía accesible para recorrer senderos a través del sonido en Bariloche.';
 	});
-	// Offline and Cuenta are app screens with nothing to rank for: they stay
-	// out of the index but keep passing link equity.
+	// Offline, Cuenta and Contacto are app screens with nothing to rank for:
+	// they stay out of the index but keep passing link equity. So does a test
+	// tour, or a track address that matches no tour at all.
 	//
 	// /dev/* has no route today — the motion preview was removed from the
 	// build — but the guard stays so that adding one back cannot quietly put
 	// an internal page into the index, which is exactly what happened before.
 	const robotsContent = $derived(
-		isOffline || isCuenta || isRecorrido || isDev ? 'noindex,follow' : 'index,follow'
+		isOffline ||
+			isCuenta ||
+			isContacto ||
+			isRecorrido ||
+			isDev ||
+			(isTrack && currentTour?.status !== 'prod')
+			? 'noindex,follow'
+			: 'index,follow'
 	);
 	const jsonLd = $derived.by(() => {
 		const graph: Record<string, unknown>[] = [
@@ -235,6 +245,8 @@
 	<meta name="theme-color" content="#102C44" />
 	<link rel="canonical" href={canonicalUrl} />
 
+	<!-- Google Search only uses a favicon whose size is a multiple of 48 px. -->
+	<link rel="icon" type="image/png" sizes="192x192" href={`${appBase}/branding/app-icon-192.png`} />
 	<link rel="icon" type="image/png" sizes="32x32" href={`${appBase}/branding/app-icon-32.png`} />
 	<link rel="icon" type="image/png" sizes="16x16" href={`${appBase}/branding/app-icon-16.png`} />
 	<link rel="apple-touch-icon" sizes="180x180" href={`${appBase}/branding/app-icon-180.png`} />

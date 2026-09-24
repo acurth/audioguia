@@ -6,6 +6,25 @@ Options -MultiViews
 DirectorySlash Off
 RewriteEngine On
 
+# -2) Una sola dirección para todo el sitio: https y sin www. Sin esto,
+#     http://audioguia.io y https://www.audioguia.io sirven la misma página con
+#     un 200, y los buscadores ven copias. Cloudflare está delante, así que
+#     %{HTTPS} no dice cómo entró el visitante. Lo dice CF-Visitor, que sólo pone
+#     Cloudflare; X-Forwarded-Proto lo puede reescribir un proxy intermedio y
+#     causar un bucle para todos.
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteRule ^(.*)$ https://audioguia.io/$1 [R=301,L]
+RewriteCond %{HTTP:CF-Visitor} scheme\W+http\b [NC]
+RewriteRule ^(.*)$ https://audioguia.io/$1 [R=301,L]
+
+# -1.5) Sin .html a la vista. /sobre.html y /sobre eran dos direcciones para la
+#       misma página. Mira THE_REQUEST, lo que pidió el visitante, para no
+#       tocar las reescrituras internas a .html de más abajo.
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^ / [R=301,L]
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
 # -1) Redirecciones permanentes de las URLs que dejaron de existir con el
 #     rediseño. Van antes que todo lo demás para que no las tome el fallback.
 #     Son las únicas dos direcciones del sitio anterior que cambiaron: las

@@ -16,11 +16,11 @@
 audioguia-mail.php
 audioguia-mail.local.php
 
-# only in production, created by the hosting (certificates, stats)
+# only in production, created by the hosting (certificates, stats).
+# favicon.ico is not here: the site ships its own.
 .well-known/
 .dh-diag
 stats/
-favicon.ico
 
 # never needed to serve the site
 node_modules/
