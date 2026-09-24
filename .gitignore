@@ -22,6 +22,8 @@ certs/
 # env
 .env
 .env.*
+# the template carries no secret and is meant to be committed
+!.env.example
 
 # session leftovers, not part of the project
 Claude outputs/

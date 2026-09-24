@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
+	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import type { TourView } from '$lib/data/tourView';
 	import type { DownloadState } from '$lib/stores/offline';
 	import { getDisplayCounts, getProgressPercent } from '$lib/stores/downloads';
+	import { startTour } from '$lib/stores/tourSession';
 	import { difficultyLabel, formatKm, formatMB, formatPointCount } from '$lib/utils/tourMeta';
 
 	/**
@@ -58,6 +61,16 @@
 		if (isDownloaded) return `Descargado. Tocá para eliminar los ${formatMB(tour.sizeBytes)}`;
 		return `Descargar para usar sin conexión, ${formatMB(tour.sizeBytes)}`;
 	});
+
+	function handleStart(event: MouseEvent) {
+		// Preserve normal link behaviour for modified clicks. A regular click
+		// starts tracking while the user gesture is still active, then opens the
+		// live recorrido screen, matching the play button on each trail card.
+		if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+		event.preventDefault();
+		void startTour(tour, base);
+		void goto(startHref);
+	}
 </script>
 
 <div class="td td--{variant}">
@@ -104,8 +117,8 @@
 		</div>
 
 		<div class="td-actions">
-			<a class="td-start" href={startHref}>
-				<span class="td-start-icon" aria-hidden="true"><Icon name="play" size={16} /></span>
+			<a class="td-start" href={startHref} onclick={handleStart}>
+				<span class="td-start-icon"><AgActionMark action="trail-start" size="sm" skin="navy" /></span>
 				<span class="td-start-text">Iniciar recorrido</span>
 				<span class="td-start-count">{formatPointCount(tour.pointCount)}</span>
 			</a>
@@ -343,15 +356,10 @@
 	}
 
 	.td-start-icon {
-		width: 36px;
-		height: 36px;
 		flex: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(79, 181, 108, 0.22);
-		border-radius: 50%;
-		color: var(--ag-green-on-navy);
 	}
 
 	.td-start-text {

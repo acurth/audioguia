@@ -108,6 +108,7 @@
 	--ag-rail-width: 0px; /* rail width, zero while the bar is showing     */
 	--ag-nav-inset-block: calc(var(--ag-nav-height) + env(safe-area-inset-bottom, 0px));
 	--ag-nav-inset-inline: 0px;
+	--ag-miniplayer-height: 65px;
 
 	/* ---- Touch targets ----------------------------------------------------
 	   44 px floor, 38 px in landscape only, where the height is scarce. */
@@ -142,6 +143,7 @@
 		--ag-rail-width: calc(76px + env(safe-area-inset-left, 0px));
 		--ag-nav-inset-block: 0px;
 		--ag-nav-inset-inline: calc(76px + env(safe-area-inset-left, 0px));
+		--ag-miniplayer-height: 61px;
 		--ag-target: 38px;
 	}
 }
@@ -159,6 +161,7 @@
 		--ag-rail-width: calc(92px + env(safe-area-inset-left, 0px));
 		--ag-nav-inset-block: 0px;
 		--ag-nav-inset-inline: calc(92px + env(safe-area-inset-left, 0px));
+		--ag-miniplayer-height: 65px;
 		--ag-target: 44px;
 	}
 }

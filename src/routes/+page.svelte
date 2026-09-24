@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -7,19 +6,11 @@
 	import { getTourRecords } from '$lib/data/tours';
 	import { LAST_UPDATE } from '$lib/version';
 
-	let query = $state('');
-
 	// The panel footer, on tablet and desktop. Both figures come from the data
 	// the app already ships, so they cannot drift from what Explorar lists.
 	const tourCount = getTourRecords(false).length;
 	const [updateYear, updateMonth, updateDay] = LAST_UPDATE.split('-');
 	const updatedOn = `${updateDay}-${updateMonth}-${updateYear}`;
-
-	function search(event: SubmitEvent) {
-		event.preventDefault();
-		const term = query.trim();
-		void goto(term ? `${base}/explorar?q=${encodeURIComponent(term)}` : `${base}/explorar`);
-	}
 </script>
 
 <div class="page-inicio">
@@ -59,25 +50,18 @@
 			</div>
 		</section>
 
-		<section class="in-search" aria-labelledby="in-search-title">
-			<form role="search" onsubmit={search}>
-				<label id="in-search-title" for="inicio-q">Buscá un recorrido</label>
-				<div class="in-search-field">
-					<span class="in-search-icon" aria-hidden="true"><Icon name="search" size={19} /></span>
-					<input
-						id="inicio-q"
-						type="search"
-						bind:value={query}
-						placeholder="Sendero, lugar o tema"
-						autocomplete="off"
-					/>
-					<button type="submit" class="in-search-go">Buscar</button>
-				</div>
-				<a class="in-search-all" href={`${base}/explorar`}>
+		<!-- One green card with one control in it. The search field that used to
+		     sit above this link was answering a question nobody has with three
+		     trails: everything the app offers fits on one screen of Explorar.
+		     It comes back when the catalogue is large enough to need it. The
+		     height it was taking went to the photo. -->
+		<section class="in-cta">
+			<div class="in-cta-card">
+				<a class="in-cta-link" href={`${base}/explorar`}>
 					Explorar todos los recorridos
 					<Icon name="chevron-right" size={16} />
 				</a>
-			</form>
+			</div>
 		</section>
 
 		<!-- Tablet and desktop only: the foot of the intro panel. Portrait has no
@@ -132,18 +116,22 @@
 
 	/* Portrait opens with 55 px of air above the isologo. It is the same
 	   measure on every portrait screen that leads with the big logo.
-	   The third row is the photo. Its height is whatever the screen has left
-	   once the text, the green card and the tab bar have taken theirs: 560 px
-	   is that text and card measured, and the nav inset carries the tab bar
-	   and the safe area. It never goes over 280 px or under 110 px. The hero
-	   does not grow past its rows, so on a tall screen the leftover lands
-	   under the green card instead of opening a hole above the photo. */
+	   The second row is the photo, and it takes every pixel the text, the
+	   green card and the tab bar do not, with 110 px as the floor.
+	   It used to be a subtraction against a hard-coded 522 px for "the text
+	   and the card". That number was an estimate, and being an estimate it was
+	   too generous: on a tall screen the difference was left over as a white
+	   band under the green card. Letting the row grow removes the estimate,
+	   and with it the band, on every screen size at once.
+	   The photo is a portrait frame, 665 by 1182, so every pixel of height it
+	   gains is a pixel it does not have to crop away.
+	   Note for whoever turns SHOW_TIENDA on: this row takes the whole leftover,
+	   so a third block under the green card would land below the fold with
+	   nothing to scroll. Give main an overflow and cap this row again. */
 	.in-hero {
+		flex: 1;
 		display: grid;
-		grid-template-rows: auto minmax(
-				110px,
-				min(280px, calc(100dvh - 522px - var(--ag-nav-inset-block)))
-			);
+		grid-template-rows: auto minmax(110px, 1fr);
 		gap: 12px;
 		min-height: 0;
 		padding: var(--ag-top-logo) var(--ag-side) 0;
@@ -226,7 +214,8 @@
 	   words. 4 px here makes the space under the link read the same as the
 	   space over it. The 10 px at the bottom keeps the green card off the
 	   tab bar. */
-	.in-search {
+	.in-cta {
+		flex: none;
 		padding: 4px var(--ag-side) 10px;
 	}
 
@@ -234,95 +223,24 @@
 		display: none;
 	}
 
-	.in-search form {
+	.in-cta-card {
 		padding: 16px;
 		background: var(--ag-green-ink);
 		border-radius: 12px;
 	}
 
-	/* A shade lighter than the mockup's #CFE8D8, which gave 4.41:1 on this
-	   green. This one clears the 4.5:1 minimum. */
-	.in-search label {
-		display: block;
-		margin-bottom: 10px;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #d5ecdd;
-	}
-
-	.in-search-field {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 10px;
-		padding: 0 6px 0 14px;
-		min-height: 52px;
-		background: var(--ag-surface);
-		border-radius: var(--ag-r-sm);
-	}
-
-	.in-search-icon {
-		display: flex;
-		flex: none;
-		color: var(--ag-green-ink);
-	}
-
-	/* 16 px is a hard floor for a text field: under it, iOS Safari zooms the
-	   whole page in when the field is tapped, and the page stays zoomed and
-	   scrolling sideways afterwards. */
-	.in-search-field input {
-		flex: 1;
-		min-width: 0;
-		border: none;
-		outline: none;
-		background: transparent;
-		font-family: inherit;
-		font-size: 16px;
-		color: var(--ag-fg-1);
-	}
-
-	/* The ring goes around the whole white field, not around the input inside
-	   it. White, because the field sits on the green card. */
-	.in-search-field:focus-within {
-		outline: 3px solid #ffffff;
-		outline-offset: 2px;
-	}
-
-	.in-search :global(a:focus-visible),
-	.in-search button:focus-visible {
+	/* White, because the link sits on the green card. */
+	.in-cta :global(a:focus-visible) {
 		outline-color: #ffffff;
 	}
 
-	/* The mockup has no submit control. Typing and pressing Enter is not
-	   discoverable for everyone, and a search field without a button is hard
-	   to use on a phone, so there is a real button. */
-	.in-search-go {
-		flex: none;
-		min-height: 40px;
-		padding: 0 14px;
-		background: var(--ag-green-ink);
-		border: none;
-		border-radius: var(--ag-r-sm);
-		color: #ffffff;
-		font-family: inherit;
-		font-size: 14px;
-		font-weight: 700;
-		cursor: pointer;
-	}
-
-	.in-search-go:hover {
-		background: #1f5a31;
-	}
-
-	.in-search-all {
+	.in-cta-link {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		min-height: var(--ag-target);
-		padding: 12px;
+		min-height: 52px;
+		padding: 14px;
 		border: 1.5px solid rgba(255, 255, 255, 0.5);
 		border-radius: var(--ag-r-pill);
 		color: #ffffff;
@@ -332,7 +250,7 @@
 		box-sizing: border-box;
 	}
 
-	.in-search-all:hover {
+	.in-cta-link:hover {
 		border-color: #ffffff;
 		color: #ffffff;
 	}
@@ -418,6 +336,7 @@
 		}
 
 		.in-hero {
+			flex: none;
 			display: contents;
 		}
 
@@ -427,7 +346,7 @@
 			padding: 32px 24px 0;
 		}
 
-		.in-search {
+		.in-cta {
 			grid-column: 1;
 			grid-row: 2;
 			align-self: start;
@@ -485,20 +404,11 @@
 			text-align: start;
 		}
 
-		.in-search form {
+		.in-cta-card {
 			padding: 18px;
 		}
 
-		.in-search label {
-			margin-bottom: 12px;
-		}
-
-		.in-search-field {
-			margin-bottom: 12px;
-			min-height: 52px;
-		}
-
-		.in-search-all {
+		.in-cta-link {
 			padding: 13px;
 		}
 
@@ -521,7 +431,7 @@
 			padding: 10px 16px 0;
 		}
 
-		.in-search {
+		.in-cta {
 			padding: 8px 16px 10px;
 		}
 
@@ -545,20 +455,11 @@
 			line-height: 1.4;
 		}
 
-		.in-search form {
+		.in-cta-card {
 			padding: 10px;
 		}
 
-		.in-search label {
-			margin-bottom: 4px;
-		}
-
-		.in-search-field {
-			margin-bottom: 6px;
-			min-height: 44px;
-		}
-
-		.in-search-all {
+		.in-cta-link {
 			min-height: 40px;
 			padding: 8px 14px;
 			font-size: 14px;
@@ -574,7 +475,7 @@
 			margin-inline: auto;
 		}
 
-		.in-search form {
+		.in-cta-card {
 			max-width: 680px;
 			margin: 0 auto;
 		}

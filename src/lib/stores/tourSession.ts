@@ -3,6 +3,7 @@ import { get, writable } from 'svelte/store';
 import type { TourView } from '$lib/data/tourView';
 import { distanceMeters, type TourPoint } from '$lib/utils/tourMeta';
 import { playTrackingOff, playTrackingOn } from '$lib/utils/earcons';
+import { clearSession, loadSession, saveSession } from '$lib/stores/tourSessionStorage';
 import { isWakeLockSupported, releaseWakeLock, requestWakeLock } from '$lib/utils/wakeLock';
 
 /**
@@ -41,6 +42,8 @@ export type TourSessionState = {
 	status: 'idle' | 'tracking';
 	slug: string | null;
 	name: string | null;
+	/** Cover used by the mini player before any point narration is active. */
+	imagePath: string | null;
 	points: TourPoint[];
 	/** Ids of the points whose narration has already fired. */
 	triggeredIds: string[];
@@ -58,6 +61,8 @@ export type TourSessionState = {
 	distances: Record<string, number>;
 	/** Metres walked along the trail, from projecting the position onto it. */
 	walkedMeters: number;
+	/** Map-selected progress, kept separate from the live GPS projection. */
+	selectedProgressMeters: number | null;
 	elapsedMs: number;
 	wakeLockActive: boolean;
 	wakeLockAvailable: boolean;
@@ -76,6 +81,7 @@ const initialState: TourSessionState = {
 	status: 'idle',
 	slug: null,
 	name: null,
+	imagePath: null,
 	points: [],
 	triggeredIds: [],
 	currentPointId: null,
@@ -89,6 +95,7 @@ const initialState: TourSessionState = {
 	isMoving: false,
 	distances: {},
 	walkedMeters: 0,
+	selectedProgressMeters: null,
 	elapsedMs: 0,
 	wakeLockActive: false,
 	wakeLockAvailable: false,
@@ -101,15 +108,48 @@ const initialState: TourSessionState = {
 
 export const tourSession = writable<TourSessionState>(initialState);
 
+/**
+ * False until `resumeTour` has looked for a saved walk, true forever after.
+ *
+ * This exists to stop the tour screen flickering. The page is prerendered, so
+ * the first paint is static HTML built with no session at all. Committing that
+ * HTML to "Sin iniciar" meant a reload showed the start screen for as long as
+ * hydration took, then swapped to the walk in progress — two changes where the
+ * walker should see one. While this is false the screen commits to neither.
+ */
+export const sessionRestored = writable(false);
+
 let audio: HTMLAudioElement | null = null;
 let watchId: number | null = null;
 let tickId: number | null = null;
 let startedAt = 0;
+/**
+ * Time already walked before this run of the page began. The clock counts
+ * active time only: a walk that is reloaded picks up from here, and the hours
+ * a phone spends in a pocket with the tab discarded are not counted.
+ */
+let elapsedBaseMs = 0;
 let lastMotionSample: { lat: number; lng: number; time: number } | null = null;
 let listenersAttached = false;
 
 const patch = (next: Partial<TourSessionState>) =>
 	tourSession.update((state) => ({ ...state, ...next }));
+
+/** Writing on every tick would hit localStorage twice a second for nothing. */
+const SAVE_INTERVAL_MS = 4000;
+let lastSaveAt = 0;
+
+/**
+ * Writes the walk down. `force` is for the moments that must not be missed:
+ * a point firing, and the tab being hidden, which on iOS is the last thing
+ * that happens before the browser is free to discard the page.
+ */
+function persist(force = false): void {
+	const now = Date.now();
+	if (!force && now - lastSaveAt < SAVE_INTERVAL_MS) return;
+	lastSaveAt = now;
+	saveSession(get(tourSession));
+}
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -252,6 +292,7 @@ export async function playPoint(point: TourPoint, base: string): Promise<void> {
 		currentPointId: point.id,
 		currentTime: 0,
 		duration: 0,
+		selectedProgressMeters: null,
 		narrationEndedFor: null,
 		photoOpen: hasPhoto && !dismissed,
 		photoFullscreen: false
@@ -269,6 +310,42 @@ export async function playPoint(point: TourPoint, base: string): Promise<void> {
 			statusMessage: `Tocá reproducir para escuchar: ${point.name}`
 		});
 	}
+}
+
+/**
+ * Loads a point chosen directly on the map without starting its narration.
+ * The live GPS distance continues updating in the background, while the
+ * visible trail playhead stays on this selected point until GPS triggers a
+ * point naturally.
+ */
+export function selectPointForPlayback(
+	point: TourPoint,
+	base: string,
+	progressMeters: number
+): void {
+	const player = ensureAudio();
+	if (!player) return;
+
+	player.pause();
+	player.removeAttribute('src');
+	if (point.audio) {
+		player.src = `${base}/${point.audio}`;
+		player.currentTime = 0;
+		player.playbackRate = get(tourSession).playbackRate;
+		player.load();
+	}
+
+	patch({
+		currentPointId: point.id,
+		isPlaying: false,
+		currentTime: 0,
+		duration: 0,
+		selectedProgressMeters: progressMeters,
+		narrationEndedFor: null,
+		photoOpen: false,
+		photoFullscreen: false,
+		statusMessage: `Listo para reproducir: ${point.name}`
+	});
 }
 
 /**
@@ -404,6 +481,7 @@ function handlePosition(pos: GeolocationPosition, base: string): void {
 		if (distances[point.id] > effectiveRadius) continue;
 
 		tourSession.update((s) => ({ ...s, triggeredIds: [...s.triggeredIds, point.id] }));
+		persist(true);
 		void playPoint(point, base);
 		break;
 	}
@@ -434,6 +512,8 @@ async function syncWakeLock(active: boolean): Promise<void> {
 
 function handleVisibilityChange(): void {
 	if (document.visibilityState === 'hidden') {
+		// Last chance before the browser may discard the page.
+		persist(true);
 		void syncWakeLock(false);
 		return;
 	}
@@ -454,6 +534,7 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 	}
 
 	startedAt = Date.now();
+	elapsedBaseMs = 0;
 	lastMotionSample = null;
 
 	tourSession.set({
@@ -461,10 +542,12 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 		status: 'tracking',
 		slug: tour.slug,
 		name: tour.name,
+		imagePath: tour.imagePath,
 		points: tour.points,
 		wakeLockAvailable: isWakeLockSupported(),
 		statusMessage: 'Iniciando seguimiento de ubicación…'
 	});
+	persist(true);
 
 	/**
 	 * Everything from here up runs synchronously, on purpose: the walk is
@@ -479,6 +562,15 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 	void syncWakeLock(true);
 	void playTrackingOn();
 
+	attachWatchers(base);
+}
+
+/**
+ * Everything the walk needs running: the page listeners, the GPS watch and the
+ * clock. Shared by `startTour` and `resumeTour` so a reloaded walk behaves
+ * exactly like one that was just started.
+ */
+function attachWatchers(base: string): void {
 	document.addEventListener('visibilitychange', handleVisibilityChange);
 	window.addEventListener('wake-lock-release', handleWakeLockRelease);
 
@@ -489,8 +581,96 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 	);
 
 	tickId = window.setInterval(() => {
-		patch({ elapsedMs: Date.now() - startedAt });
+		patch({ elapsedMs: elapsedBaseMs + (Date.now() - startedAt) });
+		persist();
 	}, TICK_MS);
+}
+
+/**
+ * Puts back a walk that a reload interrupted. Returns true when one was
+ * restored, so the caller knows whether anything happened.
+ *
+ * The walk comes back paused. A browser will not play sound without the person
+ * touching something first, so pretending otherwise would leave a play button
+ * that looks wrong. The narration is loaded at the second it was cut off, and
+ * one tap carries on from there.
+ */
+export function resumeTour(tours: TourView[], base: string): boolean {
+	if (!browser) return false;
+	// Whatever happens below, the question has now been asked and the screens
+	// waiting on the answer can render.
+	sessionRestored.set(true);
+	if (get(tourSession).status === 'tracking') return false;
+	if (typeof navigator === 'undefined' || !navigator.geolocation) return false;
+
+	const stored = loadSession();
+	if (!stored) return false;
+
+	const tour = tours.find((candidate) => candidate.slug === stored.slug);
+	if (!tour) {
+		// The trail was removed, or this is a build without it.
+		clearSession();
+		return false;
+	}
+
+	// Ids that are no longer in the trail would leave the counters wrong.
+	const knownIds = new Set(tour.points.map((point) => point.id));
+	const triggeredIds = stored.triggeredIds.filter((id) => knownIds.has(id));
+	const currentPointId =
+		stored.currentPointId && knownIds.has(stored.currentPointId) ? stored.currentPointId : null;
+
+	startedAt = Date.now();
+	elapsedBaseMs = stored.elapsedMs;
+	lastMotionSample = null;
+
+	tourSession.set({
+		...initialState,
+		status: 'tracking',
+		slug: tour.slug,
+		name: tour.name,
+		imagePath: tour.imagePath,
+		points: tour.points,
+		triggeredIds,
+		currentPointId,
+		currentTime: stored.currentTime,
+		playbackRate: stored.playbackRate,
+		walkedMeters: stored.walkedMeters,
+		selectedProgressMeters: stored.selectedProgressMeters,
+		photoDismissedIds: stored.photoDismissedIds.filter((id) => knownIds.has(id)),
+		elapsedMs: stored.elapsedMs,
+		wakeLockAvailable: isWakeLockSupported(),
+		statusMessage: 'Recorrido retomado. Tocá reproducir para seguir escuchando.'
+	});
+
+	const currentPoint = tour.points.find((point) => point.id === currentPointId);
+	if (currentPoint) loadPointPaused(currentPoint, base, stored.currentTime);
+
+	void syncWakeLock(true);
+	attachWatchers(base);
+	return true;
+}
+
+/**
+ * Loads a narration without playing it, at the second the walk was cut off.
+ * Used only by `resumeTour`.
+ */
+function loadPointPaused(point: TourPoint, base: string, at: number): void {
+	if (!point.audio) return;
+	const player = ensureAudio();
+	if (!player) return;
+
+	player.src = `${base}/${point.audio}`;
+	player.playbackRate = get(tourSession).playbackRate;
+	player.load();
+
+	const applyTime = () => {
+		if (Number.isFinite(player.duration)) {
+			player.currentTime = clamp(at, 0, player.duration);
+			patch({ currentTime: player.currentTime, duration: player.duration });
+		}
+		player.removeEventListener('loadedmetadata', applyTime);
+	};
+	player.addEventListener('loadedmetadata', applyTime);
 }
 
 export function stopTour(): void {
@@ -516,6 +696,9 @@ export function stopTour(): void {
 
 	void syncWakeLock(false);
 	lastMotionSample = null;
+	elapsedBaseMs = 0;
+	// Forget it for good: a reload after Detener must not bring the walk back.
+	clearSession();
 	tourSession.set({ ...initialState, statusMessage: 'Seguimiento detenido' });
 }
 

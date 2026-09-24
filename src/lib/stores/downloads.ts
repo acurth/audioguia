@@ -6,6 +6,8 @@ import {
 	setDownloadState,
 	type DownloadState
 } from '$lib/stores/offline';
+import { warmBasemap } from '$lib/stores/trailBasemap';
+import { getStaticImageUrl } from '$lib/utils/mapboxStatic';
 
 /**
  * One place for asking the service worker to download, delete or re-download a
@@ -157,6 +159,17 @@ export async function requestDownload(tour: TourView): Promise<void> {
 		currentIndex: 0,
 		lastUpdate: Date.now()
 	});
+
+	/**
+	 * Fetch the terrain image now, while there is still signal. It does not go
+	 * through the service worker: the tour cache refuses cross-origin URLs, and
+	 * Mapbox content may not be kept past thirty days, which that cache has no
+	 * way to enforce. See `trailBasemap.ts`.
+	 *
+	 * Deliberately not awaited. It is a background for a map that works
+	 * without it, so it must never hold up or fail the audio download.
+	 */
+	void warmBasemap(getStaticImageUrl(tour.points));
 
 	const registration = await navigator.serviceWorker.ready;
 	registration.active?.postMessage({

@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import TopBar from '$lib/components/ui/TopBar.svelte';
 	import { APP_VERSION } from '$lib/config/version';
 
 	const appBase = base;
 </script>
 
+<TopBar title="Cuenta" />
+
 <div class="page">
 	<main id="main" class="content ag-main">
-		<h1 class="hero-title">Cuenta</h1>
+		<!-- The heading lives in the top bar, beside the isologo. -->
 		<p class="hero-subtitle">Escuchar recorridos no necesita cuenta. Estás como invitado.</p>
 
 		<nav class="cuenta-links" aria-label="Ajustes">

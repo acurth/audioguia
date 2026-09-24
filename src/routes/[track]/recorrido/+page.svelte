@@ -7,22 +7,26 @@
 	import AppNav from '$lib/components/ui/AppNav.svelte';
 	import AudioPlayer from '$lib/components/ui/AudioPlayer.svelte';
 	import CurrentPointCard from '$lib/components/ui/CurrentPointCard.svelte';
+	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import MovementIndicator from '$lib/components/MovementIndicator.svelte';
 	import PhotoViewer from '$lib/components/ui/PhotoViewer.svelte';
 	import PointPhoto from '$lib/components/ui/PointPhoto.svelte';
 	import TrailMap from '$lib/components/ui/TrailMap.svelte';
-	import TrailProgress from '$lib/components/ui/TrailProgress.svelte';
 	import { getDevModeFromStorage } from '$lib/data/tours';
 	import { getTourViews } from '$lib/data/tourView';
 	import { downloadStateStore, initOfflineStore } from '$lib/stores/offline';
 	import type { DownloadState } from '$lib/stores/offline';
+	import { readListOrigin } from '$lib/stores/listOrigin';
+	import { formatClock } from '$lib/utils/time';
 	import {
 		closePhoto,
 		cumulativeMeters,
 		cyclePlaybackRate,
 		playPoint,
 		seekTo,
+		selectPointForPlayback,
+		sessionRestored,
 		setPhotoFullscreen,
 		skipSeconds,
 		startTour,
@@ -40,22 +44,43 @@
 	);
 
 	let session = $state($tourSession);
+	/**
+	 * False until the app has checked for a saved walk. Until then this screen
+	 * shows neither "En recorrido" nor "Sin iniciar", so a reload does not
+	 * flash the start screen on its way to the walk that is actually running.
+	 */
+	let restored = $state($sessionRestored);
+	/**
+	 * True from the moment Detener is pressed until this screen goes away.
+	 *
+	 * Stopping resets the session and navigating takes a moment, so in between
+	 * the screen would redraw itself as "Sin iniciar" and show the start
+	 * button for about a second on the way out. Nobody who just pressed stop
+	 * should be offered the start button.
+	 */
+	let leaving = $state(false);
 	let downloadState = $state<Record<string, DownloadState>>({});
 	// Measured, because the postcard size rule is in pixels.
 	let mapWidth = $state(0);
 	let mapHeight = $state(0);
-	// On tablet the photo has its own place on screen, so it is never an
-	// overlay and the card button enlarges instead of opening.
-	let photoBeside = $state(false);
+	let isTabletLayout = $state(false);
 
 	const detailHref = $derived(`${base}/${$page.params.track}`);
 	const isOfflineReady = $derived(
 		Boolean(tour?.id && downloadState[tour.id]?.status === 'downloaded')
 	);
 	const isThisTour = $derived(session.status === 'tracking' && session.slug === tour?.slug);
+	/**
+	 * Whether the screen may commit to "not running": only once the app has
+	 * looked for a saved walk, and only while we are not on our way out.
+	 * Both flickers this prevents are the same mistake — answering before the
+	 * answer is known.
+	 */
+	const canShowIdle = $derived(restored && !leaving);
 	const points = $derived(tour?.points ?? []);
+	// Still needed for map navigation: tapping a marker sets the progress.
 	const cumulative = $derived(cumulativeMeters(points));
-	const totalMeters = $derived(cumulative.at(-1) ?? 0);
+	const elapsed = $derived(formatClock(session.elapsedMs / 1000));
 
 	const currentPoint = $derived(
 		points.find((p) => p.id === session.currentPointId) ??
@@ -76,16 +101,11 @@
 	// No written description yet means the photo is decorative: a screen
 	// reader gets the point name from the card and the rest from the audio.
 	const photoAlt = $derived(currentPoint?.photoAlt ?? '');
-	/**
-	 * The button only exists while the walker is at the point. Once they are
-	 * past it, a control that opens the photo of a point left behind is
-	 * noise, so it goes.
-	 */
-	const atCurrentPoint = $derived(
-		isThisTour && !!photoSrc && currentDistance != null && currentDistance <= 40
-	);
-	const showOverlayPhoto = $derived(isThisTour && !!photoSrc && session.photoOpen && !photoBeside);
-	const showBesidePhoto = $derived(isThisTour && !!photoSrc && photoBeside);
+	/** Every current point with a photo exposes the control. This includes the
+	 * first point selected by default as soon as the walk starts, before GPS
+	 * has produced a distance or the walker has tapped a map marker. */
+	const canShowPhoto = $derived(isThisTour && !!photoSrc);
+	const showOverlayPhoto = $derived(isThisTour && !!photoSrc && session.photoOpen);
 
 	// Everything a screen reader needs, in one line, refreshed as it changes.
 	const spokenStatus = $derived.by(() => {
@@ -106,9 +126,43 @@
 		await startTour(tour, base);
 	}
 
-	function handleStop() {
-		stopTour();
-		void goto(detailHref);
+	/**
+	 * Leave first, stop second.
+	 *
+	 * Stopping resets the session, so doing it first left this screen with
+	 * nothing to show — no card, no player, no stop button — for as long as
+	 * the next route took to load, which on a phone is a noticeable blink.
+	 * Navigating first keeps the walk on screen until the detail page is
+	 * ready, the way any screen stays put until its replacement arrives, and
+	 * the walk is stopped once this page is gone.
+	 *
+	 * `leaving` still guards the markup: if anything redraws this screen
+	 * between the two steps, it must not offer the start button to someone who
+	 * just pressed stop.
+	 */
+	async function handleStop() {
+		leaving = true;
+
+		// A tablet opens trail details beside the list, so return to that
+		// master-detail screen instead of the standalone, phone-style detail
+		// route. Include the stopped trail so its card and detail pane remain
+		// selected. Phones still return to the standalone detail page.
+		let target = detailHref;
+		if (isTabletLayout) {
+			const listHref = readListOrigin(base);
+			target =
+				listHref === `${base}/explorar` && tour
+					? `${listHref}?recorrido=${encodeURIComponent(tour.slug)}`
+					: listHref;
+		}
+
+		try {
+			await goto(target);
+		} finally {
+			// Whatever the navigation did, the walk has to end. Leaving the GPS
+			// watch and the wake lock running would be the worse bug.
+			stopTour();
+		}
 	}
 
 	function handlePlayCurrent() {
@@ -119,6 +173,12 @@
 		else togglePlay();
 	}
 
+	function handleSelectMapPoint(point: (typeof points)[number]) {
+		if (!isThisTour) return;
+		const index = points.findIndex((candidate) => candidate.id === point.id);
+		selectPointForPlayback(point, base, cumulative[index] ?? 0);
+	}
+
 	onMount(() => {
 		initOfflineStore();
 
@@ -126,7 +186,7 @@
 			'(min-width: 840px) and (min-height: 600px) and (orientation: landscape)'
 		);
 		const syncLayout = () => {
-			photoBeside = tabletQuery.matches;
+			isTabletLayout = tabletQuery.matches;
 		};
 		syncLayout();
 		tabletQuery.addEventListener('change', syncLayout);
@@ -136,9 +196,13 @@
 		const stopDownloads = downloadStateStore.subscribe((value) => {
 			downloadState = value;
 		});
+		const stopRestored = sessionRestored.subscribe((value) => {
+			restored = value;
+		});
 		return () => {
 			stopSession();
 			stopDownloads();
+			stopRestored();
 			tabletQuery.removeEventListener('change', syncLayout);
 		};
 	});
@@ -158,8 +222,11 @@
 				<span class="rec-state">
 					<span class="rec-state-dot" aria-hidden="true"></span>
 					En recorrido
+					<!-- The clock moved here when the trail progress bar went. It
+					     was the one thing on that bar the map could not show. -->
+					<span class="rec-elapsed">{elapsed}</span>
 				</span>
-			{:else}
+			{:else if canShowIdle}
 				<span class="rec-state rec-state--idle">Sin iniciar</span>
 			{/if}
 
@@ -185,6 +252,7 @@
 						currentPointId={isThisTour ? session.currentPointId : null}
 						position={isThisTour ? session.position : null}
 						tourName={tour.name}
+						onSelectPoint={isThisTour ? handleSelectMapPoint : undefined}
 					/>
 
 					{#if showOverlayPhoto && photoSrc && mapWidth > 0}
@@ -198,27 +266,13 @@
 						/>
 					{/if}
 				</div>
-
-				{#if showBesidePhoto && photoSrc}
-					<figure class="rec-photo-beside">
-						<button type="button" onclick={() => setPhotoFullscreen(true)}>
-							<img src={photoSrc} alt={photoAlt} />
-							<span class="sr-only">Ampliar la foto del punto</span>
-						</button>
-					</figure>
-				{/if}
 			</div>
 
-			<div class="rec-panel">
-				<TrailProgress
-					{points}
-					{cumulative}
-					{totalMeters}
-					walkedMeters={session.walkedMeters}
-					heardCount={session.triggeredIds.length}
-					elapsedMs={session.elapsedMs}
-				/>
-
+			<!-- Tied to the measured width of the map so the card, the player and
+			     the stop button form one column with it and nothing below the
+			     map is ever wider than the map. `mapWidth` is already measured
+			     for the photo overlay, so this costs no extra layout work. -->
+			<div class="rec-panel" style={mapWidth > 0 ? `max-width:${mapWidth}px` : undefined}>
 				{#if isThisTour}
 					{#if currentPoint}
 						<CurrentPointCard
@@ -227,9 +281,8 @@
 							total={points.length}
 							distance={currentDistance}
 							photoOpen={session.photoOpen}
-							showPhotoButton={atCurrentPoint}
-							photoAlwaysVisible={photoBeside}
-							onTogglePhoto={() => (photoBeside ? setPhotoFullscreen(true) : togglePhoto())}
+							showPhotoButton={canShowPhoto}
+							onTogglePhoto={togglePhoto}
 						/>
 					{/if}
 
@@ -252,11 +305,17 @@
 						</p>
 					{/if}
 
+					<!-- Built to match Iniciar recorrido on the detail screen: same
+					     corner radius, same mark at the same size, same text. The
+					     only differences are the glyph it pairs with the walker and
+					     the background, which is explained on .rec-stop below. -->
 					<button type="button" class="rec-stop" onclick={handleStop}>
-						<Icon name="stop" size={16} />
-						Detener recorrido
+						<span class="rec-stop-icon">
+							<AgActionMark action="trail-stop" size="sm" skin="navy" />
+						</span>
+						<span class="rec-stop-text">Detener recorrido</span>
 					</button>
-				{:else}
+				{:else if canShowIdle}
 					<div class="rec-start-block">
 						<p class="rec-start-text">
 							Al iniciar, los relatos se activan solos cuando llegás a cada punto. Mantené la app
@@ -269,7 +328,9 @@
 							</p>
 						{/if}
 						<button type="button" class="rec-start" onclick={handleStart}>
-							<span class="rec-start-icon" aria-hidden="true"><Icon name="play" size={16} /></span>
+							<span class="rec-start-icon"
+								><AgActionMark action="trail-start" size="sm" skin="green" /></span
+							>
 							Iniciar recorrido
 						</button>
 					</div>
@@ -303,7 +364,7 @@
 		{/if}
 	</main>
 
-	<AppNav current={null} variant="dark" />
+	<AppNav current="explorar" variant="dark" />
 </div>
 
 {#if session.photoFullscreen && photoSrc && currentPoint}
@@ -382,7 +443,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 7px;
-		font-size: 11.5px;
+		font-size: 13.5px;
 		font-weight: 700;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
@@ -398,6 +459,16 @@
 		height: 7px;
 		border-radius: var(--ag-r-pill);
 		background: var(--ag-green-on-navy);
+	}
+
+	/* White rather than green: it is a number, not part of the running state,
+	   and the tracking colour should stay on the label and the dot. */
+	.rec-elapsed {
+		padding-left: 7px;
+		border-left: 1px solid rgba(255, 255, 255, 0.24);
+		color: #ffffff;
+		letter-spacing: 0.04em;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.rec-title {
@@ -426,38 +497,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
+		min-width: 0;
+		/* Centred inside whatever room it has, so capping it to the map width
+		   leaves even margins rather than a gap on one side. */
+		margin-inline: auto;
+		width: 100%;
 	}
 
 	.rec-map-box {
 		position: relative;
-	}
-
-	/* The frame wraps the photo rather than the column, so a portrait photo
-	   does not sit inside two empty bars. Same white frame as the postcard. */
-	.rec-photo-beside {
-		margin: 12px 0 0;
-		display: flex;
-		justify-content: center;
-	}
-
-	.rec-photo-beside button {
-		display: block;
-		max-width: 100%;
-		padding: 0;
-		background: var(--ag-navy);
-		border: 9px solid #ffffff;
-		border-radius: 2px;
-		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-		box-sizing: border-box;
-		cursor: pointer;
-		line-height: 0;
-	}
-
-	.rec-photo-beside img {
-		display: block;
-		width: auto;
-		max-width: 100%;
-		max-height: 300px;
 	}
 
 	.rec-empty {
@@ -480,26 +528,43 @@
 		color: var(--ag-danger-on-navy);
 	}
 
+	/* Mirrors .td-start on the detail screen, with one deliberate difference:
+	   that button is navy on a white page, and this screen is already navy,
+	   so the same colour would make the button disappear. It uses the raised
+	   panel navy instead — the same surface as the point card above it, which
+	   is how a raised control reads on this background. */
 	.rec-stop {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 9px;
+		gap: 12px;
 		min-height: var(--ag-target);
-		padding: 13px;
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.35);
-		border-radius: var(--ag-r-pill);
+		padding: 18px;
+		background: var(--ag-navy-panel);
+		border: none;
+		border-radius: var(--ag-r-md);
+		box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 		color: #ffffff;
 		font-family: inherit;
-		font-size: 14.5px;
-		font-weight: 700;
 		cursor: pointer;
 		box-sizing: border-box;
 	}
 
 	.rec-stop:hover {
-		background: rgba(255, 255, 255, 0.18);
+		background: #20496a;
+	}
+
+	.rec-stop-icon {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.rec-stop-text {
+		font-size: 16px;
+		font-weight: 800;
+		letter-spacing: 0.01em;
 	}
 
 	.rec-start-block {
@@ -533,15 +598,10 @@
 	}
 
 	.rec-start-icon {
-		width: 34px;
-		height: 34px;
 		flex: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--ag-green-soft);
-		border-radius: 50%;
-		color: var(--ag-green-ink);
 	}
 
 	.rec-dev {
@@ -580,11 +640,13 @@
 		}
 
 		/* Landscape: title and state stack in the middle of the header row,
-		   which saves the whole title line. Those pixels are the difference
-		   between the stop button being reachable and being below the fold. */
+		   which saves the whole title line. The padding was squeezed to 8 and 4
+		   when the stop button was at risk of falling below the fold; it no
+		   longer is, and the screen had ended up looking crushed against the
+		   top edge. */
 		.rec-bar {
 			flex-wrap: nowrap;
-			padding: 8px var(--ag-side-land) 4px;
+			padding: 14px var(--ag-side-land) 10px;
 		}
 
 		.rec-headline {
@@ -608,17 +670,32 @@
 		}
 
 		.rec-state {
-			font-size: 10px;
+			font-size: 12px;
 		}
 
+		/* The top padding is not decoration. The point photo is built to
+		   overhang the map by 4 px, and its close button sits 15 px beyond
+		   that again. With no padding here and overflow hidden, those 19 px
+		   were clipped and the control to close the photo was half gone. */
 		.rec-body {
 			flex-direction: row;
 			align-items: stretch;
 			gap: 20px;
-			padding: 0 var(--ag-side-land) 12px;
+			padding: 14px var(--ag-side-land) 16px;
 			overflow: hidden;
 		}
 
+		/* In landscape the map is sized from the height, not the width. Its
+		   ratio is fixed at 398/300 and cannot be bent: the Mapbox image is
+		   requested at exactly that shape and our numbered markers are placed
+		   with the same projection, so any other ratio would slide the markers
+		   off the paths. Deriving the width from the available height keeps
+		   the ratio, fills the column instead of leaving a void under it, and
+		   on a phone in landscape stops the map from being taller than the
+		   room it has.
+		   The vertical padding is the clearance the point photo needs: it
+		   overhangs the map by 4 px and its close button sits 15 px beyond
+		   that again. */
 		.rec-map {
 			flex: none;
 			width: 46%;
@@ -626,14 +703,41 @@
 			display: flex;
 			flex-direction: column;
 			align-items: stretch;
+			justify-content: center;
+			padding-block: 20px;
+			box-sizing: border-box;
 		}
 
+		.rec-map-box {
+			aspect-ratio: 398 / 300;
+			height: 100%;
+			width: auto;
+			max-width: 100%;
+			margin-inline: auto;
+		}
+
+		/* The stop button goes to the foot of its column. It is the last thing
+		   on the screen and the one most often reached for, and it is what
+		   turns the space under the player from a void into breathing room. */
 		.rec-panel {
 			flex: 1;
 			min-width: 0;
-			gap: 10px;
-			padding-top: 2px;
+			gap: 14px;
+			padding-top: 0;
 			overflow-y: auto;
+		}
+
+		.rec-stop {
+			margin-top: auto;
+		}
+
+		/* Same trim as .td-start takes in landscape. */
+		.rec-stop {
+			padding: 14px;
+		}
+
+		.rec-stop-text {
+			font-size: 15px;
 		}
 	}
 
@@ -642,16 +746,13 @@
 			font-size: 22px;
 		}
 
-		/* On tablet the photo has a place of its own under the map, so it is
-		   never an overlay and the card button enlarges instead. */
 		.rec-map {
 			width: 50%;
 			max-width: 700px;
-			overflow-y: auto;
 		}
 
 		.rec-panel {
-			gap: 16px;
+			gap: 20px;
 		}
 	}
 </style>

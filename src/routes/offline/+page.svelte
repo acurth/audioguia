@@ -25,10 +25,24 @@
 	let downloadState = $state<Record<string, DownloadState>>({});
 	let now = $state(Date.now());
 	let confirmingRelease = $state(false);
+	let query = $state('');
 
 	const downloadedTours = $derived(
 		tours.filter((tour) => downloadState[tour.id]?.status === 'downloaded')
 	);
+	/** The same search Explorar has, over what is already on the device. */
+	const visibleDownloads = $derived.by(() => {
+		const needle = query.trim().toLowerCase();
+		if (!needle) return downloadedTours;
+		return downloadedTours.filter((tour) =>
+			[tour.name, tour.place, tour.raw.theme]
+				.filter(Boolean)
+				.join(' ')
+				.toLowerCase()
+				.includes(needle)
+		);
+	});
+
 	const totalBytes = $derived(
 		downloadedTours.reduce((sum, tour) => sum + (tour.sizeBytes ?? 0), 0)
 	);
@@ -74,12 +88,12 @@
 	});
 </script>
 
-<TopBar searchHref={`${base}/explorar`} />
+<TopBar title="Offline" />
 
 <div class="page-offline">
 	<div class="of-head">
-		<h1>Offline</h1>
-
+		<!-- The heading lives in the top bar, beside the isologo, on every
+		     screen size. -->
 		{#if downloadedTours.length > 0}
 			<div class="of-summary">
 				<p class="of-summary-text">
@@ -107,6 +121,29 @@
 					</button>
 				{/if}
 			</div>
+
+			<form
+				class="of-search"
+				role="search"
+				onsubmit={(event) => {
+					event.preventDefault();
+				}}
+			>
+				<label class="sr-only" for="buscar-offline">Buscar entre los descargados</label>
+				<span class="of-search-icon" aria-hidden="true"><Icon name="search" size={18} /></span>
+				<input
+					id="buscar-offline"
+					type="search"
+					bind:value={query}
+					placeholder="Sendero, lugar o tema"
+					autocomplete="off"
+				/>
+				{#if query}
+					<button type="button" class="of-search-clear" onclick={() => (query = '')}>
+						<Icon name="x" size={16} label="Borrar la búsqueda" />
+					</button>
+				{/if}
+			</form>
 		{/if}
 	</div>
 
@@ -117,9 +154,13 @@
 			<p class="of-empty">
 				Todavía no descargaste ningún recorrido. Descargalos antes de salir y funcionan sin señal.
 			</p>
+		{:else if visibleDownloads.length === 0}
+			<p class="of-empty">
+				Ninguno de tus recorridos descargados coincide con “{query}”.
+			</p>
 		{:else}
 			<ul class="of-grid">
-				{#each downloadedTours as tour (tour.id)}
+				{#each visibleDownloads as tour (tour.id)}
 					<li>
 						<TourCard
 							{tour}
@@ -157,22 +198,65 @@
 		min-height: 0;
 	}
 
+	/* 8 px at the top, matching Explorar: the heading left this block for the
+	   top bar, so everything below starts that much higher. */
 	.of-head {
 		flex: none;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		padding: 16px var(--ag-side);
+		padding: 8px var(--ag-side) 12px;
 		background: var(--ag-surface);
 		border-bottom: 1px solid var(--ag-border);
 	}
 
-	.of-head h1 {
-		margin: 0;
-		font-size: 22px;
-		font-weight: 800;
-		letter-spacing: -0.01em;
+	/* Same field as Explorar, so the two screens read as one pair. */
+	.of-search {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 0 14px;
+		min-height: var(--ag-target);
+		background: var(--ag-page);
+		border: 1px solid var(--ag-border-control);
+		border-radius: var(--ag-r-sm);
+	}
+
+	.of-search:focus-within {
+		border-color: var(--ag-green);
+	}
+
+	.of-search-icon {
+		display: flex;
+		flex: none;
+		color: var(--ag-fg-3);
+	}
+
+	/* 16 px is a hard floor: under it, iOS Safari zooms the page in when the
+	   field is tapped and leaves it zoomed. */
+	.of-search input {
+		flex: 1;
+		min-width: 0;
+		border: none;
+		outline: none;
+		background: transparent;
+		font-family: inherit;
+		font-size: 16px;
 		color: var(--ag-fg-1);
+	}
+
+	.of-search-clear {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		flex: none;
+		padding: 0;
+		background: none;
+		border: none;
+		color: var(--ag-fg-3);
+		cursor: pointer;
 	}
 
 	.of-summary {
@@ -293,15 +377,13 @@
 	}
 
 	@media (min-width: 600px) and (orientation: landscape) {
+		/* Same air as Explorar in landscape, for the same reason. */
 		.of-head {
-			flex-direction: row;
-			align-items: center;
-			justify-content: space-between;
-			padding: 14px var(--ag-side-land);
+			padding: 14px var(--ag-side-land) 14px;
 		}
 
 		.of-body {
-			padding: 14px var(--ag-side-land) 20px;
+			padding: 16px var(--ag-side-land) 24px;
 		}
 
 		.of-grid {

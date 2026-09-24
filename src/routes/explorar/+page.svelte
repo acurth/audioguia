@@ -104,9 +104,12 @@
 		return `${ordenado} por nombre`;
 	});
 
-	const countLabel = $derived(
-		`${visibleTours.length} ${visibleTours.length === 1 ? 'recorrido' : 'recorridos'} · ${sortLabel}`
+	const countText = $derived(
+		`${visibleTours.length} ${visibleTours.length === 1 ? 'recorrido' : 'recorridos'}`
 	);
+
+	/** Still joined for the live region, which reads one sentence. */
+	const countLabel = $derived(`${countText} · ${sortLabel}`);
 
 	/** What the live region says: the result count, plus any download news. */
 	const liveMessage = $derived.by(() => {
@@ -180,6 +183,14 @@
 		if (initialQuery) query = initialQuery;
 		if ($page.url.searchParams.get('orden') === 'cerca') handleSort('cerca');
 
+		// Returning from a stopped trail on tablet keeps that trail active in
+		// both the list and the detail pane instead of falling back to the first.
+		const selectedKey = $page.url.searchParams.get('recorrido');
+		const initialSelection = tours.find(
+			(tour) => tour.slug === selectedKey || tour.id === selectedKey
+		);
+		if (initialSelection) selectedId = initialSelection.id;
+
 		return () => {
 			stopStore();
 			stopPosition();
@@ -191,15 +202,17 @@
 	});
 </script>
 
-<TopBar />
+<TopBar title="Explorar" />
 
 <div class="page-explorar">
 	<div class="ex-master">
 		<div class="ex-controls">
-			<div class="ex-heading">
-				<h1>Explorar</h1>
-				<p class="ex-count">{countLabel}</p>
-			</div>
+			<!-- The heading lives in the top bar, beside the isologo, on every
+			     screen size. This block starts at the count. -->
+			<p class="ex-count">
+				<span>{countText}</span>
+				<span class="ex-sort">{sortLabel}</span>
+			</p>
 
 			<form
 				class="ex-search"
@@ -321,37 +334,33 @@
 		display: none;
 	}
 
+	/* 8 px at the top rather than 12: the heading left this block for the top
+	   bar, so the count now leads it and everything below sits that much
+	   higher. */
 	.ex-controls {
 		flex: none;
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
-		padding: 12px var(--ag-side);
+		padding: 8px var(--ag-side) 12px;
 		background: var(--ag-surface);
 		border-bottom: 1px solid var(--ag-border);
 	}
 
-	/* Stacked on a phone: the title and the count do not fit on one line at
-	   430 px, and squeezing them clips the count. */
-	.ex-heading {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.ex-heading h1 {
-		margin: 0;
-		font-size: 22px;
-		font-weight: 800;
-		letter-spacing: -0.01em;
-		color: var(--ag-fg-1);
-	}
-
+	/* Count at one end, sort at the other. */
 	.ex-count {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
 		margin: 0;
 		font-size: 12.5px;
 		font-weight: 600;
 		color: var(--ag-fg-3);
+	}
+
+	.ex-sort {
+		text-align: end;
 	}
 
 	.ex-search {
@@ -443,20 +452,15 @@
 	/* Landscape and tablet: no top bar, so the controls carry the page, and
 	   the cards go two across. */
 	@media (min-width: 600px) and (orientation: landscape) {
+		/* Landscape gets the same air as portrait: the top bar above already
+		   carries the heading, and squeezing this block against it was what
+		   made the screen read as crushed. */
 		.ex-controls {
-			padding: 14px var(--ag-side-land) 12px;
-		}
-
-		.ex-heading {
-			flex-direction: row;
-			align-items: baseline;
-			justify-content: space-between;
-			gap: 12px;
-			flex-wrap: wrap;
+			padding: 14px var(--ag-side-land) 14px;
 		}
 
 		.ex-list {
-			padding: 14px var(--ag-side-land) 20px;
+			padding: 16px var(--ag-side-land) 24px;
 		}
 
 		.ex-grid {
@@ -484,11 +488,7 @@
 		.ex-controls {
 			background: var(--ag-page);
 			border-bottom: none;
-			padding: 24px 24px 12px;
-		}
-
-		.ex-heading h1 {
-			font-size: 26px;
+			padding: 20px 24px 16px;
 		}
 
 		.ex-list {

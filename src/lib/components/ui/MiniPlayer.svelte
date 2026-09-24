@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import Icon from '$lib/components/ui/Icon.svelte';
+	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
 	import type { TourSessionState } from '$lib/stores/tourSession';
 
 	/**
@@ -11,16 +11,21 @@
 	type Props = {
 		session: TourSessionState;
 		onTogglePlay: () => void;
+		onStop: () => void;
 	};
 
-	let { session, onTogglePlay }: Props = $props();
+	let { session, onTogglePlay, onStop }: Props = $props();
 
 	const point = $derived(session.points.find((p) => p.id === session.currentPointId));
 	const heard = $derived(session.triggeredIds.length);
 	const percent = $derived(
 		session.duration > 0 ? Math.min((session.currentTime / session.duration) * 100, 100) : 0
 	);
-	const photo = $derived(point?.photos?.[0] ? `${base}/${point.photos[0]}` : null);
+	// Before the first geolocated narration fires there is no current point.
+	// Keep the mini player identifiable with the trail cover, then prefer the
+	// current point photo once one is active.
+	const photoPath = $derived(point?.photos?.[0] ?? session.imagePath);
+	const photo = $derived(photoPath ? `${base}/${photoPath}` : null);
 </script>
 
 <div class="mp">
@@ -52,24 +57,30 @@
 			<span class="sr-only">Volver al recorrido en curso</span>
 		</a>
 
-		<button
-			type="button"
-			class="mp-play"
-			aria-label={session.isPlaying ? 'Pausar el relato' : 'Reproducir el relato'}
-			aria-pressed={session.isPlaying}
-			onclick={onTogglePlay}
-		>
-			<Icon name={session.isPlaying ? 'pause' : 'play'} size={16} />
-		</button>
+		<div class="mp-controls">
+			<button type="button" class="mp-stop" aria-label="Detener recorrido" onclick={onStop}>
+				<AgActionMark action="trail-stop" size="sm" skin="navy" />
+			</button>
+
+			<button
+				type="button"
+				class="mp-play"
+				aria-label={session.isPlaying ? 'Pausar el relato' : `Escuchar el relato de ${point?.name ?? session.name}`}
+				aria-pressed={session.isPlaying}
+				onclick={onTogglePlay}
+			>
+				<AgActionMark action={session.isPlaying ? 'audio-pause' : 'audio-play'} size="sm" skin="navy" />
+			</button>
+		</div>
 	</div>
 </div>
 
 <style>
 	.mp {
 		position: fixed;
-		inset: auto 0 var(--ag-nav-inset-block) 0;
+		inset: auto var(--ag-app-gutter) var(--ag-nav-inset-block)
+			calc(var(--ag-app-gutter) + var(--ag-nav-inset-inline));
 		z-index: 39;
-		margin-left: var(--ag-nav-inset-inline);
 		background: var(--ag-navy);
 		box-shadow: 0 -8px 24px rgba(16, 44, 68, 0.28);
 	}
@@ -160,21 +171,42 @@
 		text-overflow: ellipsis;
 	}
 
+	.mp-controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: none;
+	}
+
+	.mp-stop,
 	.mp-play {
-		width: var(--ag-target);
+		width: 52px;
 		height: var(--ag-target);
 		flex: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #ffffff;
-		border: none;
-		border-radius: 50%;
-		color: var(--ag-navy);
+		border-radius: var(--ag-r-pill);
 		cursor: pointer;
 	}
 
+	.mp-stop {
+		background: transparent;
+		border: none;
+		color: #ffffff;
+	}
+
+	.mp-play {
+		background: transparent;
+		border: none;
+		color: #ffffff;
+	}
+
+	.mp-stop:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
 	.mp-play:hover {
-		background: var(--ag-green-soft);
+		background: rgba(255, 255, 255, 0.08);
 	}
 </style>

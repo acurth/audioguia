@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
+	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import { startTour } from '$lib/stores/tourSession';
 	import type { TourView } from '$lib/data/tourView';
@@ -149,10 +150,10 @@
 		<a
 			class="tc-action tc-action--play"
 			href={startHref}
-			aria-label={`Arrancar el recorrido: ${tour.name}`}
+			aria-label={`Iniciar el recorrido ${tour.name}`}
 			onclick={handlePlay}
 		>
-			<Icon name="play" size={14} />
+			<AgActionMark action="trail-start" />
 		</a>
 		<button
 			type="button"
@@ -163,13 +164,15 @@
 			aria-disabled={isDownloading}
 			onclick={handleDownloadButton}
 		>
-			{#if isDownloaded}
-				<Icon name="trash" size={14} />
-			{:else if hasFailed}
-				<Icon name="plus" size={14} />
-			{:else}
-				<Icon name="download" size={14} />
-			{/if}
+			<span class="tc-action-mark" aria-hidden="true">
+				{#if isDownloaded}
+					<Icon name="trash" size={14} />
+				{:else if hasFailed}
+					<Icon name="plus" size={14} />
+				{:else}
+					<Icon name="download" size={14} />
+				{/if}
+			</span>
 		</button>
 	</div>
 
@@ -331,15 +334,16 @@
 	}
 
 	.tc-action {
-		width: var(--ag-target);
+		width: 60px;
 		height: var(--ag-target);
+		padding: 0;
 		flex: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--ag-page);
-		border: 1px solid var(--ag-border-control);
-		border-radius: 50%;
+		background: transparent;
+		border: none;
+		border-radius: var(--ag-r-pill);
 		color: var(--ag-fg-2);
 		text-decoration: none;
 		cursor: pointer;
@@ -349,13 +353,25 @@
 		color: var(--ag-green-ink);
 	}
 
-	.tc-action.is-ready {
+	.tc-action-mark {
+		width: 60px;
+		height: 34px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		background: var(--ag-page);
+		border: 1px solid var(--ag-border);
+		border-radius: var(--ag-r-pill);
+	}
+
+	.tc-action.is-ready .tc-action-mark {
 		background: var(--ag-green-soft);
 		border-color: var(--ag-green-line);
 		color: var(--ag-green-ink);
 	}
 
-	.tc-action.is-error {
+	.tc-action.is-error .tc-action-mark {
 		background: #fdecea;
 		border-color: #f3b7b1;
 		color: var(--ag-danger);
@@ -366,7 +382,7 @@
 		cursor: default;
 	}
 
-	.tc-action:hover:not([aria-disabled='true']) {
+	.tc-action:hover:not([aria-disabled='true']) .tc-action-mark {
 		border-color: var(--ag-green);
 	}
 

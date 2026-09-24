@@ -16,17 +16,8 @@
 		distance: number | null;
 		/** The photo is showing. Drives the pressed state of the button. */
 		photoOpen?: boolean;
-		/**
-		 * Hide the button when the point has no photo, and when the walker
-		 * has left the point behind: a control that opens the photo of a
-		 * point they have walked past is just confusing.
-		 */
+		/** Hide the button only when the current point has no photo. */
 		showPhotoButton?: boolean;
-		/**
-		 * On tablet the photo is already on screen, so the button does not
-		 * open anything: it enlarges.
-		 */
-		photoAlwaysVisible?: boolean;
 		onTogglePhoto?: () => void;
 	};
 
@@ -37,16 +28,11 @@
 		distance,
 		photoOpen = false,
 		showPhotoButton = false,
-		photoAlwaysVisible = false,
 		onTogglePhoto
 	}: Props = $props();
 
 	const photoButtonLabel = $derived(
-		photoAlwaysVisible
-			? 'Ampliar la foto del punto'
-			: photoOpen
-				? 'Cerrar la foto del punto'
-				: 'Ver la foto del punto'
+		photoOpen ? 'Cerrar la foto del punto' : 'Ver la foto del punto'
 	);
 
 	const photo = $derived(point.photos?.[0] ? `${base}/${point.photos[0]}` : null);
@@ -56,11 +42,18 @@
 </script>
 
 <article class="cpc">
-	{#if photo}
-		<img class="cpc-photo" src={photo} alt="" width="56" height="56" />
-	{:else}
-		<span class="cpc-photo cpc-photo--empty" aria-hidden="true"></span>
-	{/if}
+	<!-- The number is the same token as the map markers, on purpose: it is what
+	     ties this card to the marker the walker just reached or tapped. The
+	     eyebrow underneath still reads "Punto 3 de 10", so the badge is
+	     decorative and a screen reader should not hear the figure twice. -->
+	<div class="cpc-figure">
+		{#if photo}
+			<img class="cpc-photo" src={photo} alt="" width="56" height="56" />
+		{:else}
+			<span class="cpc-photo cpc-photo--empty" aria-hidden="true"></span>
+		{/if}
+		<span class="cpc-number" aria-hidden="true">{number}</span>
+	</div>
 
 	<div class="cpc-text">
 		<p class="cpc-eyebrow">Punto {number} de {total}{distanceText}</p>
@@ -68,18 +61,17 @@
 	</div>
 
 	{#if showPhotoButton}
-		<!-- Always the photo icon, never an X: an X on this card would read
-		     as closing the point or the narration, not the photo. When the
-		     photo is open the button inverts, and aria-pressed says so. -->
+		<!-- Keep the photo glyph in both states. The pressed treatment, rather
+		     than a different symbol, shows that the popup is open. -->
 		<button
 			type="button"
 			class="cpc-photo-button"
-			class:is-open={photoOpen && !photoAlwaysVisible}
+			class:is-open={photoOpen}
 			aria-label={photoButtonLabel}
-			aria-pressed={photoAlwaysVisible ? undefined : photoOpen}
+			aria-pressed={photoOpen}
 			onclick={onTogglePhoto}
 		>
-			<Icon name={photoAlwaysVisible ? 'expand' : 'image'} size={20} stroke={photoOpen ? 2.2 : 2} />
+			<Icon name="image" size={20} stroke={photoOpen ? 2.4 : 2} />
 		</button>
 	{/if}
 </article>
@@ -95,13 +87,42 @@
 		box-sizing: border-box;
 	}
 
+	.cpc-figure {
+		position: relative;
+		flex: none;
+	}
+
 	.cpc-photo {
+		display: block;
 		width: 56px;
 		height: 56px;
-		flex: none;
 		border-radius: 8px;
 		object-fit: cover;
 		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* Same disc as .tm-point on the map: white, navy ring, navy figure. It
+	   overlaps the corner rather than sitting inside, so it reads as a marker
+	   pinned to the photo and not as part of the photo. */
+	.cpc-number {
+		position: absolute;
+		top: -8px;
+		left: -8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+		box-sizing: border-box;
+		border: 2px solid var(--ag-navy);
+		border-radius: 50%;
+		background: #ffffff;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.38);
+		color: var(--ag-navy);
+		font-size: 13px;
+		font-weight: 800;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.cpc-text {
@@ -133,24 +154,26 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(255, 255, 255, 0.14);
-		border: none;
+		background: #ffffff;
+		border: 2px solid transparent;
 		border-radius: 50%;
-		color: #ffffff;
+		color: var(--ag-navy);
 		cursor: pointer;
+		box-sizing: border-box;
 	}
 
 	.cpc-photo-button.is-open {
-		background: #ffffff;
-		color: var(--ag-navy);
+		background: var(--ag-green-soft);
+		border-color: var(--ag-green-line);
+		color: var(--ag-green-ink);
 	}
 
 	.cpc-photo-button:hover {
-		background: rgba(255, 255, 255, 0.26);
+		background: var(--ag-green-soft);
 	}
 
 	.cpc-photo-button.is-open:hover {
-		background: var(--ag-green-soft);
+		border-color: var(--ag-green-on-panel);
 	}
 
 	@media (min-width: 600px) and (orientation: landscape) {
@@ -161,6 +184,16 @@
 		.cpc-photo {
 			width: 48px;
 			height: 48px;
+		}
+
+		/* The card padding drops to 9 px here, so the badge pulls in with it
+		   to stay clear of the card edge. */
+		.cpc-number {
+			top: -6px;
+			left: -6px;
+			width: 26px;
+			height: 26px;
+			font-size: 11.5px;
 		}
 	}
 </style>

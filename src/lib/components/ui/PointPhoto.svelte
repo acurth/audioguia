@@ -72,6 +72,7 @@
 	.pp-veil {
 		position: absolute;
 		inset: 0;
+		z-index: 3;
 		background: rgba(11, 32, 51, 0.58);
 		border-radius: var(--ag-r-lg);
 	}
@@ -80,6 +81,7 @@
 		position: absolute;
 		top: 50%;
 		left: 50%;
+		z-index: 4;
 		transform: translate(-50%, -50%);
 		box-sizing: border-box;
 	}
@@ -104,9 +106,8 @@
 		object-fit: cover;
 	}
 
-	/* The close control is an X because it closes the photo and nothing else.
-	   The button on the point card stays a photo icon: an X there would read
-	   as closing the point or the narration. */
+	/* The popup owns the explicit close control; the point-card button keeps
+	   its photo glyph and communicates the open state through colour. */
 	.pp-close {
 		position: absolute;
 		top: -15px;

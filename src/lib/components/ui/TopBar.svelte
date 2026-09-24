@@ -10,9 +10,16 @@
 	type Props = {
 		/** Where the search button goes. Leave it out to hide the button. */
 		searchHref?: string;
+		/**
+		 * The page heading, printed at the right end of the bar. It is the
+		 * page's h1, so a page that passes it must not carry another one where
+		 * this bar is visible. The bar is hidden in landscape, so those layouts
+		 * keep their own heading.
+		 */
+		title?: string;
 	};
 
-	let { searchHref }: Props = $props();
+	let { searchHref, title }: Props = $props();
 </script>
 
 <header class="ag-topbar">
@@ -24,6 +31,10 @@
 			height="248"
 		/>
 	</a>
+
+	{#if title}
+		<h1 class="ag-topbar-title">{title}</h1>
+	{/if}
 
 	{#if searchHref}
 		<a class="ag-topbar-action" href={searchHref} aria-label="Buscar recorridos">
@@ -60,6 +71,14 @@
 		object-fit: contain;
 	}
 
+	.ag-topbar-title {
+		margin: 0;
+		font-size: 22px;
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		color: var(--ag-fg-1);
+	}
+
 	.ag-topbar-action {
 		width: var(--ag-target);
 		height: var(--ag-target);
@@ -79,11 +98,10 @@
 		color: var(--ag-green-ink);
 	}
 
-	/* In landscape the rail already carries the branding duty and the height
-	   is the scarce resource, so the bar goes away entirely. */
-	@media (min-width: 600px) and (orientation: landscape) {
-		.ag-topbar {
-			display: none;
-		}
-	}
+	/* The bar stays on every screen size, including landscape, tablet and
+	   desktop. It used to be hidden in landscape to save 60 px of height, on
+	   the grounds that the nav rail carried the branding instead. The rail
+	   never did, so landscape simply lost the isologo and the rule under it,
+	   and each page had to print its own heading in a different shape. One bar
+	   everywhere is what keeps the screens reading as one app. */
 </style>

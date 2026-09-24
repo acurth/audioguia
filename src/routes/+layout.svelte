@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import { env } from '$env/dynamic/public';
-	import { getTourRecords } from '$lib/data/tours';
+	import { getDevModeFromStorage, getTourRecords } from '$lib/data/tours';
+	import { getTourViews } from '$lib/data/tourView';
 	import { initOfflineStore, mergeDownloadState } from '$lib/stores/offline';
 	import AppNav from '$lib/components/ui/AppNav.svelte';
 	import MiniPlayer from '$lib/components/ui/MiniPlayer.svelte';
 	import { sectionForRoute } from '$lib/nav';
 	import { listOrigin } from '$lib/stores/listOrigin';
-	import { togglePlay, tourSession } from '$lib/stores/tourSession';
+	import { resumeTour, stopTour, togglePlay, tourSession } from '$lib/stores/tourSession';
 	import '../app.css';
 
 	let { children } = $props();
@@ -17,6 +19,20 @@
 	// The walk keeps running when the person leaves the tour screen, so every
 	// other screen offers the mini player as the way back into it.
 	let session = $state($tourSession);
+
+	/**
+	 * Put back a walk that a reload interrupted, here in the component body
+	 * rather than in onMount. The layout initialises before any page does, so
+	 * by the time the tour screen first renders the session is already right
+	 * and it draws the correct view once instead of correcting itself.
+	 *
+	 * It lives in the layout, not on the tour screen, because the session is
+	 * app-wide: this also brings the mini player back for someone who reloads
+	 * on Inicio. `getDevModeFromStorage` reads the query string as well as
+	 * sessionStorage, so a dev-only trail is found even before the block below
+	 * moves the flag across.
+	 */
+	if (browser) resumeTour(getTourViews(getDevModeFromStorage()), base);
 
 	const DEFAULT_SITE_ORIGIN = 'https://audioguia.io';
 	const siteOrigin = (env.PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN).replace(/\/+$/, '');
@@ -56,6 +72,7 @@
 	const isExplorar = $derived(routeId?.startsWith('/explorar') ?? false);
 	const isSobre = $derived(routeId?.startsWith('/sobre') ?? false);
 	const isCuenta = $derived(routeId?.startsWith('/cuenta') ?? false);
+	const isDev = $derived(routeId?.startsWith('/dev') ?? false);
 	const isTrack = $derived(Boolean($page.params.track));
 	const isRecorrido = $derived(routeId === '/[track]/recorrido');
 	const currentTrack = $derived($page.params.track);
@@ -102,8 +119,12 @@
 	});
 	// Offline and Cuenta are app screens with nothing to rank for: they stay
 	// out of the index but keep passing link equity.
+	//
+	// /dev/* has no route today — the motion preview was removed from the
+	// build — but the guard stays so that adding one back cannot quietly put
+	// an internal page into the index, which is exactly what happened before.
 	const robotsContent = $derived(
-		isOffline || isCuenta || isRecorrido ? 'noindex,follow' : 'index,follow'
+		isOffline || isCuenta || isRecorrido || isDev ? 'noindex,follow' : 'index,follow'
 	);
 	const jsonLd = $derived.by(() => {
 		const graph: Record<string, unknown>[] = [
@@ -174,6 +195,7 @@
 		}
 
 		initOfflineStore();
+
 		if ('serviceWorker' in navigator) {
 			const swUrl = `${appBase}/service-worker.js`;
 			const handleMessage = (event: MessageEvent) => {
@@ -243,7 +265,7 @@
 	</div>
 
 	{#if showMiniPlayer}
-		<MiniPlayer {session} onTogglePlay={togglePlay} />
+		<MiniPlayer {session} onTogglePlay={togglePlay} onStop={stopTour} />
 	{/if}
 
 	{#if showChrome}
@@ -281,7 +303,7 @@
 
 	/* Room for the mini player, which sits just above the tab bar. */
 	.ag-shell.has-miniplayer {
-		padding-bottom: calc(var(--ag-nav-inset-block) + 61px);
+		padding-bottom: calc(var(--ag-nav-inset-block) + var(--ag-miniplayer-height));
 	}
 
 	.ag-shell-main {
