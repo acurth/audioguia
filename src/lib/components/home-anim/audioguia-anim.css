@@ -1,0 +1,70 @@
+/* audioguia.io: animación "Cómo funciona" (loop de 30 s).
+   Todo está bajo .ag-wrap y los ids empiezan con ag- para no chocar con la PWA.
+   Si la PWA ya carga Nunito, podés borrar los tres @font-face. */
+@font-face{font-family:"Nunito";font-weight:400;font-style:normal;font-display:swap;src:url("fonts/nunito-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Nunito";font-weight:700;font-style:normal;font-display:swap;src:url("fonts/nunito-latin-700-normal.woff2") format("woff2")}
+@font-face{font-family:"Nunito";font-weight:800;font-style:normal;font-display:swap;src:url("fonts/nunito-latin-800-normal.woff2") format("woff2")}
+
+.ag-wrap{
+  --navy:#102c44; --green:#2a7440; --green-soft:#e9f4ed; --green-mid:#5e946c; --green-leaf:#37874d;
+  --orange:#c0641c; --white:#ffffff; --sand:#f4efe4; --water:#cfe3ea; --path:#d9c9a8;
+}
+/* The stage is 1080 x 1080 CSS px. .wrap scales it to fit its container. */
+.ag-wrap{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#ffffff;border-radius:20px;font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;color:#102c44;-webkit-font-smoothing:antialiased;text-align:left}
+#ag-stage{position:absolute;left:0;top:0;width:1080px;height:1080px;transform-origin:0 0;overflow:hidden;background:var(--white)}
+.ag-layer{position:absolute;left:0;top:0;width:1080px;height:1080px;will-change:transform,opacity}
+.ag-abs{position:absolute}
+
+/* Scene 1 and 5: logo centered */
+#ag-introT{left:60px;top:0;width:960px;height:1080px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:100px;font-weight:800;line-height:1.12;letter-spacing:-1px}
+#ag-endT{left:60px;top:360px;width:960px;text-align:center;font-size:88px;font-weight:800;line-height:1.1;letter-spacing:-0.5px}
+#ag-endS{left:150px;top:590px;width:780px;text-align:center;font-size:40px;font-weight:400;line-height:1.3;color:#3b5064}
+.ag-g{color:#2a7440}
+
+/* Header (scenes 2 to 4) */
+#ag-logoSmall{left:60px;top:52px;width:330px;height:85px}
+#ag-stepPill{right:60px;top:56px;height:64px;padding:0 28px;border-radius:32px;background:var(--green-soft);color:var(--green);font-size:30px;font-weight:800;display:flex;align-items:center;gap:14px}
+#ag-stepPill .n{display:inline-flex;width:40px;height:40px;border-radius:20px;background:var(--green);color:#fff;align-items:center;justify-content:center;font-size:26px}
+
+/* Map card */
+#ag-mapCard{left:60px;top:150px;width:960px;height:640px;border-radius:32px;overflow:hidden;background:var(--sand);box-shadow:0 10px 30px rgba(16,44,68,.10)}
+#ag-mapSvg{position:absolute;left:0;top:0;width:960px;height:640px}
+
+/* Start button over the map */
+#ag-startBtn{left:240px;top:500px;width:480px;height:96px;border-radius:48px;background:var(--green);color:#fff;font-size:40px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:16px;box-shadow:0 10px 24px rgba(42,116,64,.35)}
+#ag-tapRing{left:480px;top:548px;width:0;height:0;border-radius:50%;border:6px solid #fff;transform:translate(-50%,-50%)}
+
+/* Download button over the map */
+#ag-dlBtn{left:170px;top:500px;width:620px;height:96px;border-radius:48px;background:#fff;border:4px solid var(--green);box-sizing:border-box;overflow:hidden;box-shadow:0 10px 24px rgba(16,44,68,.18)}
+#ag-dlFill{position:absolute;left:0;top:0;height:100%;width:0;background:var(--green-soft)}
+#ag-dlLabel{position:absolute;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:16px;color:var(--green);font-size:36px;font-weight:800}
+#ag-dlLabel svg{width:40px;height:40px}
+#ag-dlBtn.ag-done{background:var(--green)}
+#ag-dlBtn.ag-done #ag-dlFill{display:none}
+#ag-dlBtn.ag-done #ag-dlLabel{color:#fff}
+#ag-tapRing2{left:480px;top:548px;width:0;height:0;border-radius:50%;border:6px solid var(--green);transform:translate(-50%,-50%)}
+
+/* Audio card over the map (bottom of card) */
+#ag-audioCard{left:40px;top:460px;width:880px;height:150px;border-radius:26px;background:#fff;box-shadow:0 12px 30px rgba(16,44,68,.18);display:flex;align-items:center;gap:26px;padding:0 30px;box-sizing:border-box}
+#ag-audioIcon{width:92px;height:92px;border-radius:24px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+#ag-audioIcon svg{width:56px;height:56px}
+#ag-audioText{flex:1 1 auto;min-width:0}
+#ag-audioTitle{font-size:38px;font-weight:800;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ag-audioSub{font-size:26px;font-weight:400;color:#3b5064;margin-top:6px;line-height:1.25}
+#ag-wave{display:flex;align-items:center;gap:6px;height:70px;flex:0 0 auto}
+#ag-wave i{display:block;width:8px;border-radius:4px;background:var(--green);height:12px}
+#ag-audioCard.ag-warn #ag-audioIcon{background:#fbe9dc}
+#ag-audioCard.ag-warn #ag-wave i{background:var(--orange)}
+
+/* Captions */
+#ag-cap{left:60px;top:840px;width:960px;text-align:center}
+#ag-capT{font-size:52px;font-weight:800;line-height:1.15;letter-spacing:-0.3px}
+#ag-capS{font-size:32px;font-weight:400;color:#3b5064;margin-top:14px;line-height:1.3}
+
+/* Scene 4: companions */
+#ag-pair{left:60px;top:150px;width:960px;height:640px;border-radius:32px;background:var(--green-soft);overflow:hidden}
+#ag-pairSvg{position:absolute;left:0;top:0;width:960px;height:640px}
+
+.ag-logo{background:url("assets/logo-audioguia.png") no-repeat center/contain}
+.ag-wrap *{box-sizing:content-box}
+.ag-wrap #ag-audioCard,.ag-wrap #ag-dlBtn{box-sizing:border-box}

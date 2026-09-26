@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import HomeAnimation from '$lib/components/home-anim/HomeAnimation.svelte';
 	import Eyebrow from '$lib/components/ui/Eyebrow.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import { SHOW_TIENDA, TIENDA_URL } from '$lib/config/features';
@@ -31,22 +32,18 @@
 				<h1>Senderos para escuchar</h1>
 				<p>
 					Una audioguía accesible para recorrer senderos a través del sonido. Los relatos se activan
-					solos a medida que caminás. Los senderos se caminan acompañados: la app guía con imágenes
-					a quien acompaña, y el relato y las señales sonoras acompañan a quienes escuchan.
-					<a class="in-how" href={`${base}/sobre`}>
-						Más información
-						<Icon name="chevron-right" size={16} />
-					</a>
+					solos mientras caminás. Se recorre acompañado: la app guía a quien acompaña, y el relato y
+					las señales sonoras, a quien escucha.
 				</p>
 			</div>
 
+			<!-- The "Cómo funciona" animation took the photo's place on 2026-09-26.
+			     The photo is kept for later use: static/media/home/intro-pasarela.jpg,
+			     665 by 1182, alt "Dos personas caminando por una pasarela de madera
+			     en el bosque, una de ellas con bastón blanco." Its styles, crop
+			     included, are in commit c417753 under .in-hero-photo img. -->
 			<div class="in-hero-photo">
-				<img
-					src={`${base}/media/home/intro-pasarela.jpg`}
-					alt="Dos personas caminando por una pasarela de madera en el bosque, una de ellas con bastón blanco."
-					width="665"
-					height="1182"
-				/>
+				<HomeAnimation />
 			</div>
 		</section>
 
@@ -116,22 +113,23 @@
 
 	/* Portrait opens with 55 px of air above the isologo. It is the same
 	   measure on every portrait screen that leads with the big logo.
-	   The second row is the photo, and it takes every pixel the text, the
-	   green card and the tab bar do not, with 110 px as the floor.
+	   The second row is the animation, and it takes every pixel the text, the
+	   green card and the tab bar do not, with 300 px as the floor. Below
+	   300 px the animation's captions cannot be read, so on a short phone
+	   (an iPhone SE, 667 px tall) the page scrolls instead and the green card
+	   starts just under the fold. Axel chose that on 2026-09-26.
 	   It used to be a subtraction against a hard-coded 522 px for "the text
 	   and the card". That number was an estimate, and being an estimate it was
 	   too generous: on a tall screen the difference was left over as a white
 	   band under the green card. Letting the row grow removes the estimate,
 	   and with it the band, on every screen size at once.
-	   The photo is a portrait frame, 665 by 1182, so every pixel of height it
-	   gains is a pixel it does not have to crop away.
 	   Note for whoever turns SHOW_TIENDA on: this row takes the whole leftover,
 	   so a third block under the green card would land below the fold with
 	   nothing to scroll. Give main an overflow and cap this row again. */
 	.in-hero {
 		flex: 1;
 		display: grid;
-		grid-template-rows: auto minmax(110px, 1fr);
+		grid-template-rows: auto minmax(300px, 1fr);
 		gap: 12px;
 		min-height: 0;
 		padding: var(--ag-top-logo) var(--ag-side) 0;
@@ -158,7 +156,7 @@
 
 	.in-hero p {
 		margin: 0;
-		font-size: 15px;
+		font-size: 17px;
 		line-height: 1.55;
 		text-align: center;
 		color: var(--ag-fg-2);
@@ -173,47 +171,9 @@
 		min-height: 0;
 	}
 
-	/* The crop is set from the top of the frame on purpose: the band that is
-	   kept has to hold both walkers' heads, whatever height the photo ends
-	   up with. */
-	.in-hero-photo img {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		display: block;
-		object-fit: cover;
-		object-position: 50% 28%;
-		border-radius: 12px;
-	}
-
-	/* The link rides at the end of the paragraph rather than sitting in a
-	   block of its own, which used to cost about 56 px of height on a phone.
-	   A link inside a sentence is the one case where the 44 px target does
-	   not apply, so it keeps the text's own size. */
-	.in-how {
-		white-space: nowrap;
-		color: var(--ag-green-ink);
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	/* Icon draws its svg as a block, which would push the chevron onto a line
-	   of its own at the end of the paragraph. */
-	.in-how :global(svg) {
-		display: inline-block;
-		vertical-align: -3px;
-	}
-
-	.in-how:hover {
-		text-decoration: underline;
-	}
-
-	/* 4 px, not the 24 px between blocks: "Cómo funciona" is a 44 px target,
-	   so it already carries about 12 px of its own air above and below the
-	   words. 4 px here makes the space under the link read the same as the
-	   space over it. The 10 px at the bottom keeps the green card off the
-	   tab bar. */
+	/* 4 px, not the 24 px between blocks: the animation's white square
+	   already has its own air under the caption. The 10 px at the bottom
+	   keeps the green card off the tab bar. */
 	.in-cta {
 		flex: none;
 		padding: 4px var(--ag-side) 10px;
@@ -377,13 +337,9 @@
 			grid-row: 1 / -1;
 			align-self: stretch;
 			min-height: 0;
-		}
-
-		/* Full bleed: no margin, no radius, and the crop set from the top so the
-		   two walkers stay in frame whatever the panel's proportion. */
-		.in-hero-photo img {
-			object-position: 50% 35%;
-			border-radius: 0;
+			/* The animation is square, so without this it would touch the
+			   column's edges. 24 px is the panel's own padding. */
+			margin: 24px;
 		}
 
 		.in-logo {
@@ -399,7 +355,7 @@
 		}
 
 		.in-hero p {
-			font-size: 14px;
+			font-size: 16px;
 			line-height: 1.6;
 			text-align: start;
 		}
@@ -451,7 +407,7 @@
 		}
 
 		.in-hero p {
-			font-size: 13px;
+			font-size: 15px;
 			line-height: 1.4;
 		}
 
