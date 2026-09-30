@@ -21,6 +21,7 @@ Quién: **Axel** o **Claude**. "Specs" quiere decir que Axel pasa los detalles a
   - Prueba (Axel): en el iPhone, descargar el sendero **desde adentro de la app de la pantalla de inicio** (puede tener almacenamiento separado del de Safari), poner modo avión, cerrar la app y abrirla de cero.
 
 - [ ] **2. Mini player: ajustes** — specs de Axel.
+  - 2026-09-29: hecho en el código. Play antes que Detener; segunda línea "En recorrido" y el tiempo total; tercera línea "Audio N de 10", barra de progreso y duración del audio. En Detalle, el sendero que está en curso muestra "Recorrido en curso" en lugar de "Iniciar recorrido · N puntos". Falta que Axel lo revise en el teléfono.
 - [ ] **3. Botón "Detener recorrido": ajustes** — specs de Axel.
 
 - [ ] **4. Varias fotos y videos cortos por punto** — Claude.

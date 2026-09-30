@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
-	import type { TourSessionState } from '$lib/stores/tourSession';
+	import { pointOnDeck, type TourSessionState } from '$lib/stores/tourSession';
+	import { formatClock, spokenDuration } from '$lib/utils/time';
 
 	/**
 	 * The bar above the tab bar while a walk is in progress. It exists
@@ -16,8 +17,13 @@
 
 	let { session, onTogglePlay, onStop }: Props = $props();
 
-	const point = $derived(session.points.find((p) => p.id === session.currentPointId));
-	const heard = $derived(session.triggeredIds.length);
+	// The same point the Recorrido screen shows: before any point fires, the
+	// first one, ready to play.
+	const point = $derived(pointOnDeck(session.points, session.currentPointId, session.triggeredIds));
+	/** Position of the point on deck, the same number Recorrido shows. */
+	const audioNumber = $derived(point ? session.points.findIndex((p) => p.id === point.id) + 1 : 0);
+	// The same walk clock the Recorrido screen shows in its header.
+	const elapsedSeconds = $derived(session.elapsedMs / 1000);
 	const percent = $derived(
 		session.duration > 0 ? Math.min((session.currentTime / session.duration) * 100, 100) : 0
 	);
@@ -29,10 +35,6 @@
 </script>
 
 <div class="mp">
-	<div class="mp-progress" aria-hidden="true">
-		<span style={`width:${percent.toFixed(1)}%`}></span>
-	</div>
-
 	<div class="mp-row">
 		<a class="mp-link" href={`${base}/${session.slug}/recorrido`}>
 			{#if photo}
@@ -49,27 +51,42 @@
 						<span class="mp-dot" aria-hidden="true"></span>
 						En recorrido
 					</span>
-					<span class="mp-counts">
-						{session.name} · {heard} de {session.points.length}
+					<!-- Screen readers read "12:34" as a time of day, so they get
+					     the duration in words instead. -->
+					<span class="mp-elapsed" aria-hidden="true">{formatClock(elapsedSeconds)}</span>
+					<span class="sr-only">, {spokenDuration(elapsedSeconds)}.</span>
+				</span>
+				<span class="mp-audio">
+					<span class="mp-audio-count">Audio {audioNumber} de {session.points.length}</span>
+					<!-- Shows progress only. Seeking is on the Recorrido screen. -->
+					<span class="mp-bar" aria-hidden="true">
+						<span style={`width:${percent.toFixed(1)}%`}></span>
 					</span>
+					<span class="mp-duration" aria-hidden="true">{formatClock(session.duration)}</span>
 				</span>
 			</span>
 			<span class="sr-only">Volver al recorrido en curso</span>
 		</a>
 
 		<div class="mp-controls">
-			<button type="button" class="mp-stop" aria-label="Detener recorrido" onclick={onStop}>
-				<AgActionMark action="trail-stop" size="sm" skin="navy" />
-			</button>
-
 			<button
 				type="button"
 				class="mp-play"
-				aria-label={session.isPlaying ? 'Pausar el relato' : `Escuchar el relato de ${point?.name ?? session.name}`}
+				aria-label={session.isPlaying
+					? 'Pausar el relato'
+					: `Escuchar el relato de ${point?.name ?? session.name}`}
 				aria-pressed={session.isPlaying}
 				onclick={onTogglePlay}
 			>
-				<AgActionMark action={session.isPlaying ? 'audio-pause' : 'audio-play'} size="sm" skin="navy" />
+				<AgActionMark
+					action={session.isPlaying ? 'audio-pause' : 'audio-play'}
+					size="sm"
+					skin="navy"
+				/>
+			</button>
+
+			<button type="button" class="mp-stop" aria-label="Detener recorrido" onclick={onStop}>
+				<AgActionMark action="trail-stop" size="sm" skin="navy" />
 			</button>
 		</div>
 	</div>
@@ -83,17 +100,6 @@
 		z-index: 39;
 		background: var(--ag-navy);
 		box-shadow: 0 -8px 24px rgba(16, 44, 68, 0.28);
-	}
-
-	.mp-progress {
-		height: 3px;
-		background: rgba(255, 255, 255, 0.18);
-	}
-
-	.mp-progress span {
-		display: block;
-		height: 100%;
-		background: var(--ag-green-on-panel);
 	}
 
 	.mp-row {
@@ -163,12 +169,49 @@
 		background: var(--ag-green-on-navy);
 	}
 
-	.mp-counts {
+	.mp-elapsed {
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		color: var(--ag-on-dark-2);
+	}
+
+	.mp-audio {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 4px;
+		min-width: 0;
 		font-size: 11px;
 		color: var(--ag-on-dark-2);
+	}
+
+	.mp-audio-count {
+		flex: none;
 		white-space: nowrap;
+	}
+
+	/* The same colours as the bar on Detalle, without the knob or the time
+	   under it: here it only shows how far the audio has gone. */
+	.mp-bar {
+		position: relative;
+		flex: 1;
+		min-width: 24px;
+		height: 4px;
+		border-radius: var(--ag-r-pill);
+		background: rgba(255, 255, 255, 0.18);
 		overflow: hidden;
-		text-overflow: ellipsis;
+	}
+
+	.mp-bar span {
+		position: absolute;
+		inset: 0 auto 0 0;
+		border-radius: var(--ag-r-pill);
+		background: var(--ag-green-on-panel);
+	}
+
+	.mp-duration {
+		flex: none;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.mp-controls {

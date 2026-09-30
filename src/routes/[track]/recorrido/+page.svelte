@@ -23,7 +23,8 @@
 		closePhoto,
 		cumulativeMeters,
 		cyclePlaybackRate,
-		playPoint,
+		playOnDeck,
+		pointOnDeck,
 		seekTo,
 		selectPointForPlayback,
 		sessionRestored,
@@ -32,7 +33,6 @@
 		startTour,
 		stopTour,
 		togglePhoto,
-		togglePlay,
 		tourSession,
 		wakeLockLine
 	} from '$lib/stores/tourSession';
@@ -82,11 +82,7 @@
 	const cumulative = $derived(cumulativeMeters(points));
 	const elapsed = $derived(formatClock(session.elapsedMs / 1000));
 
-	const currentPoint = $derived(
-		points.find((p) => p.id === session.currentPointId) ??
-			points.find((p) => !session.triggeredIds.includes(p.id)) ??
-			points[0]
-	);
+	const currentPoint = $derived(pointOnDeck(points, session.currentPointId, session.triggeredIds));
 	const currentNumber = $derived(
 		currentPoint ? points.findIndex((p) => p.id === currentPoint.id) + 1 : 0
 	);
@@ -166,11 +162,7 @@
 	}
 
 	function handlePlayCurrent() {
-		if (!currentPoint) return;
-		// Nothing loaded yet: the first tap starts this point rather than
-		// resuming silence.
-		if (!session.currentPointId) void playPoint(currentPoint, base);
-		else togglePlay();
+		playOnDeck(base);
 	}
 
 	function handleSelectMapPoint(point: (typeof points)[number]) {

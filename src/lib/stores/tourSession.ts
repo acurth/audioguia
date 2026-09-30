@@ -389,6 +389,37 @@ export function setPhotoFullscreen(open: boolean): void {
 	patch({ photoFullscreen: open });
 }
 
+/**
+ * The point the player is on: the one loaded, else the first one not heard
+ * yet, else the first. Before any point fires, this is point 01, so the
+ * Recorrido screen and the mini player offer the same audio.
+ */
+export function pointOnDeck(
+	points: TourPoint[],
+	currentPointId: string | null,
+	triggeredIds: string[]
+): TourPoint | undefined {
+	return (
+		points.find((p) => p.id === currentPointId) ??
+		points.find((p) => !triggeredIds.includes(p.id)) ??
+		points[0]
+	);
+}
+
+/**
+ * Play on either screen. With nothing loaded yet, the first tap starts the
+ * point on deck rather than resuming silence.
+ */
+export function playOnDeck(base: string): void {
+	const state = get(tourSession);
+	if (state.currentPointId) {
+		togglePlay();
+		return;
+	}
+	const point = pointOnDeck(state.points, null, state.triggeredIds);
+	if (point) void playPoint(point, base);
+}
+
 export function togglePlay(): void {
 	const player = ensureAudio();
 	if (!player || !player.src) return;
@@ -563,6 +594,7 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 	void playTrackingOn();
 
 	attachWatchers(base);
+	showDeckDuration(base);
 }
 
 /**
@@ -644,10 +676,39 @@ export function resumeTour(tours: TourView[], base: string): boolean {
 
 	const currentPoint = tour.points.find((point) => point.id === currentPointId);
 	if (currentPoint) loadPointPaused(currentPoint, base, stored.currentTime);
+	else showDeckDuration(base);
 
 	void syncWakeLock(true);
 	attachWatchers(base);
 	return true;
+}
+
+/**
+ * Reads only the length of the audio on deck, so the mini player shows it
+ * before anything plays. It uses its own element: the real player stays
+ * empty, and the first tap on play still starts the point from the top.
+ * The browser fetches a few KB of the file, not the whole audio.
+ */
+function showDeckDuration(base: string): void {
+	const state = get(tourSession);
+	const point = pointOnDeck(state.points, state.currentPointId, state.triggeredIds);
+	if (!point?.audio) return;
+
+	const probe = new Audio();
+	probe.preload = 'metadata';
+	probe.addEventListener(
+		'loadedmetadata',
+		() => {
+			const now = get(tourSession);
+			// A point may have started playing meanwhile, and then its own
+			// length is the one to show.
+			if (now.status !== 'tracking' || now.slug !== state.slug || now.currentPointId) return;
+			if (Number.isFinite(probe.duration)) patch({ duration: probe.duration });
+			probe.removeAttribute('src');
+		},
+		{ once: true }
+	);
+	probe.src = `${base}/${point.audio}`;
 }
 
 /**

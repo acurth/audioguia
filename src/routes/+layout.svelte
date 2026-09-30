@@ -11,7 +11,7 @@
 	import MiniPlayer from '$lib/components/ui/MiniPlayer.svelte';
 	import { sectionForRoute } from '$lib/nav';
 	import { listOrigin } from '$lib/stores/listOrigin';
-	import { resumeTour, stopTour, togglePlay, tourSession } from '$lib/stores/tourSession';
+	import { playOnDeck, resumeTour, stopTour, tourSession } from '$lib/stores/tourSession';
 	import '../app.css';
 
 	let { children } = $props();
@@ -277,7 +277,7 @@
 	</div>
 
 	{#if showMiniPlayer}
-		<MiniPlayer {session} onTogglePlay={togglePlay} onStop={stopTour} />
+		<MiniPlayer {session} onTogglePlay={() => playOnDeck(appBase)} onStop={stopTour} />
 	{/if}
 
 	{#if showChrome}

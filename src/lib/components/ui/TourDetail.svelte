@@ -7,7 +7,7 @@
 	import type { TourView } from '$lib/data/tourView';
 	import type { DownloadState } from '$lib/stores/offline';
 	import { getDisplayCounts, getProgressPercent } from '$lib/stores/downloads';
-	import { startTour } from '$lib/stores/tourSession';
+	import { startTour, tourSession } from '$lib/stores/tourSession';
 	import { difficultyLabel, formatKm, formatMB, formatPointCount } from '$lib/utils/tourMeta';
 
 	/**
@@ -47,6 +47,9 @@
 	const percent = $derived(getProgressPercent(state));
 	const counts = $derived(getDisplayCounts(state));
 	const startHref = $derived(`${base}/${tour.slug}/recorrido`);
+	// This trail is the one in the mini player. The button then only takes the
+	// person back to the walk: startTour does nothing for a walk already running.
+	const isRunning = $derived($tourSession.status === 'tracking' && $tourSession.slug === tour.slug);
 
 	// Shown in the live region under the buttons, so it reaches a screen
 	// reader as well as the screen.
@@ -118,9 +121,15 @@
 
 		<div class="td-actions">
 			<a class="td-start" href={startHref} onclick={handleStart}>
-				<span class="td-start-icon"><AgActionMark action="trail-start" size="sm" skin="navy" /></span>
-				<span class="td-start-text">Iniciar recorrido</span>
-				<span class="td-start-count">{formatPointCount(tour.pointCount)}</span>
+				<span class="td-start-icon"
+					><AgActionMark action="trail-start" size="sm" skin="navy" /></span
+				>
+				{#if isRunning}
+					<span class="td-start-text">Recorrido en curso</span>
+				{:else}
+					<span class="td-start-text">Iniciar recorrido</span>
+					<span class="td-start-count">{formatPointCount(tour.pointCount)}</span>
+				{/if}
 			</a>
 
 			<div class="td-secondary">
