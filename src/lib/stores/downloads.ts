@@ -137,6 +137,16 @@ export async function requestDownload(tour: TourView): Promise<void> {
 		return;
 	}
 
+	if (!navigator.onLine) {
+		setDownloadState(tour.id, {
+			status: 'error',
+			bytes: tour.sizeBytes,
+			stage: 'error',
+			errorMessage: 'No hay conexión. Descargalo cuando vuelvas a tener señal.'
+		});
+		return;
+	}
+
 	const files = getOfflineFiles(tour);
 	if (files.length === 0) {
 		setDownloadState(tour.id, {

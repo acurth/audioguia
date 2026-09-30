@@ -19,6 +19,7 @@
 		resetDownload,
 		verifyDownloads
 	} from '$lib/stores/downloads';
+	import { onlineStore } from '$lib/stores/connection';
 	import { positionStore, requestPosition } from '$lib/stores/position';
 	import { favouritesStore, initFavourites, toggleFavourite } from '$lib/stores/favourites';
 	import { distanceMeters } from '$lib/utils/tourMeta';
@@ -248,6 +249,13 @@
 				onToggleAccessible={() => (onlyAccessible = !onlyAccessible)}
 			/>
 
+			{#if !$onlineStore}
+				<p class="ex-offline" role="status">
+					<Icon name="alert" size={15} stroke={2.2} />
+					Sin conexión. Solo podés escuchar los recorridos que descargaste.
+				</p>
+			{/if}
+
 			{#if sort === 'cerca' && position.message}
 				<p class="ex-notice">{position.message}</p>
 			{/if}
@@ -416,6 +424,22 @@
 		font-size: 12.5px;
 		line-height: 1.5;
 		color: var(--ag-fg-2);
+	}
+
+	.ex-offline {
+		display: flex;
+		align-items: flex-start;
+		gap: 6px;
+		margin: 0;
+		font-size: 13px;
+		font-weight: 600;
+		line-height: 1.5;
+		color: var(--ag-fg-1);
+	}
+
+	.ex-offline :global(svg) {
+		flex: none;
+		margin-top: 2px;
 	}
 
 	.ex-list {
