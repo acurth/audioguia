@@ -17,7 +17,7 @@ Quién: **Axel** o **Claude**. "Specs" quiere decir que Axel pasa los detalles a
   - Páginas y archivos de la app: primero la red, después lo guardado. Así un cambio siempre llega al teléfono (hoy usa siempre lo guardado y nunca actualiza).
   - Audios y fotos de los senderos: primero lo guardado, como ahora.
   - Explorar sin conexión: aviso de que solo están los senderos descargados.
-  - 2026-09-29: hecho en el código y probado en Chrome con el servidor apagado (todas las páginas abren y la navegación funciona). Falta publicar y la prueba en el iPhone.
+  - 2026-09-29: hecho en el código y probado en Chrome con el servidor apagado (todas las páginas abren y la navegación funciona). Publicado el 2026-09-29 (run 36655541485). Falta la prueba en el iPhone.
   - Prueba (Axel): en el iPhone, descargar el sendero **desde adentro de la app de la pantalla de inicio** (puede tener almacenamiento separado del de Safari), poner modo avión, cerrar la app y abrirla de cero.
 
 - [ ] **2. Mini player: ajustes** — specs de Axel.

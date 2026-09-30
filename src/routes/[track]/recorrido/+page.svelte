@@ -23,6 +23,7 @@
 		closePhoto,
 		cumulativeMeters,
 		cyclePlaybackRate,
+		forgetWalk,
 		playOnDeck,
 		pointOnDeck,
 		seekTo,
@@ -151,6 +152,10 @@
 					? `${listHref}?recorrido=${encodeURIComponent(tour.slug)}`
 					: listHref;
 		}
+
+		// The saved walk goes now, not after the navigation: if that becomes a
+		// full page load, the finally block below never runs.
+		forgetWalk();
 
 		try {
 			await goto(target);

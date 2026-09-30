@@ -144,7 +144,15 @@ let lastSaveAt = 0;
  * a point firing, and the tab being hidden, which on iOS is the last thing
  * that happens before the browser is free to discard the page.
  */
+/**
+ * Set the moment the person presses Detener, before anything else happens.
+ * From then on nothing may write the walk back to storage: not the clock,
+ * not the page going to the background.
+ */
+let stopRequested = false;
+
 function persist(force = false): void {
+	if (stopRequested) return;
 	const now = Date.now();
 	if (!force && now - lastSaveAt < SAVE_INTERVAL_MS) return;
 	lastSaveAt = now;
@@ -564,6 +572,7 @@ export async function startTour(tour: TourView, base: string): Promise<void> {
 		return;
 	}
 
+	stopRequested = false;
 	startedAt = Date.now();
 	elapsedBaseMs = 0;
 	lastMotionSample = null;
@@ -651,6 +660,7 @@ export function resumeTour(tours: TourView[], base: string): boolean {
 	const currentPointId =
 		stored.currentPointId && knownIds.has(stored.currentPointId) ? stored.currentPointId : null;
 
+	stopRequested = false;
 	startedAt = Date.now();
 	elapsedBaseMs = stored.elapsedMs;
 	lastMotionSample = null;
@@ -734,8 +744,24 @@ function loadPointPaused(point: TourPoint, base: string, at: number): void {
 	player.addEventListener('loadedmetadata', applyTime);
 }
 
+/**
+ * Forgets the saved walk at once, while the screen still shows it. The
+ * Recorrido screen calls this before it navigates away and stops the walk
+ * after. If the navigation turns into a full page load, which happens when
+ * the app was updated and the old files are gone, the code after it never
+ * runs; without this the walk came back on the next launch.
+ */
+export function forgetWalk(): void {
+	if (!browser) return;
+	stopRequested = true;
+	clearSession();
+}
+
 export function stopTour(): void {
 	if (!browser) return;
+	// First, before anything below can fail: a reload after Detener must not
+	// bring the walk back.
+	forgetWalk();
 	if (get(tourSession).status === 'tracking') void playTrackingOff();
 
 	if (watchId !== null && navigator.geolocation) {
@@ -758,8 +784,6 @@ export function stopTour(): void {
 	void syncWakeLock(false);
 	lastMotionSample = null;
 	elapsedBaseMs = 0;
-	// Forget it for good: a reload after Detener must not bring the walk back.
-	clearSession();
 	tourSession.set({ ...initialState, statusMessage: 'Seguimiento detenido' });
 }
 

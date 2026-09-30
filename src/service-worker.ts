@@ -176,14 +176,17 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(
-        keys.map((key) => {
-          if (key.startsWith("audioguia-shell-") && key !== SHELL_CACHE) {
-            return caches.delete(key);
-          }
-          return Promise.resolve(true);
-        })
-      );
+      // Keep the previous version's files for one more update. A page that
+      // was open when this worker took over still runs the old scripts, and
+      // with no signal it can only load the rest of them from here. Deleting
+      // them turned its next navigation into a full page load. `version` is
+      // the build time, so the names sort by age.
+      const olderShells = keys
+        .filter((key) => key.startsWith("audioguia-shell-") && key !== SHELL_CACHE)
+        .sort((a, b) =>
+          b.localeCompare(a, undefined, { numeric: true })
+        );
+      await Promise.all(olderShells.slice(1).map((key) => caches.delete(key)));
       await Promise.all(
         keys
           .filter((key) => key.startsWith(TOUR_CACHE_PREFIX))
