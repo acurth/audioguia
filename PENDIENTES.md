@@ -23,6 +23,7 @@ Quién: **Axel** o **Claude**. "Specs" quiere decir que Axel pasa los detalles a
 - [ ] **2. Mini player: ajustes** — specs de Axel.
   - 2026-09-29: hecho en el código. Play antes que Detener; segunda línea "En recorrido" y el tiempo total; tercera línea "Audio N de 10", barra de progreso y duración del audio. En Detalle, el sendero que está en curso muestra "Recorrido en curso" en lugar de "Iniciar recorrido · N puntos". Falta que Axel lo revise en el teléfono.
 - [ ] **3. Botón "Detener recorrido": ajustes** — specs de Axel.
+  - 2026-09-29: hecho en el código. A la izquierda el tiempo del recorrido; a la derecha "Detener recorrido" y el botón con el mismo tamaño que el play del audio, en celeste claro. Falta que Axel lo revise en el teléfono y en el iPad.
 
 - [ ] **4. Varias fotos y videos cortos por punto** — Claude.
   - Por defecto sigue siendo 1 foto, y con 1 sola se ve igual que hoy.

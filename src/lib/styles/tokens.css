@@ -48,6 +48,8 @@
 	--ag-green-on-panel: #5cbe78;
 	--ag-green-soft: #e9f4ed; /* tinted fill                                */
 	--ag-green-line: #a9d6b8; /* tinted border                              */
+	--ag-sky-soft: #e3eef7; /* navy tint: fill of the stop control        */
+	--ag-sky-line: #a9c7de; /* navy tint: its border                      */
 
 	/* GPS blue: the only colour outside the brand. It must never read as one
 	   more trail point on a green forest, so it stays blue on purpose. */

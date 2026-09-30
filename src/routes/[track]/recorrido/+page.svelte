@@ -297,16 +297,16 @@
 						</p>
 					{/if}
 
-					<!-- Built to match Iniciar recorrido on the detail screen: same
-					     corner radius, same mark at the same size, same text. The
-					     only differences are the glyph it pairs with the walker and
-					     the background, which is explained on .rec-stop below. -->
-					<button type="button" class="rec-stop" onclick={handleStop}>
-						<span class="rec-stop-icon">
-							<AgActionMark action="trail-stop" size="sm" skin="navy" />
-						</span>
-						<span class="rec-stop-text">Detener recorrido</span>
-					</button>
+					<!-- The walk clock again, at the foot, beside the control that ends
+					     the walk. The mark is the size and shape of the audio play
+					     control, in light blue so the two never read as one. -->
+					<div class="rec-stop-bar">
+						<span class="rec-stop-elapsed" aria-hidden="true">{elapsed}</span>
+						<button type="button" class="rec-stop" onclick={handleStop}>
+							<span class="rec-stop-text">Detener recorrido</span>
+							<AgActionMark action="trail-stop" size="xl" skin="sky" />
+						</button>
+					</div>
 				{:else if canShowIdle}
 					<div class="rec-start-block">
 						<p class="rec-start-text">
@@ -525,32 +525,47 @@
 	   so the same colour would make the button disappear. It uses the raised
 	   panel navy instead — the same surface as the point card above it, which
 	   is how a raised control reads on this background. */
+	.rec-stop-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 12px 12px 12px 18px;
+		background: var(--ag-navy-panel);
+		border-radius: var(--ag-r-md);
+		box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+	}
+
+	/* The same figure and type as the clock beside En recorrido at the top. */
+	.rec-stop-elapsed {
+		font-size: 13.5px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		font-variant-numeric: tabular-nums;
+		color: #ffffff;
+	}
+
 	.rec-stop {
 		display: flex;
 		align-items: center;
-		justify-content: center;
 		gap: 12px;
 		min-height: var(--ag-target);
-		padding: 18px;
-		background: var(--ag-navy-panel);
+		padding: 0 0 0 12px;
+		background: none;
 		border: none;
-		border-radius: var(--ag-r-md);
-		box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+		border-radius: var(--ag-r-pill);
 		color: #ffffff;
 		font-family: inherit;
 		cursor: pointer;
-		box-sizing: border-box;
 	}
 
-	.rec-stop:hover {
-		background: #20496a;
+	.rec-stop:hover :global(.ag-action-mark) {
+		filter: brightness(1.04);
 	}
 
-	.rec-stop-icon {
-		flex: none;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.rec-stop:focus-visible {
+		outline: 3px solid #ffffff;
+		outline-offset: 3px;
 	}
 
 	.rec-stop-text {
@@ -695,7 +710,10 @@
 			display: flex;
 			flex-direction: column;
 			align-items: stretch;
-			justify-content: center;
+			/* Top, not centred: the map and the right column start on the same
+			   line. Centred, the map sat lower than the point card whenever
+			   the width, not the height, set its size. */
+			justify-content: flex-start;
 			padding-block: 20px;
 			box-sizing: border-box;
 		}
@@ -708,24 +726,20 @@
 			margin-inline: auto;
 		}
 
-		/* The stop button goes to the foot of its column. It is the last thing
-		   on the screen and the one most often reached for, and it is what
-		   turns the space under the player from a void into breathing room. */
+		/* The stop bar follows the player straight away, as it does in
+		   portrait. Pushed to the foot of the column it hung far from the
+		   controls on a tablet or a computer screen. */
 		.rec-panel {
 			flex: 1;
 			min-width: 0;
 			gap: 14px;
-			padding-top: 0;
+			/* The same 20 px the map keeps above itself, so both tops align. */
+			padding-top: 20px;
 			overflow-y: auto;
 		}
 
-		.rec-stop {
-			margin-top: auto;
-		}
-
-		/* Same trim as .td-start takes in landscape. */
-		.rec-stop {
-			padding: 14px;
+		.rec-stop-bar {
+			padding: 8px 10px 8px 14px;
 		}
 
 		.rec-stop-text {

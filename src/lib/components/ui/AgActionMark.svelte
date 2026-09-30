@@ -3,7 +3,7 @@
 
 	type Action = 'trail-start' | 'trail-stop' | 'audio-play' | 'audio-pause';
 	type Size = 'sm' | 'md' | 'lg' | 'xl';
-	type Skin = 'light' | 'green' | 'navy';
+	type Skin = 'light' | 'green' | 'navy' | 'sky';
 	type Props = { action: Action; size?: Size; skin?: Skin };
 
 	let { action, size = 'md', skin = 'light' }: Props = $props();
@@ -61,6 +61,15 @@
 		background: var(--ag-green-soft, #e9f4ed);
 		border: 1px solid var(--ag-green-line, #a9d6b8);
 		color: var(--ag-green-ink, #2a7440);
+	}
+
+	/* Light blue, a tint of the brand navy rather than the GPS blue, which
+	   means "you are here" on the map. Stopping the walk uses it, so it sits
+	   apart from the green of listening. Navy glyphs on it: 12.6:1. */
+	.ag-action-mark--sky {
+		background: var(--ag-sky-soft, #e3eef7);
+		border: 1px solid var(--ag-sky-line, #a9c7de);
+		color: var(--ag-navy, #102c44);
 	}
 
 	.ag-action-mark--navy {
