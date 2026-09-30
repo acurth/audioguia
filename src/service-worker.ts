@@ -261,6 +261,13 @@ async function cacheTourAssets(payload: {
       currentUrl: url
     });
 
+    // Already saved by an earlier try: Reintentar only fetches what is
+    // missing, and never throws away files that arrived.
+    if (await cache.match(url)) {
+      completed += 1;
+      continue;
+    }
+
     let cached = false;
     let lastError: unknown = undefined;
 
@@ -434,8 +441,54 @@ async function handleNavigation(event: FetchEvent): Promise<Response> {
  */
 async function handleAsset(request: Request): Promise<Response> {
   const cached = await caches.match(request);
-  if (cached) return cached;
+  if (cached) {
+    const range = request.headers.get("range");
+    if (range && cached.status === 200) return rangeResponse(cached, range);
+    return cached;
+  }
   return fetch(request);
+}
+
+/**
+ * Safari asks for audio in pieces ("Range: bytes=0-1", then the rest) and
+ * expects a 206 with just that piece. The server does this online, but the
+ * cache holds the whole file, and answering a range request with the whole
+ * file left the narration silent on an iPhone with no signal.
+ */
+async function rangeResponse(cached: Response, range: string): Promise<Response> {
+  const blob = await cached.blob();
+  const size = blob.size;
+  const match = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+
+  let start = 0;
+  let end = size - 1;
+  if (match) {
+    const [, from, to] = match;
+    if (from === "" && to !== "") {
+      // "bytes=-500": the last 500 bytes.
+      start = Math.max(size - Number(to), 0);
+    } else {
+      start = Number(from || 0);
+      if (to !== "") end = Math.min(Number(to), size - 1);
+    }
+  }
+
+  if (!match || start >= size || start > end) {
+    return new Response(null, {
+      status: 416,
+      headers: { "Content-Range": `bytes */${size}` }
+    });
+  }
+
+  const headers = new Headers(cached.headers);
+  headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
+  headers.set("Content-Length", String(end - start + 1));
+  headers.set("Accept-Ranges", "bytes");
+  return new Response(blob.slice(start, end + 1), {
+    status: 206,
+    statusText: "Partial Content",
+    headers
+  });
 }
 
 self.addEventListener("fetch", (event) => {

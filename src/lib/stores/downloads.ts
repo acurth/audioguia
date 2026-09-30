@@ -195,12 +195,58 @@ export async function deleteDownload(tour: TourView): Promise<void> {
 	setDownloadState(tour.id, { status: 'idle', bytes: tour.sizeBytes });
 }
 
-/** Clears a half-finished cache, optionally starting the download again. */
+type CacheResult = { okCount: number; failCount: number; failedUrls: string[] };
+
+/**
+ * What a finished download leaves in the store. A download with files missing
+ * is an error, not "downloaded": offline, the missing audios stay silent and
+ * the missing photos blank, so the card has to offer Reintentar.
+ */
+export function finishedDownloadState(
+	tour: TourView | undefined,
+	result: CacheResult | undefined
+): Partial<DownloadState> {
+	const name = tour?.name ?? 'El recorrido';
+	const failed = result?.failCount ?? 0;
+	if (failed > 0) {
+		const total = failed + (result?.okCount ?? 0);
+		const message = `No se descargaron ${failed} de ${total} archivos. Tocá Reintentar para bajar solo esos.`;
+		return {
+			status: 'error',
+			stage: 'error',
+			bytes: tour?.sizeBytes,
+			lastUpdate: Date.now(),
+			errorMessage: message,
+			screenreaderText: `${name}. ${message}`,
+			cacheResult: result
+		};
+	}
+	return {
+		status: 'downloaded',
+		bytes: tour?.sizeBytes,
+		downloadedBytes: tour?.sizeBytes,
+		progress: 100,
+		stage: 'done',
+		lastUpdate: Date.now(),
+		errorMessage: undefined,
+		screenreaderText: `${name} quedó listo sin conexión.`,
+		cacheResult: result
+	};
+}
+
+/**
+ * Reintentar keeps what already arrived: the service worker skips files that
+ * are in the cache, so a second try only fetches the missing ones. Without
+ * `restart` this deletes the tour's files instead.
+ */
 export async function resetDownload(tour: TourView, restart = false): Promise<void> {
 	if (!browser || !('caches' in window)) return;
+	if (restart) {
+		await requestDownload(tour);
+		return;
+	}
 	await caches.delete(`${TOUR_CACHE_PREFIX}${tour.id}`);
 	setDownloadState(tour.id, { status: 'idle', bytes: tour.sizeBytes });
-	if (restart) await requestDownload(tour);
 }
 
 /**
@@ -223,16 +269,7 @@ export function listenToDownloadProgress(getTour: (id: string) => TourView | und
 		const prev = current[tourId];
 
 		if (data.type === 'tour-downloaded') {
-			mergeDownloadState(tourId, {
-				status: 'downloaded',
-				bytes: tour?.sizeBytes,
-				downloadedBytes: tour?.sizeBytes,
-				progress: 100,
-				stage: 'done',
-				lastUpdate: Date.now(),
-				screenreaderText: `${tour?.name ?? 'El recorrido'} quedó listo sin conexión.`,
-				cacheResult: data.result
-			});
+			mergeDownloadState(tourId, finishedDownloadState(tour, data.result as CacheResult));
 			return;
 		}
 
@@ -284,9 +321,10 @@ export function listenToDownloadProgress(getTour: (id: string) => TourView | und
 }
 
 /**
- * A download whose cache vanished (the browser evicted it, or the worker died)
- * would otherwise sit at "downloading" for ever. This marks those as failed so
- * the card can offer a retry.
+ * Checks what the store says against what the cache holds. A download whose
+ * cache vanished (the browser evicted it, or the worker died) would otherwise
+ * sit at "downloading" for ever, and a "downloaded" tour with files missing
+ * would fail in silence on the trail. Both become errors the card can retry.
  */
 export async function verifyDownloads(tours: TourView[]): Promise<void> {
 	if (!browser || !('caches' in window)) return;
@@ -297,12 +335,19 @@ export async function verifyDownloads(tours: TourView[]): Promise<void> {
 	});
 	unsubscribe();
 
+	// The worker saves files under its scope, so resolve against the same.
+	const registration =
+		'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+	const scope = registration?.scope ?? `${location.origin}/`;
+
 	await Promise.all(
-		tours
-			.filter((tour) => current[tour.id]?.status === 'downloading')
-			.map(async (tour) => {
-				try {
-					const cache = await caches.open(`${TOUR_CACHE_PREFIX}${tour.id}`);
+		tours.map(async (tour) => {
+			const status = current[tour.id]?.status;
+			if (status !== 'downloading' && status !== 'downloaded') return;
+			try {
+				const cache = await caches.open(`${TOUR_CACHE_PREFIX}${tour.id}`);
+
+				if (status === 'downloading') {
 					const keys = await cache.keys();
 					if (keys.length === 0) {
 						mergeDownloadState(tour.id, {
@@ -313,9 +358,27 @@ export async function verifyDownloads(tours: TourView[]): Promise<void> {
 							lastUpdate: Date.now()
 						});
 					}
-				} catch (err) {
-					console.error('Failed to verify cache', err);
+					return;
 				}
-			})
+
+				const files = getOfflineFiles(tour);
+				let missing = 0;
+				for (const file of files) {
+					if (!(await cache.match(new URL(file, scope).href))) missing += 1;
+				}
+				if (missing > 0) {
+					const message = `Faltan ${missing} de ${files.length} archivos. Tocá Reintentar para bajar solo esos.`;
+					mergeDownloadState(tour.id, {
+						status: 'error',
+						stage: 'error',
+						errorMessage: message,
+						screenreaderText: `${tour.name}. ${message}`,
+						lastUpdate: Date.now()
+					});
+				}
+			} catch (err) {
+				console.error('Failed to verify cache', err);
+			}
+		})
 	);
 }

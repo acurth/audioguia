@@ -7,6 +7,7 @@
 	import { getDevModeFromStorage, getTourRecords } from '$lib/data/tours';
 	import { getTourViews } from '$lib/data/tourView';
 	import { initOfflineStore, mergeDownloadState } from '$lib/stores/offline';
+	import { finishedDownloadState, verifyDownloads } from '$lib/stores/downloads';
 	import AppNav from '$lib/components/ui/AppNav.svelte';
 	import MiniPlayer from '$lib/components/ui/MiniPlayer.svelte';
 	import { sectionForRoute } from '$lib/nav';
@@ -205,6 +206,9 @@
 		}
 
 		initOfflineStore();
+		// Once per launch: a trail marked as downloaded with files missing
+		// turns into Reintentar here, before anyone walks off with it.
+		void verifyDownloads(getTourViews(getDevModeFromStorage()));
 
 		if ('serviceWorker' in navigator) {
 			const swUrl = `${appBase}/service-worker.js`;
@@ -212,10 +216,9 @@
 				const data = event.data;
 				if (!data) return;
 				if (data.type === 'tour-downloaded') {
-					mergeDownloadState(data.id as string, {
-						status: 'downloaded',
-						cacheResult: data.result as { okCount: number; failCount: number; failedUrls: string[] }
-					});
+					const id = data.id as string;
+					const tour = getTourViews(getDevModeFromStorage()).find((t) => t.id === id);
+					mergeDownloadState(id, finishedDownloadState(tour, data.result));
 				}
 				if (data.type === 'tour-deleted') {
 					mergeDownloadState(data.id as string, { status: 'idle', cacheResult: undefined });
