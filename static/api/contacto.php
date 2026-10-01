@@ -23,6 +23,17 @@ const RATE_MAX = 5;
 const RATE_WINDOW = 3600;
 /** A person cannot fill the form faster than this, in seconds. */
 const MIN_FILL_SECONDS = 3;
+/**
+ * The reasons offered in the form. Same list as src/lib/config/contact.ts:
+ * change both together.
+ */
+const REASONS = [
+    'Quiero información',
+    'Quiero dar mi opinión',
+    'Quiero crear un sendero',
+    'Quiero ayudar a programar',
+    'Tengo otro motivo',
+];
 
 /** @param array<string, mixed> $data */
 function reply(int $status, array $data): never
@@ -108,6 +119,22 @@ if (is_int($elapsed) && $elapsed < MIN_FILL_SECONDS * 1000) {
     reply(200, ['ok' => true]);
 }
 
+// The small sum. Both numbers come from the form, so this only stops bots
+// that fill fields blindly; the honeypot, the timer and the rate limit do
+// the rest.
+$sumA = $input['suma_a'] ?? null;
+$sumB = $input['suma_b'] ?? null;
+$sum = $input['suma'] ?? null;
+if (!is_int($sumA) || !is_int($sumB) || !is_int($sum)
+    || $sumA < 1 || $sumA > 9 || $sumB < 1 || $sumB > 9 || $sumA + $sumB !== $sum) {
+    fail(422, 'La suma no es correcta. Probá de nuevo.');
+}
+
+$reason = $input['motivo'] ?? '';
+if (!is_string($reason) || !in_array($reason, REASONS, true)) {
+    fail(422, 'Elegí un motivo.');
+}
+
 $fields = [];
 foreach (LIMITS as $name => $max) {
     $value = $input[$name] ?? '';
@@ -142,8 +169,9 @@ if (rate_limited($ip)) {
     fail(429, 'Recibimos varios mensajes seguidos desde tu conexión. Probá de nuevo en una hora.');
 }
 
-$subject = '[audioguia.io] ' . $fields['asunto'];
+$subject = '[audioguia.io] ' . $reason . ' · ' . $fields['asunto'];
 $body = "Mensaje enviado desde el formulario de contacto de audioguia.io\n\n"
+    . 'Motivo: ' . $reason . "\n"
     . 'Nombre: ' . $fields['nombre'] . "\n"
     . 'Email: ' . $fields['email'] . "\n"
     . 'Asunto: ' . $fields['asunto'] . "\n\n"
