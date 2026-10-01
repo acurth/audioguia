@@ -4,6 +4,7 @@ import type { TourView } from '$lib/data/tourView';
 import { distanceMeters, type TourPoint } from '$lib/utils/tourMeta';
 import { playTrackingOff, playTrackingOn } from '$lib/utils/earcons';
 import { clearSession, loadSession, saveSession } from '$lib/stores/tourSessionStorage';
+import { disableCompass } from '$lib/stores/compass';
 import { isWakeLockSupported, releaseWakeLock, requestWakeLock } from '$lib/utils/wakeLock';
 
 /**
@@ -782,6 +783,7 @@ export function stopTour(): void {
 	}
 
 	void syncWakeLock(false);
+	disableCompass();
 	lastMotionSample = null;
 	elapsedBaseMs = 0;
 	tourSession.set({ ...initialState, statusMessage: 'Seguimiento detenido' });

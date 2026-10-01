@@ -7,6 +7,7 @@
 	import AppNav from '$lib/components/ui/AppNav.svelte';
 	import AudioPlayer from '$lib/components/ui/AudioPlayer.svelte';
 	import CurrentPointCard from '$lib/components/ui/CurrentPointCard.svelte';
+	import DistanceHud from '$lib/components/ui/DistanceHud.svelte';
 	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import MovementIndicator from '$lib/components/MovementIndicator.svelte';
@@ -18,6 +19,7 @@
 	import { downloadStateStore, initOfflineStore } from '$lib/stores/offline';
 	import type { DownloadState } from '$lib/stores/offline';
 	import { readListOrigin } from '$lib/stores/listOrigin';
+	import { compass } from '$lib/stores/compass';
 	import { formatClock } from '$lib/utils/time';
 	import { pointMedia } from '$lib/utils/tourMeta';
 	import {
@@ -261,7 +263,15 @@
 						position={isThisTour ? session.position : null}
 						tourName={tour.name}
 						onSelectPoint={isThisTour ? handleSelectMapPoint : undefined}
-					/>
+					>
+						{#if isThisTour}
+							<DistanceHud
+								{points}
+								triggeredIds={session.triggeredIds}
+								position={session.position}
+							/>
+						{/if}
+					</TrailMap>
 
 					{#if showOverlayPhoto && mapWidth > 0}
 						<PointPhoto
@@ -362,6 +372,19 @@
 						<div>
 							<dt>Avance</dt>
 							<dd>{Math.round(session.walkedMeters)} m</dd>
+						</div>
+						<div>
+							<dt>Brújula</dt>
+							<dd>
+								{$compass.active && $compass.heading != null
+									? `${Math.round($compass.heading)}° (lectura ${Math.round($compass.raw ?? 0)}°, pantalla ${$compass.screenAngle}°)`
+									: {
+											off: 'sin activar',
+											asking: 'pidiendo permiso',
+											on: 'sí',
+											unavailable: 'no, modo mapa'
+										}[$compass.status]}
+							</dd>
 						</div>
 						<div>
 							<dt>Pantalla activa</dt>

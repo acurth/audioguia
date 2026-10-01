@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import MapAttribution from '$lib/components/ui/MapAttribution.svelte';
 	import { loadBasemap, releaseBasemap } from '$lib/stores/trailBasemap';
 	import {
@@ -30,9 +31,17 @@
 		tourName: string;
 		/** Enables point navigation while a tour is running. */
 		onSelectPoint?: (point: TourPoint) => void;
+		/**
+		 * Drawn inside the map, over it. The distance box goes here so its
+		 * corner is the map's corner: in landscape the panel around the map
+		 * is taller than the map, and a box placed in the panel ended up
+		 * below it.
+		 */
+		children?: Snippet;
 	};
 
-	let { points, triggeredIds, currentPointId, position, tourName, onSelectPoint }: Props = $props();
+	let { points, triggeredIds, currentPointId, position, tourName, onSelectPoint, children }: Props =
+		$props();
 
 	// Drawing surface, in the ratio the redesign specifies for the panel. These
 	// come from mapboxStatic so the image we request is exactly this size.
@@ -260,6 +269,8 @@
 			{box.item.point.id}
 		</button>
 	{/each}
+
+	{@render children?.()}
 
 	<!-- Only when Mapbox content is actually on screen. Their credits have no
 	     business sitting over a map we drew ourselves. -->
