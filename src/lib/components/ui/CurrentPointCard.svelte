@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import { firstPhoto, pointMedia } from '$lib/utils/tourMeta';
 	import type { TourPoint } from '$lib/utils/tourMeta';
 
 	/**
@@ -31,11 +32,22 @@
 		onTogglePhoto
 	}: Props = $props();
 
-	const photoButtonLabel = $derived(
-		photoOpen ? 'Cerrar la foto del punto' : 'Ver la foto del punto'
-	);
+	const media = $derived(pointMedia(point));
+	/** Shown on the button only when there is more than one to see. */
+	const mediaCount = $derived(media.length > 1 ? media.length : 0);
+	const photoButtonLabel = $derived.by(() => {
+		if (photoOpen) return mediaCount ? 'Cerrar las fotos del punto' : 'Cerrar la foto del punto';
+		if (!mediaCount) return 'Ver la foto del punto';
+		const videos = media.filter((item) => item.kind === 'video').length;
+		const photos = media.length - videos;
+		const parts = [];
+		if (photos) parts.push(photos === 1 ? '1 foto' : `${photos} fotos`);
+		if (videos) parts.push(videos === 1 ? '1 video' : `${videos} videos`);
+		return `Ver ${parts.join(' y ')} del punto`;
+	});
 
-	const photo = $derived(point.photos?.[0] ? `${base}/${point.photos[0]}` : null);
+	const thumbPath = $derived(firstPhoto(point));
+	const photo = $derived(thumbPath ? `${base}/${thumbPath}` : null);
 	const distanceText = $derived(
 		distance != null && Number.isFinite(distance) ? ` · a ${Math.round(distance)} m` : ''
 	);
@@ -72,6 +84,9 @@
 			onclick={onTogglePhoto}
 		>
 			<Icon name="image" size={20} stroke={photoOpen ? 2.4 : 2} />
+			{#if mediaCount}
+				<span class="cpc-photo-count" aria-hidden="true">{mediaCount}</span>
+			{/if}
 		</button>
 	{/if}
 </article>
@@ -148,6 +163,7 @@
 	}
 
 	.cpc-photo-button {
+		position: relative;
 		width: var(--ag-target);
 		height: var(--ag-target);
 		flex: none;
@@ -160,6 +176,29 @@
 		color: var(--ag-navy);
 		cursor: pointer;
 		box-sizing: border-box;
+	}
+
+	/* How many photos and videos, pinned to the button the way the point
+	   number is pinned to the thumbnail. Only when there is more than one. */
+	.cpc-photo-count {
+		position: absolute;
+		top: -5px;
+		right: -5px;
+		min-width: 20px;
+		height: 20px;
+		padding: 0 5px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 2px solid var(--ag-navy-panel);
+		border-radius: 999px;
+		background: var(--ag-green-on-panel);
+		color: var(--ag-navy);
+		font-size: 11px;
+		font-weight: 800;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.cpc-photo-button.is-open {

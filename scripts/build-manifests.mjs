@@ -5,7 +5,8 @@ const rootDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), ".
 const toursDir = path.join(rootDir, "src", "lib", "data", "tours");
 const staticDir = path.join(rootDir, "static");
 const audioRoot = path.join(staticDir, "audio", "tours");
-const imageExtRegex = /\.(avif|jpe?g|png|webp)$/i;
+// Photos and the short videos that can sit between them.
+const mediaExtRegex = /\.(avif|jpe?g|png|webp|mp4)$/i;
 
 async function listMp3Files(dir) {
   const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
@@ -66,7 +67,7 @@ async function buildManifestForTour(jsonPath) {
     if (!Array.isArray(photos)) continue;
     for (const photo of photos) {
       if (typeof photo !== "string") continue;
-      if (!imageExtRegex.test(photo)) continue;
+      if (!mediaExtRegex.test(photo)) continue;
       mediaPaths.add(photo.replace(/^\/+/, ""));
     }
   }

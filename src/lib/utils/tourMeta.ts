@@ -11,6 +11,10 @@ export type TourPoint = {
 	lng: number;
 	radius?: number;
 	audio?: string;
+	/**
+	 * Photos, and short silent .mp4 videos between them, in the order they
+	 * are shown. Most points have one photo; the most is three.
+	 */
 	photos?: string[];
 	/**
 	 * What the photo shows, for a screen reader. It has to describe the
@@ -19,6 +23,20 @@ export type TourPoint = {
 	 */
 	photoAlt?: string;
 };
+
+export type PointMedia = { src: string; kind: 'photo' | 'video' };
+
+/** A point's photos and videos, told apart by the file extension. */
+export function pointMedia(point: TourPoint | null | undefined): PointMedia[] {
+	return (point?.photos ?? [])
+		.filter(Boolean)
+		.map((src) => ({ src, kind: /\.mp4$/i.test(src) ? 'video' : 'photo' }));
+}
+
+/** The first photo, for thumbnails: a video cannot stand in for one. */
+export function firstPhoto(point: TourPoint | null | undefined): string | null {
+	return pointMedia(point).find((item) => item.kind === 'photo')?.src ?? null;
+}
 
 export type Difficulty = 'facil' | 'exigente';
 

@@ -3,6 +3,7 @@
 	import AgActionMark from '$lib/components/ui/AgActionMark.svelte';
 	import { pointOnDeck, type TourSessionState } from '$lib/stores/tourSession';
 	import { formatClock, spokenDuration } from '$lib/utils/time';
+	import { firstPhoto } from '$lib/utils/tourMeta';
 
 	/**
 	 * The bar above the tab bar while a walk is in progress. It exists
@@ -30,7 +31,7 @@
 	// Before the first geolocated narration fires there is no current point.
 	// Keep the mini player identifiable with the trail cover, then prefer the
 	// current point photo once one is active.
-	const photoPath = $derived(point?.photos?.[0] ?? session.imagePath);
+	const photoPath = $derived(firstPhoto(point) ?? session.imagePath);
 	const photo = $derived(photoPath ? `${base}/${photoPath}` : null);
 </script>
 

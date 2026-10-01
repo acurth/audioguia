@@ -19,6 +19,7 @@
 	import type { DownloadState } from '$lib/stores/offline';
 	import { readListOrigin } from '$lib/stores/listOrigin';
 	import { formatClock } from '$lib/utils/time';
+	import { pointMedia } from '$lib/utils/tourMeta';
 	import {
 		closePhoto,
 		cumulativeMeters,
@@ -94,15 +95,25 @@
 		currentPoint ? `Relato del punto ${currentPoint.id}` : 'Relato del punto'
 	);
 
-	const photoSrc = $derived(currentPoint?.photos?.[0] ? `${base}/${currentPoint.photos[0]}` : null);
+	const media = $derived(
+		pointMedia(currentPoint).map((item) => ({ ...item, src: `${base}/${item.src}` }))
+	);
+	const hasMedia = $derived(media.length > 0);
+	/** Which photo or video is showing, shared by the postcard and the viewer. */
+	let mediaIndex = $state(0);
+	// A new point starts again at its first photo.
+	$effect(() => {
+		void currentPoint?.id;
+		mediaIndex = 0;
+	});
 	// No written description yet means the photo is decorative: a screen
 	// reader gets the point name from the card and the rest from the audio.
 	const photoAlt = $derived(currentPoint?.photoAlt ?? '');
 	/** Every current point with a photo exposes the control. This includes the
 	 * first point selected by default as soon as the walk starts, before GPS
 	 * has produced a distance or the walker has tapped a map marker. */
-	const canShowPhoto = $derived(isThisTour && !!photoSrc);
-	const showOverlayPhoto = $derived(isThisTour && !!photoSrc && session.photoOpen);
+	const canShowPhoto = $derived(isThisTour && hasMedia);
+	const showOverlayPhoto = $derived(isThisTour && hasMedia && session.photoOpen);
 
 	// Everything a screen reader needs, in one line, refreshed as it changes.
 	const spokenStatus = $derived.by(() => {
@@ -252,9 +263,10 @@
 						onSelectPoint={isThisTour ? handleSelectMapPoint : undefined}
 					/>
 
-					{#if showOverlayPhoto && photoSrc && mapWidth > 0}
+					{#if showOverlayPhoto && mapWidth > 0}
 						<PointPhoto
-							src={photoSrc}
+							items={media}
+							bind:index={mediaIndex}
 							alt={photoAlt}
 							boxWidth={mapWidth}
 							boxHeight={mapHeight}
@@ -364,9 +376,10 @@
 	<AppNav current="explorar" variant="dark" />
 </div>
 
-{#if session.photoFullscreen && photoSrc && currentPoint}
+{#if session.photoFullscreen && hasMedia && currentPoint}
 	<PhotoViewer
-		src={photoSrc}
+		items={media}
+		bind:index={mediaIndex}
 		alt={photoAlt}
 		title={currentPoint.name}
 		onClose={() => setPhotoFullscreen(false)}

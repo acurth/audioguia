@@ -26,9 +26,14 @@
 
 <script lang="ts">
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import MediaStrip from '$lib/components/ui/MediaStrip.svelte';
+	import type { PointMedia } from '$lib/utils/tourMeta';
 
 	type Props = {
-		src: string;
+		/** The point's photos and videos, full URLs. Usually just one. */
+		items: PointMedia[];
+		/** Which one is showing. Shared with the full-screen viewer. */
+		index: number;
 		/** Empty string when the point has no written description yet. */
 		alt: string;
 		/** Size of the map panel the postcard sits over. */
@@ -38,30 +43,40 @@
 		onExpand: () => void;
 	};
 
-	let { src, alt, boxWidth, boxHeight, onClose, onExpand }: Props = $props();
+	let {
+		items,
+		index = $bindable(0),
+		alt,
+		boxWidth,
+		boxHeight,
+		onClose,
+		onExpand
+	}: Props = $props();
 
-	// Until the file has loaded we do not know its shape, so the postcard
-	// takes the ratio of the hole and settles when the image arrives.
+	// Until the first file has loaded we do not know its shape, so the
+	// postcard takes the ratio of the hole and settles when it arrives. The
+	// first item sets the size for all of them: a postcard that changed shape
+	// on every swipe would jump under the finger. The others are cropped to it.
 	let naturalRatio = $state<number | null>(null);
 
 	const ratio = $derived(naturalRatio ?? (boxHeight > 0 ? boxWidth / boxHeight : 1));
 	const size = $derived(postcardSize(boxWidth, boxHeight, ratio));
-
-	function handleLoad(event: Event) {
-		const img = event.currentTarget as HTMLImageElement;
-		if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-			naturalRatio = img.naturalWidth / img.naturalHeight;
-		}
-	}
 </script>
 
 <!-- The map goes under a veil so the photo reads as a popup over it. -->
 <div class="pp-veil" aria-hidden="true"></div>
 
 <div class="pp-card" style={`width:${size.width}px; height:${size.height}px;`}>
-	<button type="button" class="pp-image" onclick={onExpand} aria-label="Ampliar la foto del punto">
-		<img {src} {alt} onload={handleLoad} />
-	</button>
+	<div class="pp-image">
+		<MediaStrip
+			{items}
+			bind:index
+			{alt}
+			onActivate={onExpand}
+			activateLabel="Ampliar la foto del punto"
+			onRatio={(value) => (naturalRatio = value)}
+		/>
+	</div>
 
 	<button type="button" class="pp-close" onclick={onClose} aria-label="Cerrar la foto del punto">
 		<Icon name="x" size={21} stroke={2.6} />
@@ -96,14 +111,7 @@
 		border-radius: 2px;
 		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
 		box-sizing: border-box;
-		cursor: pointer;
-	}
-
-	.pp-image img {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
+		overflow: hidden;
 	}
 
 	/* The popup owns the explicit close control; the point-card button keeps
